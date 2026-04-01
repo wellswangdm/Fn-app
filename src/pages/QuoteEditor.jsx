@@ -4,25 +4,43 @@ import PackageSelector from '../components/PackageSelector.jsx'
 import ItemBrowser from '../components/ItemBrowser.jsx'
 import QuoteSummary from '../components/QuoteSummary.jsx'
 import CustomerForm from '../components/CustomerForm.jsx'
+import PrintView from '../components/PrintView.jsx'
 
-// ─── State management ────────────────────────────────────────────────────────
+const GST_RATE = 0.05
+const PST_RATE = 0.07
 
-function calcTotals(items, discountType, discountValue, taxRate) {
-  const subtotal = items.reduce((s, i) => s + (i.price * i.quantity), 0)
+// ─── Totals ───────────────────────────────────────────────────────────────────
+
+function calcTotals(items, discountType, discountValue) {
+  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
+
   let discountAmount = 0
-  if (discountValue > 0) {
+  if (Number(discountValue) > 0) {
     discountAmount = discountType === 'percentage'
-      ? subtotal * (discountValue / 100)
-      : discountValue
+      ? subtotal * (Number(discountValue) / 100)
+      : Math.min(Number(discountValue), subtotal)
   }
-  const taxableAmount = subtotal - discountAmount
-  const taxAmount     = taxableAmount * taxRate
-  const total         = taxableAmount + taxAmount
-  return { subtotal, discountAmount, taxAmount, total }
+
+  const factor    = subtotal > 0 ? (subtotal - discountAmount) / subtotal : 1
+  const gstBase   = items.filter(i => i.gst !== false).reduce((s, i) => s + i.price * i.quantity, 0)
+  const pstBase   = items.filter(i => i.pst === true).reduce((s, i) => s + i.price * i.quantity, 0)
+  const gstAmount = gstBase * factor * GST_RATE
+  const pstAmount = pstBase * factor * PST_RATE
+  const taxAmount = gstAmount + pstAmount
+  const total     = subtotal - discountAmount + taxAmount
+
+  return { subtotal, discountAmount, gstAmount, pstAmount, taxAmount, total }
+}
+
+// ─── Reducer ──────────────────────────────────────────────────────────────────
+
+function freshItem(item) {
+  return { ...item, id: crypto.randomUUID(), gst: true, pst: false }
 }
 
 function reducer(state, action) {
   switch (action.type) {
+
     case 'LOAD':
       return { ...state, ...action.payload, loaded: true }
 
@@ -30,64 +48,54 @@ function reducer(state, action) {
       return { ...state, funeralHomeId: action.id, taxRate: action.taxRate, packageId: null, items: [] }
 
     case 'SET_PACKAGE': {
-      // Replace package items; keep non-package items
-      const keep     = state.items.filter(i => !i.isFromPackage)
-      const newItems = action.items.map(i => ({ ...i, isFromPackage: true }))
-      const items    = [...newItems, ...keep]
-      const totals   = calcTotals(items, state.discountType, state.discountValue, state.taxRate)
-      return { ...state, packageId: action.id, items, ...totals }
+      const keep  = state.items.filter(i => !i.isFromPackage)
+      const items = [
+        ...action.items.map(i => freshItem({ ...i, isFromPackage: true })),
+        ...keep,
+      ]
+      return { ...state, packageId: action.id, items, ...calcTotals(items, state.discountType, state.discountValue) }
     }
 
     case 'CLEAR_PACKAGE': {
-      const items  = state.items.filter(i => !i.isFromPackage)
-      const totals = calcTotals(items, state.discountType, state.discountValue, state.taxRate)
-      return { ...state, packageId: null, items, ...totals }
+      const items = state.items.filter(i => !i.isFromPackage)
+      return { ...state, packageId: null, items, ...calcTotals(items, state.discountType, state.discountValue) }
     }
 
     case 'ADD_ITEM': {
       const existing = state.items.find(i => i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
-      let items
-      if (existing) {
-        items = state.items.map(i =>
-          i === existing ? { ...i, quantity: i.quantity + 1 } : i
-        )
-      } else {
-        items = [...state.items, { ...action.item, quantity: 1, isFromPackage: false }]
-      }
-      const totals = calcTotals(items, state.discountType, state.discountValue, state.taxRate)
-      return { ...state, items, ...totals }
+      const items = existing
+        ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
+        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false })]
+      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
     }
 
     case 'REMOVE_ITEM': {
-      const items  = state.items.filter(i => i.id !== action.id)
-      const totals = calcTotals(items, state.discountType, state.discountValue, state.taxRate)
-      return { ...state, items, ...totals }
+      const items = state.items.filter(i => i.id !== action.id)
+      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
     }
 
     case 'CHANGE_QTY': {
       const items = action.qty < 1
         ? state.items.filter(i => i.id !== action.id)
         : state.items.map(i => i.id === action.id ? { ...i, quantity: action.qty } : i)
-      const totals = calcTotals(items, state.discountType, state.discountValue, state.taxRate)
-      return { ...state, items, ...totals }
+      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
+    }
+
+    case 'TOGGLE_TAX': {
+      const items = state.items.map(i => i.id === action.id ? { ...i, ...action.taxes } : i)
+      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
     }
 
     case 'SET_DISCOUNT': {
-      const totals = calcTotals(state.items, action.discountType, action.discountValue, state.taxRate)
+      const totals = calcTotals(state.items, action.discountType, action.discountValue)
       return { ...state, discountType: action.discountType, discountValue: action.discountValue, ...totals }
     }
 
-    case 'SET_CUSTOMER':
-      return { ...state, ...action.payload }
+    case 'SET_CUSTOMER': return { ...state, ...action.payload }
+    case 'SET_STATUS':   return { ...state, status: action.status }
+    case 'SET_NOTES':    return { ...state, notes: action.notes }
 
-    case 'SET_STATUS':
-      return { ...state, status: action.status }
-
-    case 'SET_NOTES':
-      return { ...state, notes: action.notes }
-
-    default:
-      return state
+    default: return state
   }
 }
 
@@ -104,6 +112,8 @@ const INIT = {
   discountValue:  0,
   discountAmount: 0,
   taxRate:        0.05,
+  gstAmount:      0,
+  pstAmount:      0,
   taxAmount:      0,
   subtotal:       0,
   total:          0,
@@ -111,26 +121,27 @@ const INIT = {
   notes:          '',
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function QuoteEditor({ quoteId, onDone }) {
   const [state, dispatch] = useReducer(reducer, INIT)
-  const [homes,   setHomes]   = useState([])
-  const [saving,  setSaving]  = useState(false)
-  const [saveErr, setSaveErr] = useState(null)
-  const [tab,     setTab]     = useState('packages') // 'packages' | 'items'
+  const [homes,     setHomes]     = useState([])
+  const [saving,    setSaving]    = useState(false)
+  const [saveErr,   setSaveErr]   = useState(null)
+  const [tab,       setTab]       = useState('packages')
+  const [showPrint, setShowPrint] = useState(false)
 
-  // Load funeral homes
   useEffect(() => {
-    supabase.from('funeral_homes').select('id, name, tax_rate').then(({ data }) => {
-      setHomes(data || [])
-      if (data?.length && !quoteId) {
-        dispatch({ type: 'SET_HOME', id: data[0].id, taxRate: data[0].tax_rate })
-      }
-    })
+    supabase
+      .from('funeral_homes')
+      .select('id, name, tax_rate, address, phone, website')
+      .then(({ data }) => {
+        setHomes(data || [])
+        if (data?.length && !quoteId)
+          dispatch({ type: 'SET_HOME', id: data[0].id, taxRate: Number(data[0].tax_rate) })
+      })
   }, [])
 
-  // Load existing quote if editing
   useEffect(() => {
     if (!quoteId) { dispatch({ type: 'LOAD', payload: { loaded: true } }); return }
     async function load() {
@@ -147,8 +158,9 @@ export default function QuoteEditor({ quoteId, onDone }) {
         quantity:      i.quantity,
         isFromPackage: i.is_from_package,
         notes:         i.notes,
+        gst:           i.is_gst  ?? true,
+        pst:           i.is_pst  ?? false,
       }))
-      const totals = calcTotals(items, q.discount_type, Number(q.discount_value), Number(q.tax_rate))
       dispatch({
         type: 'LOAD',
         payload: {
@@ -164,7 +176,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
           status:         q.status,
           notes:          q.notes || '',
           items,
-          ...totals,
+          ...calcTotals(items, q.discount_type, Number(q.discount_value)),
         },
       })
     }
@@ -172,8 +184,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
   }, [quoteId])
 
   async function save(status) {
-    setSaving(true)
-    setSaveErr(null)
+    setSaving(true); setSaveErr(null)
     try {
       const quoteData = {
         funeral_home_id: state.funeralHomeId,
@@ -192,7 +203,6 @@ export default function QuoteEditor({ quoteId, onDone }) {
         status:          status || state.status,
         notes:           state.notes,
       }
-
       let qid = quoteId
       if (quoteId) {
         await supabase.from('quotes').update(quoteData).eq('id', quoteId)
@@ -200,19 +210,19 @@ export default function QuoteEditor({ quoteId, onDone }) {
         const { data } = await supabase.from('quotes').insert(quoteData).select('id').single()
         qid = data.id
       }
-
-      // Replace all quote_items
       await supabase.from('quote_items').delete().eq('quote_id', qid)
       if (state.items.length) {
         await supabase.from('quote_items').insert(
           state.items.map(i => ({
-            quote_id:       qid,
+            quote_id:        qid,
             service_item_id: i.serviceItemId || null,
-            name:           i.name,
-            price:          i.price,
-            quantity:       i.quantity,
+            name:            i.name,
+            price:           i.price,
+            quantity:        i.quantity,
             is_from_package: i.isFromPackage,
-            notes:          i.notes || null,
+            is_gst:          i.gst !== false,
+            is_pst:          i.pst === true,
+            notes:           i.notes || null,
           }))
         )
       }
@@ -224,26 +234,39 @@ export default function QuoteEditor({ quoteId, onDone }) {
     setSaving(false)
   }
 
-  if (!state.loaded) return <div className="p-8 text-gray-400">Loading…</div>
+  const currentHome = homes.find(h => h.id === state.funeralHomeId) || null
+
+  if (!state.loaded) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <p className="text-slate-400 text-sm">Loading…</p>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-primary-800 text-white shadow sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <button onClick={onDone} className="text-primary-200 hover:text-white text-sm">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <header className="bg-primary-800 text-white sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+          <button
+            onClick={onDone}
+            className="text-primary-300 hover:text-white text-sm transition-colors shrink-0"
+          >
             ← Back
           </button>
-          <div className="flex-1">
-            <h1 className="font-bold">{quoteId ? 'Edit Quote' : 'New Quote'}</h1>
+
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm leading-tight">
+              {quoteId ? 'Edit Quote' : 'New Quote'}
+            </p>
             {state.deceasedName && (
-              <p className="text-primary-200 text-xs">For: {state.deceasedName}</p>
+              <p className="text-primary-300 text-xs truncate leading-tight">{state.deceasedName}</p>
             )}
           </div>
 
-          {/* Funeral Home Selector */}
           <select
-            className="text-sm bg-primary-700 border border-primary-600 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+            className="text-xs bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white
+                       focus:outline-none focus:ring-2 focus:ring-white/30 max-w-[200px] truncate"
             value={state.funeralHomeId || ''}
             onChange={e => {
               const home = homes.find(h => h.id === e.target.value)
@@ -253,34 +276,40 @@ export default function QuoteEditor({ quoteId, onDone }) {
             {homes.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
           </select>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowPrint(true)}
+              disabled={!state.items.length}
+              className="text-primary-200 hover:text-white disabled:opacity-30 text-xs px-3 py-1.5
+                         border border-white/20 rounded-lg transition-colors"
+            >
+              Print
+            </button>
             <button
               onClick={() => save('draft')}
               disabled={saving}
-              className="btn-secondary text-sm py-1.5"
+              className="btn-secondary text-xs py-1.5"
             >
               {saving ? 'Saving…' : 'Save Draft'}
             </button>
             <button
               onClick={() => save('finalized')}
               disabled={saving}
-              className="btn-primary text-sm py-1.5"
+              className="btn-primary text-xs py-1.5 bg-white text-primary-800 hover:bg-slate-100"
             >
               Finalize
             </button>
           </div>
         </div>
         {saveErr && (
-          <div className="bg-red-600 text-white text-sm px-4 py-2">Error: {saveErr}</div>
+          <div className="bg-red-600 text-white text-xs px-4 py-2">Error: {saveErr}</div>
         )}
       </header>
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* ── Body ────────────────────────────────────────────────────────────── */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* Left column: Customer + Packages/Items */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-
-          {/* Customer Info */}
           <CustomerForm
             values={{
               deceasedName:  state.deceasedName,
@@ -293,25 +322,26 @@ export default function QuoteEditor({ quoteId, onDone }) {
             onNotes={notes => dispatch({ type: 'SET_NOTES', notes })}
           />
 
-          {/* Tabs: Packages / Items */}
           {state.funeralHomeId && (
             <div className="card overflow-hidden">
-              <div className="flex border-b border-gray-200">
-                {['packages', 'items'].map(t => (
+              <div className="flex border-b border-slate-100 bg-slate-50/80">
+                {[
+                  { key: 'packages', label: 'Service Packages' },
+                  { key: 'items',    label: 'Individual Items'  },
+                ].map(({ key, label }) => (
                   <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    className={`flex-1 py-2.5 text-sm font-medium capitalize transition-colors ${
-                      tab === t
-                        ? 'bg-white text-primary-700 border-b-2 border-primary-700'
-                        : 'text-gray-500 hover:text-gray-700 bg-gray-50'
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      tab === key
+                        ? 'bg-white text-primary-700 border-b-2 border-primary-600 -mb-px'
+                        : 'text-slate-400 hover:text-slate-600'
                     }`}
                   >
-                    {t === 'packages' ? 'Service Packages' : 'Individual Items'}
+                    {label}
                   </button>
                 ))}
               </div>
-
               <div className="p-4">
                 {tab === 'packages' && (
                   <PackageSelector
@@ -332,7 +362,6 @@ export default function QuoteEditor({ quoteId, onDone }) {
           )}
         </div>
 
-        {/* Right column: Quote Summary */}
         <div className="lg:col-span-1">
           <QuoteSummary
             items={state.items}
@@ -340,18 +369,22 @@ export default function QuoteEditor({ quoteId, onDone }) {
             discountType={state.discountType}
             discountValue={state.discountValue}
             discountAmount={state.discountAmount}
-            taxRate={state.taxRate}
-            taxAmount={state.taxAmount}
+            gstAmount={state.gstAmount}
+            pstAmount={state.pstAmount}
             total={state.total}
             status={state.status}
             onRemove={id => dispatch({ type: 'REMOVE_ITEM', id })}
             onChangeQty={(id, qty) => dispatch({ type: 'CHANGE_QTY', id, qty })}
-            onDiscount={(discountType, discountValue) =>
-              dispatch({ type: 'SET_DISCOUNT', discountType, discountValue })
-            }
+            onDiscount={(t, v) => dispatch({ type: 'SET_DISCOUNT', discountType: t, discountValue: v })}
+            onToggleTax={(id, taxes) => dispatch({ type: 'TOGGLE_TAX', id, taxes })}
+            onPrint={() => setShowPrint(true)}
           />
         </div>
       </div>
+
+      {showPrint && (
+        <PrintView home={currentHome} state={state} onClose={() => setShowPrint(false)} />
+      )}
     </div>
   )
 }

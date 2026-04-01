@@ -202,7 +202,7 @@ const packageItems = pkgLinks.map(([pkg_id, si_id]) => {
 
 // ─── In-memory mutable store ──────────────────────────────────────────────────
 const DB = {
-  funeral_homes:      [{ id: FH, name: 'Victory Memorial Park Funeral Centre', tax_rate: 0.05 }],
+  funeral_homes:      [{ id: FH, name: 'Victory Memorial Park Funeral Centre', address: '14831 28th Ave, Surrey, BC V4P 1P3', phone: '604-536-6522', website: 'www.victoryfuneralcentre.ca', tax_rate: 0.05 }],
   service_categories: serviceCategories,
   service_items:      serviceItems,
   packages,

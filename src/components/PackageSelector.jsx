@@ -19,10 +19,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
       .select('id, name, description, total_price, sort_order')
       .eq('funeral_home_id', funeralHomeId)
       .order('sort_order')
-      .then(({ data }) => {
-        setPackages(data || [])
-        setLoading(false)
-      })
+      .then(({ data }) => { setPackages(data || []); setLoading(false) })
   }, [funeralHomeId])
 
   async function loadItems(pkgId) {
@@ -43,12 +40,8 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
   }
 
   function toggle(pkgId) {
-    if (expanded === pkgId) {
-      setExpanded(null)
-    } else {
-      setExpanded(pkgId)
-      loadItems(pkgId)
-    }
+    setExpanded(e => e === pkgId ? null : pkgId)
+    loadItems(pkgId)
   }
 
   async function selectPackage(pkg) {
@@ -57,17 +50,21 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
     setExpanded(pkg.id)
   }
 
-  if (loading) return <p className="text-sm text-gray-400">Loading packages…</p>
+  if (loading) return <p className="text-xs text-slate-400 py-4">Loading packages…</p>
 
   return (
     <div className="space-y-2">
       {selectedId && (
-        <div className="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-lg px-3 py-2 text-sm mb-3">
-          <span className="text-primary-700 font-medium">
-            Package selected: {packages.find(p => p.id === selectedId)?.name}
+        <div className="flex items-center justify-between bg-primary-50 border border-primary-200/70
+                        rounded-lg px-3 py-2 mb-3">
+          <span className="text-xs font-semibold text-primary-700">
+            {packages.find(p => p.id === selectedId)?.name}
           </span>
-          <button onClick={onClear} className="text-primary-500 hover:text-primary-700 text-xs">
-            Clear package
+          <button
+            onClick={onClear}
+            className="text-[11px] text-primary-500 hover:text-primary-800 font-medium"
+          >
+            Clear
           </button>
         </div>
       )}
@@ -80,43 +77,51 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
         return (
           <div
             key={pkg.id}
-            className={`border rounded-lg overflow-hidden transition-colors ${
-              isSelected ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-white'
+            className={`rounded-lg border overflow-hidden transition-colors ${
+              isSelected
+                ? 'border-primary-300 bg-primary-50/60'
+                : 'border-slate-200 bg-white hover:border-slate-300'
             }`}
           >
             <div className="flex items-center px-3 py-2.5 gap-2">
-              <button
-                onClick={() => selectPackage(pkg)}
-                className={`flex-1 text-left`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`font-medium text-sm ${isSelected ? 'text-primary-800' : 'text-gray-800'}`}>
-                    {pkg.name}
-                    {isSelected && <span className="ml-2 text-xs bg-primary-600 text-white px-1.5 py-0.5 rounded-full">Selected</span>}
-                  </span>
-                  <span className={`text-sm font-semibold ${isSelected ? 'text-primary-700' : 'text-gray-700'}`}>
+              <button onClick={() => selectPackage(pkg)} className="flex-1 text-left min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isSelected && (
+                      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-primary-600" />
+                    )}
+                    <span className={`text-sm font-medium truncate ${
+                      isSelected ? 'text-primary-800' : 'text-slate-700'
+                    }`}>
+                      {pkg.name}
+                    </span>
+                  </div>
+                  <span className={`text-sm font-semibold shrink-0 ${
+                    isSelected ? 'text-primary-700' : 'text-slate-600'
+                  }`}>
                     {fmt(pkg.total_price)}
                   </span>
                 </div>
               </button>
               <button
                 onClick={() => toggle(pkg.id)}
-                className="text-gray-400 hover:text-gray-600 text-xs px-2 py-1 rounded border border-gray-200 hover:border-gray-300"
+                className="shrink-0 text-[11px] font-medium text-slate-400 hover:text-slate-600
+                           px-2 py-1 rounded border border-slate-200 hover:border-slate-300 transition-colors"
               >
                 {isExpanded ? 'Hide' : 'Details'}
               </button>
             </div>
 
             {isExpanded && (
-              <div className="border-t border-gray-100 px-3 py-2 bg-white">
+              <div className="border-t border-slate-100 px-3 py-2.5 bg-white/80">
                 {!items ? (
-                  <p className="text-xs text-gray-400">Loading…</p>
+                  <p className="text-xs text-slate-400">Loading…</p>
                 ) : (
-                  <ul className="space-y-1">
+                  <ul className="space-y-1.5">
                     {items.map((item, i) => (
-                      <li key={i} className="flex justify-between text-xs text-gray-600">
-                        <span>{item.name}</span>
-                        <span className="ml-4 text-gray-500">{fmt(item.price)}</span>
+                      <li key={i} className="flex justify-between text-xs">
+                        <span className="text-slate-600">{item.name}</span>
+                        <span className="text-slate-400 ml-4 shrink-0">{fmt(item.price)}</span>
                       </li>
                     ))}
                   </ul>

@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase.js'
 
 function fmt(n, min, max) {
   if (n != null) return `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
-  if (min != null && max != null) return `$${Number(min).toLocaleString('en-CA', { minimumFractionDigits: 2 })} – $${Number(max).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
+  if (min != null && max != null)
+    return `$${Number(min).toLocaleString('en-CA', { minimumFractionDigits: 2 })} – $${Number(max).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
   return 'As selected'
 }
 
@@ -13,7 +14,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
   const [loading,    setLoading]    = useState(false)
   const [search,     setSearch]     = useState('')
   const [catFilter,  setCatFilter]  = useState('all')
-  const [cashPrices, setCashPrices] = useState({}) // itemId -> custom price
+  const [cashPrices, setCashPrices] = useState({})
 
   useEffect(() => {
     if (!funeralHomeId) return
@@ -42,25 +43,20 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
     const price = item.is_cash_advance
       ? Number(cashPrices[item.id] || 0)
       : Number(item.price ?? item.price_min ?? 0)
-    onAdd({
-      serviceItemId: item.id,
-      name:          item.name,
-      price,
-    })
+    onAdd({ serviceItemId: item.id, name: item.name, price })
   }
 
   return (
     <div>
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <input
-          className="input flex-1"
+          className="input flex-1 text-sm"
           placeholder="Search items…"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
         <select
-          className="input sm:w-56"
+          className="input sm:w-52 text-sm"
           value={catFilter}
           onChange={e => setCatFilter(e.target.value)}
         >
@@ -71,39 +67,38 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
         </select>
       </div>
 
-      {loading && <p className="text-sm text-gray-400">Loading items…</p>}
+      {loading && <p className="text-xs text-slate-400 py-4">Loading items…</p>}
 
       {!loading && (
-        <div className="space-y-1 max-h-[520px] overflow-y-auto pr-1">
+        <div className="space-y-px max-h-[500px] overflow-y-auto pr-0.5">
           {filtered.length === 0 && (
-            <p className="text-sm text-gray-400 py-4 text-center">No items found.</p>
+            <p className="text-xs text-slate-400 py-6 text-center">No items found.</p>
           )}
           {filtered.map(item => (
             <div
               key={item.id}
-              className="flex items-start gap-2 px-3 py-2 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors group"
+              className="group flex items-start gap-2 px-3 py-2.5 rounded-lg
+                         border border-transparent hover:border-slate-200 hover:bg-slate-50
+                         transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-medium text-gray-800 leading-snug">{item.name}</span>
-                  <span className="text-sm text-gray-600 whitespace-nowrap font-semibold">
+                  <span className="text-sm font-medium text-slate-700 leading-snug">{item.name}</span>
+                  <span className="text-sm font-semibold text-slate-600 whitespace-nowrap shrink-0">
                     {fmt(item.price, item.price_min, item.price_max)}
                   </span>
                 </div>
                 {item.description && (
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{item.description}</p>
+                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{item.description}</p>
                 )}
-                <span className="text-xs text-gray-400">{item.service_categories?.name}</span>
+                <span className="text-[11px] text-slate-400">{item.service_categories?.name}</span>
 
-                {/* Cash advance: allow custom price input */}
                 {item.is_cash_advance && (
-                  <div className="mt-1 flex items-center gap-1">
-                    <span className="text-xs text-gray-500">Amount: $</span>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <span className="text-xs text-slate-500">Amount: $</span>
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="input text-xs py-0.5 px-1 w-24"
+                      type="number" min="0" step="0.01"
+                      className="input text-xs py-0.5 px-2 w-24"
                       placeholder="0.00"
                       value={cashPrices[item.id] || ''}
                       onChange={e => setCashPrices(p => ({ ...p, [item.id]: e.target.value }))}
@@ -115,7 +110,8 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
 
               <button
                 onClick={() => addItem(item)}
-                className="shrink-0 text-xs bg-primary-600 text-white px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-700"
+                className="shrink-0 text-xs font-medium bg-primary-700 text-white px-2.5 py-1 rounded-lg
+                           opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-800"
               >
                 + Add
               </button>

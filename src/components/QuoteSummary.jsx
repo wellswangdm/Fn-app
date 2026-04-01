@@ -1,177 +1,236 @@
 import { useState } from 'react'
 
+const GST_RATE = 0.05
+const PST_RATE = 0.07
+
+function fmt(n) {
+  return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
+}
+
 export default function QuoteSummary({
   items,
   subtotal, discountType, discountValue, discountAmount,
-  taxRate, taxAmount, total,
+  gstAmount, pstAmount, total,
   status,
-  onRemove, onChangeQty, onDiscount,
+  onRemove, onChangeQty, onDiscount, onToggleTax, onPrint,
 }) {
-  const [showDiscount, setShowDiscount] = useState(discountValue > 0)
+  const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
   const [localDiscType,  setLocalDiscType]  = useState(discountType || 'percentage')
   const [localDiscValue, setLocalDiscValue] = useState(discountValue || '')
-
-  function applyDiscount() {
-    onDiscount(localDiscType, Number(localDiscValue) || 0)
-  }
 
   const packageItems = items.filter(i => i.isFromPackage)
   const extraItems   = items.filter(i => !i.isFromPackage)
 
+  const statusStyle = {
+    finalized: 'bg-blue-50 text-blue-600 border-blue-200',
+    accepted:  'bg-green-50 text-green-600 border-green-200',
+    draft:     'bg-amber-50 text-amber-600 border-amber-200',
+  }[status] || 'bg-slate-100 text-slate-500'
+
   return (
-    <div className="card sticky top-20">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="font-semibold text-gray-800">Quote Summary</h2>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-          status === 'finalized' ? 'bg-blue-100 text-blue-700' :
-          status === 'accepted'  ? 'bg-green-100 text-green-700' :
-          'bg-yellow-100 text-yellow-700'
-        }`}>
+    <div className="card sticky top-[3.75rem]">
+
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-700">Quote Summary</h2>
+        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>
           {status}
         </span>
       </div>
 
-      {/* Items list */}
-      <div className="px-4 py-3 max-h-[380px] overflow-y-auto space-y-2">
+      {/* Items */}
+      <div className="px-3 py-3 max-h-[420px] overflow-y-auto space-y-0.5">
         {items.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-4">
+          <p className="text-xs text-slate-400 text-center py-8 leading-relaxed">
             No items added yet.<br />Select a package or add individual items.
           </p>
         )}
 
         {packageItems.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Package Items</p>
+          <div className="mb-2">
+            <p className="section-title px-1 mb-1.5">Package</p>
             {packageItems.map(item => (
-              <ItemRow key={item.id || item.serviceItemId + '-pkg'} item={item} onRemove={onRemove} onChangeQty={onChangeQty} />
+              <ItemRow key={item.id} item={item} onRemove={onRemove} onChangeQty={onChangeQty} onToggleTax={onToggleTax} />
             ))}
           </div>
         )}
 
         {extraItems.length > 0 && (
           <div>
-            {packageItems.length > 0 && (
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 mt-2">Additional Items</p>
-            )}
+            {packageItems.length > 0 && <p className="section-title px-1 mb-1.5 mt-3">Additional</p>}
             {extraItems.map(item => (
-              <ItemRow key={item.id || item.serviceItemId + '-extra'} item={item} onRemove={onRemove} onChangeQty={onChangeQty} />
+              <ItemRow key={item.id} item={item} onRemove={onRemove} onChangeQty={onChangeQty} onToggleTax={onToggleTax} />
             ))}
           </div>
         )}
       </div>
 
       {/* Totals */}
-      <div className="px-4 py-3 border-t border-gray-100 space-y-1.5 text-sm">
-        <div className="flex justify-between text-gray-600">
-          <span>Subtotal</span>
-          <span>{fmt(subtotal)}</span>
-        </div>
+      <div className="px-4 py-3 border-t border-slate-100 space-y-2 text-xs">
 
-        {/* Discount toggle */}
+        <TotalRow label="Subtotal" value={fmt(subtotal)} />
+
+        {/* Discount */}
         {!showDiscount ? (
           <button
             onClick={() => setShowDiscount(true)}
-            className="text-xs text-primary-600 hover:underline"
+            className="text-primary-600 hover:text-primary-800 text-xs font-medium"
           >
             + Add discount
           </button>
         ) : (
-          <div className="bg-gray-50 rounded-lg p-2 space-y-1.5">
-            <div className="flex items-center gap-2">
+          <div className="bg-slate-50 rounded-lg p-2.5 space-y-2 border border-slate-100">
+            <div className="flex items-center gap-1.5">
               <select
-                className="input text-xs py-1 w-28"
+                className="input text-xs py-1 w-24 bg-white"
                 value={localDiscType}
                 onChange={e => setLocalDiscType(e.target.value)}
               >
-                <option value="percentage">Percent %</option>
-                <option value="flat">Flat $</option>
+                <option value="percentage">%</option>
+                <option value="flat">$ flat</option>
               </select>
               <input
-                type="number"
-                min="0"
+                type="number" min="0"
                 step={localDiscType === 'percentage' ? '0.1' : '1'}
-                className="input text-xs py-1 flex-1"
-                placeholder={localDiscType === 'percentage' ? '0.0' : '0.00'}
+                className="input text-xs py-1 flex-1 bg-white"
+                placeholder="0"
                 value={localDiscValue}
                 onChange={e => setLocalDiscValue(e.target.value)}
               />
-              <button onClick={applyDiscount} className="btn-primary text-xs py-1 px-2">Apply</button>
+              <button
+                onClick={() => onDiscount(localDiscType, Number(localDiscValue) || 0)}
+                className="btn-primary text-xs py-1 px-2.5"
+              >
+                Apply
+              </button>
             </div>
             {discountAmount > 0 && (
-              <div className="flex justify-between text-red-600 text-xs">
-                <span>Discount ({discountType === 'percentage' ? `${discountValue}%` : fmt(discountValue)})</span>
-                <span>−{fmt(discountAmount)}</span>
-              </div>
+              <TotalRow
+                label={`Discount (${discountType === 'percentage' ? `${discountValue}%` : fmt(discountValue)})`}
+                value={`−${fmt(discountAmount)}`}
+                className="text-red-500"
+              />
             )}
             <button
               onClick={() => { setShowDiscount(false); onDiscount('percentage', 0) }}
-              className="text-xs text-gray-400 hover:text-gray-600"
+              className="text-xs text-slate-400 hover:text-slate-600"
             >
               Remove discount
             </button>
           </div>
         )}
 
-        <div className="flex justify-between text-gray-600">
-          <span>GST ({(taxRate * 100).toFixed(0)}%)</span>
-          <span>{fmt(taxAmount)}</span>
+        <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
+        {pstAmount > 0 && (
+          <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
+        )}
+
+        <div className="flex justify-between items-baseline pt-2 border-t border-slate-200">
+          <span className="text-sm font-bold text-slate-800">Total</span>
+          <span className="text-base font-bold text-primary-700">{fmt(total)}</span>
         </div>
 
-        <div className="flex justify-between font-bold text-base pt-1 border-t border-gray-200">
-          <span>Total</span>
-          <span className="text-primary-700">{fmt(total)}</span>
-        </div>
+        <p className="text-[10px] text-slate-400 pt-0.5">All prices in CAD.</p>
 
-        <p className="text-xs text-gray-400 pt-1">
-          All prices in CAD. Taxes are additional as indicated.
-        </p>
+        {items.length > 0 && (
+          <button
+            onClick={onPrint}
+            className="w-full mt-1 btn-secondary text-xs py-2 justify-center"
+          >
+            Print / Save as PDF
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
-function ItemRow({ item, onRemove, onChangeQty }) {
+function ItemRow({ item, onRemove, onChangeQty, onToggleTax }) {
+  const gstOn = item.gst !== false
+  const pstOn = item.pst === true
+
   return (
-    <div className="flex items-start gap-1.5 py-1 group">
-      <div className="flex-1 min-w-0">
-        <p className={`text-xs font-medium leading-snug ${item.isFromPackage ? 'text-gray-600' : 'text-gray-800'}`}>
+    <div className="group rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors">
+      {/* Name + price */}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-medium text-slate-700 leading-snug flex-1 min-w-0 truncate">
           {item.name}
         </p>
-        <p className="text-xs text-gray-400">{fmt(item.price)} each</p>
+        <span className="text-xs font-semibold text-slate-700 shrink-0">
+          {fmt(item.price * item.quantity)}
+        </span>
       </div>
 
-      {/* Qty control */}
-      <div className="flex items-center gap-1 shrink-0">
+      {/* Controls row */}
+      <div className="flex items-center gap-1.5 mt-1">
+        {/* Tax toggles */}
+        <TaxBadge
+          label="GST"
+          active={gstOn}
+          activeClass="bg-primary-700 text-white border-primary-700"
+          onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn })}
+        />
+        <TaxBadge
+          label="PST"
+          active={pstOn}
+          activeClass="bg-slate-600 text-white border-slate-600"
+          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn })}
+        />
+        <TaxBadge
+          label="Exempt"
+          active={!gstOn && !pstOn}
+          activeClass="bg-slate-400 text-white border-slate-400"
+          onClick={() => onToggleTax(item.id, { gst: false, pst: false })}
+        />
+
+        <span className="flex-1" />
+
+        {/* Qty */}
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => onChangeQty(item.id, item.quantity - 1)}
+            className="w-5 h-5 rounded flex items-center justify-center text-slate-400
+                       hover:text-slate-700 hover:bg-slate-200 transition-colors text-xs"
+          >−</button>
+          <span className="text-xs text-slate-600 w-4 text-center">{item.quantity}</span>
+          <button
+            onClick={() => onChangeQty(item.id, item.quantity + 1)}
+            className="w-5 h-5 rounded flex items-center justify-center text-slate-400
+                       hover:text-slate-700 hover:bg-slate-200 transition-colors text-xs"
+          >+</button>
+        </div>
+
+        {/* Remove */}
         <button
-          onClick={() => onChangeQty(item.id, item.quantity - 1)}
-          className="w-5 h-5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-xs flex items-center justify-center"
-        >
-          −
-        </button>
-        <span className="text-xs w-4 text-center">{item.quantity}</span>
-        <button
-          onClick={() => onChangeQty(item.id, item.quantity + 1)}
-          className="w-5 h-5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-xs flex items-center justify-center"
-        >
-          +
-        </button>
+          onClick={() => onRemove(item.id)}
+          className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-sm leading-none"
+          title="Remove"
+        >×</button>
       </div>
-
-      <span className="text-xs font-semibold text-gray-700 shrink-0 w-16 text-right">
-        {fmt(item.price * item.quantity)}
-      </span>
-
-      <button
-        onClick={() => onRemove(item.id)}
-        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-        title="Remove"
-      >
-        ×
-      </button>
     </div>
   )
 }
 
-function fmt(n) {
-  return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
+function TaxBadge({ label, active, activeClass, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border transition-colors ${
+        active
+          ? activeClass
+          : 'text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-500'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function TotalRow({ label, value, className = 'text-slate-500' }) {
+  return (
+    <div className={`flex justify-between ${className}`}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  )
 }

@@ -1,11 +1,9 @@
 export default function CustomerForm({ values, onChange, onNotes }) {
-  function set(key, val) {
-    onChange({ [key]: val })
-  }
+  function set(key, val) { onChange({ [key]: val }) }
 
   return (
     <div className="card p-4">
-      <h2 className="font-semibold text-gray-800 mb-3">Quote Details</h2>
+      <h2 className="text-sm font-semibold text-slate-700 mb-3">Quote Details</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="label">Deceased Name</label>
@@ -17,7 +15,7 @@ export default function CustomerForm({ values, onChange, onNotes }) {
           />
         </div>
         <div>
-          <label className="label">Family Contact Name</label>
+          <label className="label">Family Contact</label>
           <input
             className="input"
             placeholder="Contact name"
