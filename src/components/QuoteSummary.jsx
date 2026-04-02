@@ -25,14 +25,14 @@ export default function QuoteSummary({
     finalized: 'bg-blue-50 text-blue-600 border-blue-200',
     accepted:  'bg-green-50 text-green-600 border-green-200',
     draft:     'bg-amber-50 text-amber-600 border-amber-200',
-  }[status] || 'bg-slate-100 text-slate-500'
+  }[status] || 'bg-stone-100 text-stone-500'
 
   return (
     <div className="card sticky top-[3.75rem]">
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-700">Quote Summary</h2>
+      <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-stone-700">Quote Summary</h2>
         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>
           {status}
         </span>
@@ -41,7 +41,7 @@ export default function QuoteSummary({
       {/* Items */}
       <div className="px-3 py-3 max-h-[420px] overflow-y-auto space-y-0.5">
         {items.length === 0 && (
-          <p className="text-xs text-slate-400 text-center py-8 leading-relaxed">
+          <p className="text-xs text-stone-400 text-center py-8 leading-relaxed">
             No items added yet.<br />Select a package or add individual items.
           </p>
         )}
@@ -66,7 +66,7 @@ export default function QuoteSummary({
       </div>
 
       {/* Totals */}
-      <div className="px-4 py-3 border-t border-slate-100 space-y-2 text-xs">
+      <div className="px-4 py-3 border-t border-stone-100 space-y-2 text-xs">
 
         <TotalRow label="Subtotal" value={fmt(subtotal)} />
 
@@ -79,7 +79,7 @@ export default function QuoteSummary({
             + Add discount
           </button>
         ) : (
-          <div className="bg-slate-50 rounded-lg p-2.5 space-y-2 border border-slate-100">
+          <div className="bg-stone-50 rounded-lg p-2.5 space-y-2 border border-stone-100">
             <div className="flex items-center gap-1.5">
               <select
                 className="input text-xs py-1 w-24 bg-white"
@@ -113,7 +113,7 @@ export default function QuoteSummary({
             )}
             <button
               onClick={() => { setShowDiscount(false); onDiscount('percentage', 0) }}
-              className="text-xs text-slate-400 hover:text-slate-600"
+              className="text-xs text-stone-400 hover:text-stone-600"
             >
               Remove discount
             </button>
@@ -125,12 +125,12 @@ export default function QuoteSummary({
           <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
         )}
 
-        <div className="flex justify-between items-baseline pt-2 border-t border-slate-200">
-          <span className="text-sm font-bold text-slate-800">Total</span>
+        <div className="flex justify-between items-baseline pt-2 border-t border-stone-200">
+          <span className="text-sm font-bold text-stone-800">Total</span>
           <span className="text-base font-bold text-primary-700">{fmt(total)}</span>
         </div>
 
-        <p className="text-[10px] text-slate-400 pt-0.5">All prices in CAD.</p>
+        <p className="text-[10px] text-stone-400 pt-0.5">All prices in CAD.</p>
 
         {items.length > 0 && (
           <button
@@ -150,13 +150,13 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax }) {
   const pstOn = item.pst === true
 
   return (
-    <div className="group rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors">
+    <div className="group rounded-lg px-2 py-1.5 hover:bg-stone-50 transition-colors">
       {/* Name + price */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-medium text-slate-700 leading-snug flex-1 min-w-0 truncate">
+        <p className="text-xs font-medium text-stone-700 leading-snug flex-1 min-w-0 truncate">
           {item.name}
         </p>
-        <span className="text-xs font-semibold text-slate-700 shrink-0">
+        <span className="text-xs font-semibold text-stone-700 shrink-0">
           {fmt(item.price * item.quantity)}
         </span>
       </div>
@@ -173,13 +173,13 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax }) {
         <TaxBadge
           label="PST"
           active={pstOn}
-          activeClass="bg-slate-600 text-white border-slate-600"
+          activeClass="bg-stone-600 text-white border-stone-600"
           onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn })}
         />
         <TaxBadge
           label="Exempt"
           active={!gstOn && !pstOn}
-          activeClass="bg-slate-400 text-white border-slate-400"
+          activeClass="bg-stone-400 text-white border-stone-400"
           onClick={() => onToggleTax(item.id, { gst: false, pst: false })}
         />
 
@@ -189,21 +189,21 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax }) {
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => onChangeQty(item.id, item.quantity - 1)}
-            className="w-5 h-5 rounded flex items-center justify-center text-slate-400
-                       hover:text-slate-700 hover:bg-slate-200 transition-colors text-xs"
+            className="w-5 h-5 rounded flex items-center justify-center text-stone-400
+                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs"
           >−</button>
-          <span className="text-xs text-slate-600 w-4 text-center">{item.quantity}</span>
+          <span className="text-xs text-stone-600 w-4 text-center">{item.quantity}</span>
           <button
             onClick={() => onChangeQty(item.id, item.quantity + 1)}
-            className="w-5 h-5 rounded flex items-center justify-center text-slate-400
-                       hover:text-slate-700 hover:bg-slate-200 transition-colors text-xs"
+            className="w-5 h-5 rounded flex items-center justify-center text-stone-400
+                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs"
           >+</button>
         </div>
 
         {/* Remove */}
         <button
           onClick={() => onRemove(item.id)}
-          className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-sm leading-none"
+          className="text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-sm leading-none"
           title="Remove"
         >×</button>
       </div>
@@ -218,7 +218,7 @@ function TaxBadge({ label, active, activeClass, onClick }) {
       className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border transition-colors ${
         active
           ? activeClass
-          : 'text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-500'
+          : 'text-stone-400 border-stone-200 hover:border-stone-300 hover:text-stone-500'
       }`}
     >
       {label}
@@ -226,7 +226,7 @@ function TaxBadge({ label, active, activeClass, onClick }) {
   )
 }
 
-function TotalRow({ label, value, className = 'text-slate-500' }) {
+function TotalRow({ label, value, className = 'text-stone-500' }) {
   return (
     <div className={`flex justify-between ${className}`}>
       <span>{label}</span>

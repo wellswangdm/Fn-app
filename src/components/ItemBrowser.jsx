@@ -67,35 +67,35 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
         </select>
       </div>
 
-      {loading && <p className="text-xs text-slate-400 py-4">Loading items…</p>}
+      {loading && <p className="text-xs text-stone-400 py-4">Loading items…</p>}
 
       {!loading && (
         <div className="space-y-px max-h-[500px] overflow-y-auto pr-0.5">
           {filtered.length === 0 && (
-            <p className="text-xs text-slate-400 py-6 text-center">No items found.</p>
+            <p className="text-xs text-stone-400 py-6 text-center">No items found.</p>
           )}
           {filtered.map(item => (
             <div
               key={item.id}
               className="group flex items-start gap-2 px-3 py-2.5 rounded-lg
-                         border border-transparent hover:border-slate-200 hover:bg-slate-50
+                         border border-transparent hover:border-stone-200 hover:bg-stone-50
                          transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-medium text-slate-700 leading-snug">{item.name}</span>
-                  <span className="text-sm font-semibold text-slate-600 whitespace-nowrap shrink-0">
+                  <span className="text-sm font-medium text-stone-700 leading-snug">{item.name}</span>
+                  <span className="text-sm font-semibold text-stone-600 whitespace-nowrap shrink-0">
                     {fmt(item.price, item.price_min, item.price_max)}
                   </span>
                 </div>
                 {item.description && (
-                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{item.description}</p>
+                  <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{item.description}</p>
                 )}
-                <span className="text-[11px] text-slate-400">{item.service_categories?.name}</span>
+                <span className="text-[11px] text-stone-400">{item.service_categories?.name}</span>
 
                 {item.is_cash_advance && (
                   <div className="mt-1.5 flex items-center gap-1.5">
-                    <span className="text-xs text-slate-500">Amount: $</span>
+                    <span className="text-xs text-stone-500">Amount: $</span>
                     <input
                       type="number" min="0" step="0.01"
                       className="input text-xs py-0.5 px-2 w-24"

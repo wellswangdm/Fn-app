@@ -5,23 +5,20 @@ export default {
     extend: {
       colors: {
         primary: {
-          50:  '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
+          50:  '#EFF4F9',
+          100: '#D6E4F0',
+          200: '#ADC9E3',
+          300: '#7EA8D1',
+          400: '#5288BB',
+          500: '#3368A4',
+          600: '#265186',
+          700: '#1C3E6E',
+          800: '#122A4E',
+          900: '#0A1A32',
         },
       },
       fontFamily: {
         sans: ['"Inter"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-      },
-      boxShadow: {
-        card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
       },
     },
   },

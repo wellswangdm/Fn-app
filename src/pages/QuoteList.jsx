@@ -45,7 +45,7 @@ export default function QuoteList({ onNew, onEdit }) {
   })
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-stone-50">
 
       {/* Header */}
       <header className="bg-primary-800 text-white">
@@ -57,7 +57,7 @@ export default function QuoteList({ onNew, onEdit }) {
           <button
             onClick={onNew}
             className="text-sm font-medium bg-white text-primary-800 px-4 py-2 rounded-lg
-                       hover:bg-slate-100 transition-colors shadow-sm"
+                       hover:bg-stone-100 transition-colors shadow-sm"
           >
             + New Quote
           </button>
@@ -76,45 +76,45 @@ export default function QuoteList({ onNew, onEdit }) {
           />
         </div>
 
-        {loading && <p className="text-sm text-slate-400">Loading…</p>}
+        {loading && <p className="text-sm text-stone-400">Loading…</p>}
         {error   && <p className="text-sm text-red-500">Error: {error}</p>}
 
         {!loading && !error && (
           filtered.length === 0 ? (
             <div className="card p-16 text-center">
-              <p className="text-slate-400 text-sm mb-3">No quotes yet</p>
+              <p className="text-stone-400 text-sm mb-3">No quotes yet</p>
               <button onClick={onNew} className="btn-primary">Create your first quote</button>
             </div>
           ) : (
             <div className="card overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/80">
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Deceased</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Contact</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Funeral Home</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Date</th>
+                  <tr className="border-b border-stone-100 bg-stone-50/80">
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Deceased</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Contact</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Funeral Home</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Status</th>
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Total</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Date</th>
                     <th className="px-4 py-3 w-24" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-stone-50">
                   {filtered.map(q => {
-                    const s = STATUS[q.status] || { label: q.status, cls: 'bg-slate-100 text-slate-500' }
+                    const s = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
                     return (
                       <tr
                         key={q.id}
-                        className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                        className="hover:bg-stone-50/60 transition-colors cursor-pointer"
                         onClick={() => onEdit(q.id)}
                       >
-                        <td className="px-4 py-3 text-sm font-medium text-slate-800">
-                          {q.deceased_name || <span className="text-slate-300">—</span>}
+                        <td className="px-4 py-3 text-sm font-medium text-stone-800">
+                          {q.deceased_name || <span className="text-stone-300">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-500">
-                          {q.customer_name || <span className="text-slate-300">—</span>}
+                        <td className="px-4 py-3 text-sm text-stone-500">
+                          {q.customer_name || <span className="text-stone-300">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-400">
+                        <td className="px-4 py-3 text-xs text-stone-400">
                           {q.funeral_homes?.name || '—'}
                         </td>
                         <td className="px-4 py-3">
@@ -122,17 +122,17 @@ export default function QuoteList({ onNew, onEdit }) {
                             {s.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right text-sm font-semibold text-slate-700">
+                        <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">
                           {fmt(q.total)}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-400">
+                        <td className="px-4 py-3 text-xs text-stone-400">
                           {new Date(q.created_at).toLocaleDateString('en-CA')}
                         </td>
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => deleteQuote(q.id)}
                             disabled={deleting === q.id}
-                            className="text-xs text-slate-300 hover:text-red-400 disabled:opacity-40 transition-colors"
+                            className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors"
                           >
                             Delete
                           </button>

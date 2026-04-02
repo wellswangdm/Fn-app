@@ -9,6 +9,13 @@ import PrintView from '../components/PrintView.jsx'
 const GST_RATE = 0.05
 const PST_RATE = 0.07
 
+function generateQuoteNumber() {
+  const d = new Date()
+  const date = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
+  const rand = String(Math.floor(Math.random() * 900) + 100)
+  return `Q-${date}-${rand}`
+}
+
 // ─── Totals ───────────────────────────────────────────────────────────────────
 
 function calcTotals(items, discountType, discountValue) {
@@ -103,10 +110,13 @@ const INIT = {
   loaded:         false,
   funeralHomeId:  null,
   packageId:      null,
+  quoteNumber:    '',
   customerName:   '',
   customerEmail:  '',
   customerPhone:  '',
   deceasedName:   '',
+  advisorName:    '',
+  advisorEmail:   '',
   items:          [],
   discountType:   'percentage',
   discountValue:  0,
@@ -143,7 +153,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
   }, [])
 
   useEffect(() => {
-    if (!quoteId) { dispatch({ type: 'LOAD', payload: { loaded: true } }); return }
+    if (!quoteId) { dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber() } }); return }
     async function load() {
       const [{ data: q }, { data: qi }] = await Promise.all([
         supabase.from('quotes').select('*').eq('id', quoteId).single(),
@@ -166,10 +176,13 @@ export default function QuoteEditor({ quoteId, onDone }) {
         payload: {
           funeralHomeId:  q.funeral_home_id,
           packageId:      q.package_id,
+          quoteNumber:    q.quote_number   || generateQuoteNumber(),
           customerName:   q.customer_name  || '',
           customerEmail:  q.customer_email || '',
           customerPhone:  q.customer_phone || '',
           deceasedName:   q.deceased_name  || '',
+          advisorName:    q.advisor_name   || '',
+          advisorEmail:   q.advisor_email  || '',
           discountType:   q.discount_type  || 'percentage',
           discountValue:  Number(q.discount_value),
           taxRate:        Number(q.tax_rate),
@@ -189,10 +202,13 @@ export default function QuoteEditor({ quoteId, onDone }) {
       const quoteData = {
         funeral_home_id: state.funeralHomeId,
         package_id:      state.packageId || null,
+        quote_number:    state.quoteNumber || generateQuoteNumber(),
         customer_name:   state.customerName,
         customer_email:  state.customerEmail,
         customer_phone:  state.customerPhone,
         deceased_name:   state.deceasedName,
+        advisor_name:    state.advisorName,
+        advisor_email:   state.advisorEmail,
         subtotal:        state.subtotal,
         discount_type:   state.discountType,
         discount_value:  state.discountValue,
@@ -237,13 +253,13 @@ export default function QuoteEditor({ quoteId, onDone }) {
   const currentHome = homes.find(h => h.id === state.funeralHomeId) || null
 
   if (!state.loaded) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <p className="text-slate-400 text-sm">Loading…</p>
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <p className="text-stone-400 text-sm">Loading…</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-stone-50 flex flex-col">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="bg-primary-800 text-white sticky top-0 z-20">
@@ -295,7 +311,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
             <button
               onClick={() => save('finalized')}
               disabled={saving}
-              className="btn-primary text-xs py-1.5 bg-white text-primary-800 hover:bg-slate-100"
+              className="btn-primary text-xs py-1.5 bg-white text-primary-800 hover:bg-stone-100"
             >
               Finalize
             </button>
@@ -316,6 +332,8 @@ export default function QuoteEditor({ quoteId, onDone }) {
               customerName:  state.customerName,
               customerEmail: state.customerEmail,
               customerPhone: state.customerPhone,
+              advisorName:   state.advisorName,
+              advisorEmail:  state.advisorEmail,
               notes:         state.notes,
             }}
             onChange={payload => dispatch({ type: 'SET_CUSTOMER', payload })}
@@ -324,7 +342,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
 
           {state.funeralHomeId && (
             <div className="card overflow-hidden">
-              <div className="flex border-b border-slate-100 bg-slate-50/80">
+              <div className="flex border-b border-stone-100 bg-stone-50/80">
                 {[
                   { key: 'packages', label: 'Service Packages' },
                   { key: 'items',    label: 'Individual Items'  },
@@ -335,7 +353,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
                     className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
                       tab === key
                         ? 'bg-white text-primary-700 border-b-2 border-primary-600 -mb-px'
-                        : 'text-slate-400 hover:text-slate-600'
+                        : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
                     {label}

@@ -3,7 +3,7 @@ export default function CustomerForm({ values, onChange, onNotes }) {
 
   return (
     <div className="card p-4">
-      <h2 className="text-sm font-semibold text-slate-700 mb-3">Quote Details</h2>
+      <h2 className="text-sm font-semibold text-stone-700 mb-3">Quote Details</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="label">Deceased Name</label>
@@ -24,7 +24,7 @@ export default function CustomerForm({ values, onChange, onNotes }) {
           />
         </div>
         <div>
-          <label className="label">Email</label>
+          <label className="label">Contact Email</label>
           <input
             type="email"
             className="input"
@@ -34,13 +34,32 @@ export default function CustomerForm({ values, onChange, onNotes }) {
           />
         </div>
         <div>
-          <label className="label">Phone</label>
+          <label className="label">Contact Phone</label>
           <input
             type="tel"
             className="input"
             placeholder="604-000-0000"
             value={values.customerPhone}
             onChange={e => set('customerPhone', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Advisor Name</label>
+          <input
+            className="input"
+            placeholder="Advisor name"
+            value={values.advisorName}
+            onChange={e => set('advisorName', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Advisor Email</label>
+          <input
+            type="email"
+            className="input"
+            placeholder="advisor@example.com"
+            value={values.advisorEmail}
+            onChange={e => set('advisorEmail', e.target.value)}
           />
         </div>
         <div className="sm:col-span-2">
