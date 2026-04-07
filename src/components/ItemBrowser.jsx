@@ -9,12 +9,25 @@ function fmt(n, min, max) {
 }
 
 export default function ItemBrowser({ funeralHomeId, onAdd }) {
-  const [categories, setCategories] = useState([])
-  const [items,      setItems]      = useState([])
-  const [loading,    setLoading]    = useState(false)
-  const [search,     setSearch]     = useState('')
-  const [catFilter,  setCatFilter]  = useState('all')
-  const [cashPrices, setCashPrices] = useState({})
+  const [categories,   setCategories]   = useState([])
+  const [items,        setItems]        = useState([])
+  const [loading,      setLoading]      = useState(false)
+  const [search,       setSearch]       = useState('')
+  const [catFilter,    setCatFilter]    = useState('all')
+  const [cashPrices,   setCashPrices]   = useState({})
+  const [showCustom,   setShowCustom]   = useState(false)
+  const [customName,   setCustomName]   = useState('')
+  const [customPrice,  setCustomPrice]  = useState('')
+
+  function addCustomItem() {
+    const name  = customName.trim()
+    const price = parseFloat(customPrice)
+    if (!name || isNaN(price) || price < 0) return
+    onAdd({ serviceItemId: null, name, price })
+    setCustomName('')
+    setCustomPrice('')
+    setShowCustom(false)
+  }
 
   useEffect(() => {
     if (!funeralHomeId) return
@@ -48,6 +61,47 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
 
   return (
     <div>
+      {/* Custom item panel */}
+      <div className="mb-3">
+        <button
+          onClick={() => setShowCustom(v => !v)}
+          className="text-xs font-medium text-primary-700 hover:text-primary-800 flex items-center gap-1"
+        >
+          <span className="text-base leading-none">{showCustom ? '−' : '+'}</span>
+          Add custom item
+        </button>
+        {showCustom && (
+          <div className="mt-2 flex flex-col sm:flex-row gap-2 p-3 rounded-lg border border-stone-200 bg-stone-50">
+            <input
+              className="input flex-1 text-sm"
+              placeholder="Item name"
+              value={customName}
+              onChange={e => setCustomName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addCustomItem()}
+              autoFocus
+            />
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-stone-500">$</span>
+              <input
+                type="number" min="0" step="0.01"
+                className="input w-28 text-sm"
+                placeholder="0.00"
+                value={customPrice}
+                onChange={e => setCustomPrice(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addCustomItem()}
+              />
+            </div>
+            <button
+              onClick={addCustomItem}
+              disabled={!customName.trim() || customPrice === ''}
+              className="btn-primary text-sm px-4 py-1.5 disabled:opacity-40"
+            >
+              Add
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <input
           className="input flex-1 text-sm"
