@@ -26,7 +26,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
     onAdd({ serviceItemId: null, name, price })
     setCustomName('')
     setCustomPrice('')
-    setShowCustom(false)
+    // keep form open so user can add more custom items without reopening
   }
 
   useEffect(() => {
