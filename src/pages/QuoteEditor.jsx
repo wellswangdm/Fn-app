@@ -69,7 +69,9 @@ function reducer(state, action) {
     }
 
     case 'ADD_ITEM': {
-      const existing = state.items.find(i => i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
+      const existing = action.item.serviceItemId
+        ? state.items.find(i => i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
+        : null
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
         : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false })]
