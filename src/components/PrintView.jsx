@@ -41,7 +41,7 @@ export default function PrintView({ home, state, onClose }) {
         <div id="print-zone" className="bg-white rounded-2xl shadow-2xl overflow-hidden">
 
           {/* Letterhead band */}
-          <div className="bg-primary-800 px-10 py-7 flex items-start justify-between">
+          <div className="bg-primary-800 px-8 py-5 print:px-6 print:py-4 flex items-start justify-between">
             <div>
               <h1 className="text-white text-xl font-bold tracking-tight leading-tight">
                 {home?.name || 'Funeral Centre'}
@@ -72,10 +72,10 @@ export default function PrintView({ home, state, onClose }) {
           </div>
 
           {/* Body */}
-          <div className="px-10 py-8">
+          <div className="px-8 py-6 print:px-6 print:py-4">
 
             {/* Items table */}
-            <table className="w-full text-sm mb-8">
+            <table className="w-full text-sm print:text-xs mb-6 print:mb-4">
               <thead>
                 <tr className="border-b-2 border-stone-200">
                   <th className="text-left pb-2.5 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
@@ -167,10 +167,10 @@ export default function PrintView({ home, state, onClose }) {
 function ItemRow({ item }) {
   return (
     <tr className="border-b border-stone-100">
-      <td className="py-2 text-stone-700 pr-4">{item.name}</td>
-      <td className="py-2 text-center text-stone-500">{item.quantity}</td>
-      <td className="py-2 text-right text-stone-500">{fmt(item.price)}</td>
-      <td className="py-2 text-right font-medium text-stone-800">{fmt(item.price * item.quantity)}</td>
+      <td className="py-1.5 print:py-1 text-stone-700 pr-4">{item.name}</td>
+      <td className="py-1.5 print:py-1 text-center text-stone-500">{item.quantity}</td>
+      <td className="py-1.5 print:py-1 text-right text-stone-500">{fmt(item.price)}</td>
+      <td className="py-1.5 print:py-1 text-right font-medium text-stone-800">{fmt(item.price * item.quantity)}</td>
     </tr>
   )
 }

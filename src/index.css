@@ -47,14 +47,25 @@
 
 /* ── Print ──────────────────────────────────────────────────────────────── */
 @media print {
-  body > * { visibility: hidden; }
+  html, body {
+    height: auto;
+    background: white;
+  }
+  body * { visibility: hidden; }
   #print-zone,
   #print-zone * { visibility: visible; }
   #print-zone {
-    position: fixed;
-    inset: 0;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
     background: white;
-    z-index: 9999;
   }
-  @page { margin: 1.5cm 1.8cm; }
+  @page {
+    size: A4 portrait;
+    margin: 1cm 1.5cm;
+  }
 }
