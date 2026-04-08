@@ -23,7 +23,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
     const name  = customName.trim()
     const price = parseFloat(customPrice)
     if (!name || isNaN(price) || price < 0) return
-    onAdd({ serviceItemId: null, name, price })
+    onAdd({ serviceItemId: null, name, price, isCustom: true })
     setCustomName('')
     setCustomPrice('')
     // keep form open so user can add more custom items without reopening

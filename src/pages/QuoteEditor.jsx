@@ -69,9 +69,9 @@ function reducer(state, action) {
     }
 
     case 'ADD_ITEM': {
-      const existing = action.item.serviceItemId
-        ? state.items.find(i => i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
-        : null
+      const existing = action.item.isCustom
+        ? null  // custom items always create a new line
+        : state.items.find(i => !i.isCustom && i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
         : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false })]
@@ -233,7 +233,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
         await supabase.from('quote_items').insert(
           state.items.map(i => ({
             quote_id:        qid,
-            service_item_id: i.serviceItemId || null,
+            service_item_id: i.isCustom ? null : (i.serviceItemId || null),
             name:            i.name,
             price:           i.price,
             quantity:        i.quantity,
