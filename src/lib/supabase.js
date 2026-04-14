@@ -10,6 +10,8 @@ const C = {
   c5: 'c1000000-0000-0000-0000-000000000005',
   c6: 'c1000000-0000-0000-0000-000000000006',
   c7: 'c1000000-0000-0000-0000-000000000007',
+  c8: 'c1000000-0000-0000-0000-000000000008',
+  c9: 'c1000000-0000-0000-0000-000000000009',
 }
 
 const serviceCategories = [
@@ -20,6 +22,8 @@ const serviceCategories = [
   { id: C.c5, name: 'Miscellaneous Services & Merchandise', sort_order: 5 },
   { id: C.c6, name: 'Stationery',                           sort_order: 6 },
   { id: C.c7, name: 'Cash Advances',                        sort_order: 7 },
+  { id: C.c8, name: 'Caskets & Containers',                 sort_order: 8 },
+  { id: C.c9, name: 'Urns',                                 sort_order: 9 },
 ]
 
 const serviceItemsRaw = [
@@ -125,6 +129,40 @@ const serviceItemsRaw = [
   { id: 'si000117', category_id: C.c7, name: 'Outside Funeral Director Expense', is_cash_advance: true  },
   { id: 'si000118', category_id: C.c7, name: 'Cemetery Fees',                    is_cash_advance: true  },
   { id: 'si000119', category_id: C.c7, name: 'Public Transportation',            is_cash_advance: true  },
+  // Family Support (package-specific)
+  { id: 'si000200', category_id: C.c4, name: 'Plan Support Option',             price: 295.00 },
+  { id: 'si000201', category_id: C.c4, name: 'Cremation Plan Support Option',   price: 295.00 },
+  // Flowers
+  { id: 'si000202', category_id: C.c5, name: 'Burial Flowers',                  price: 695.00 },
+  { id: 'si000203', category_id: C.c5, name: 'Burial Flowers',                  price: 595.00 },
+  { id: 'si000204', category_id: C.c5, name: 'Burial Flowers',                  price: 495.00 },
+  { id: 'si000205', category_id: C.c5, name: 'Cremation Flowers',               price: 500.00 },
+  { id: 'si000206', category_id: C.c5, name: 'Cremation Flowers',               price: 400.00 },
+  // Events
+  { id: 'si000207', category_id: C.c2, name: 'Catered Reception III',           price: 2150.00 },
+  { id: 'si000208', category_id: C.c2, name: 'Catered Reception II',            price: 1980.00 },
+  { id: 'si000209', category_id: C.c2, name: 'Catered Reception I',             price: 1350.00 },
+  // Caskets
+  { id: 'si000210', category_id: C.c8, name: 'Casket',
+    description: 'Batesville Merlot, Victoriaville Dominion HC Wood Maple Crepe, Batesville Fireside, Batesville Eleanor Oak', price: 4099.00 },
+  { id: 'si000211', category_id: C.c8, name: 'Casket',
+    description: 'Batesville Misty Blue, Batesville Watson, Batesville Bailey, Victoriaville Hartvic', price: 3599.00 },
+  { id: 'si000212', category_id: C.c8, name: 'Casket',
+    description: 'Batesville Coleridge, Batesville Montgomery, Victoriaville Heavenly White, Victoriaville Winfield', price: 2999.00 },
+  // Containers
+  { id: 'si000216', category_id: C.c8, name: 'Ceremonial Container',
+    description: 'Batesville Brockton Oak Ceremonial', price: 1599.00 },
+  { id: 'si000217', category_id: C.c8, name: 'Rental Container',
+    description: 'Batesville Brockton Oak (1 Hour Rental)', price: 850.00 },
+  { id: 'si000218', category_id: C.c8, name: 'Container',
+    description: 'Vancouver Casket Cypress', price: 650.00 },
+  // Urns
+  { id: 'si000213', category_id: C.c9, name: 'Memorial Urn Selection',
+    description: 'LoveUrns HeartFelt Gold, Terrybear Eminence White Marble Urn, Granville Lucinda Blue Horizontal Urn, Granville Charlotte Horizontal Urn', price: 1295.00 },
+  { id: 'si000214', category_id: C.c9, name: 'Memorial Urn Selection',
+    description: 'Urnes Bégin Versatile Urn Navy, LoveUrns Laurel Midnight, Terrybear Satori Ocean Pearl, Batesville Memento Chest', price: 795.00 },
+  { id: 'si000215', category_id: C.c9, name: 'Memorial Urn Selection',
+    description: 'LoveUrns Laurel Crimson, Urnes Bégin Sky Pewter, Mackenzie Classic Sky Blue, Batesville Cherry Chest', price: 595.00 },
 ]
 
 // Attach funeral_home_id and pre-join service_categories onto every item
@@ -141,15 +179,23 @@ const serviceItems = serviceItemsRaw.map(item => ({
 }))
 
 const packages = [
-  { id: 'pk000001', funeral_home_id: FH, name: 'Full Service',           total_price: 7650.00, sort_order: 1 },
-  { id: 'pk000002', funeral_home_id: FH, name: 'Witness Cremation',      total_price: 7000.00, sort_order: 2 },
-  { id: 'pk000003', funeral_home_id: FH, name: 'Service of Remembrance', total_price: 7475.00, sort_order: 3 },
-  { id: 'pk000004', funeral_home_id: FH, name: 'Graveside Service',      total_price: 6155.00, sort_order: 4 },
-  { id: 'pk000005', funeral_home_id: FH, name: 'Urn Committal Option',   total_price: 4150.00, sort_order: 5 },
-  { id: 'pk000006', funeral_home_id: FH, name: 'No Service Option',      total_price: 3630.00, sort_order: 6 },
-  { id: 'pk000007', funeral_home_id: FH, name: 'Forwarding of Remains',  total_price: 5120.00, sort_order: 7 },
-  { id: 'pk000008', funeral_home_id: FH, name: 'Receiving of Remains',   total_price: 3950.00, sort_order: 8 },
-  { id: 'pk000009', funeral_home_id: FH, name: 'Tea Room Gathering',     total_price: 7240.00, sort_order: 9 },
+  // ── Named Packages ────────────────────────────────────────────────────────
+  { id: 'pk000010', funeral_home_id: FH, name: 'Heritage Funeral Service',   total_price: 17519.00, sort_order: 10, pkg_type: 'package' },
+  { id: 'pk000011', funeral_home_id: FH, name: 'Honour Funeral Service',     total_price: 16449.00, sort_order: 11, pkg_type: 'package' },
+  { id: 'pk000012', funeral_home_id: FH, name: 'Tribute Funeral Service',    total_price: 14669.00, sort_order: 12, pkg_type: 'package' },
+  { id: 'pk000013', funeral_home_id: FH, name: 'Heritage Cremation Service', total_price: 16719.00, sort_order: 13, pkg_type: 'package' },
+  { id: 'pk000014', funeral_home_id: FH, name: 'Honour Cremation Service',   total_price: 13775.00, sort_order: 14, pkg_type: 'package' },
+  { id: 'pk000015', funeral_home_id: FH, name: 'Tribute Cremation Service',  total_price:  6065.00, sort_order: 15, pkg_type: 'package' },
+  // ── A La Carte ────────────────────────────────────────────────────────────
+  { id: 'pk000001', funeral_home_id: FH, name: 'Full Service',           total_price: 7650.00, sort_order: 1, pkg_type: 'alacarte' },
+  { id: 'pk000002', funeral_home_id: FH, name: 'Witness Cremation',      total_price: 7000.00, sort_order: 2, pkg_type: 'alacarte' },
+  { id: 'pk000003', funeral_home_id: FH, name: 'Service of Remembrance', total_price: 7475.00, sort_order: 3, pkg_type: 'alacarte' },
+  { id: 'pk000004', funeral_home_id: FH, name: 'Graveside Service',      total_price: 6155.00, sort_order: 4, pkg_type: 'alacarte' },
+  { id: 'pk000005', funeral_home_id: FH, name: 'Urn Committal Option',   total_price: 4150.00, sort_order: 5, pkg_type: 'alacarte' },
+  { id: 'pk000006', funeral_home_id: FH, name: 'No Service Option',      total_price: 3630.00, sort_order: 6, pkg_type: 'alacarte' },
+  { id: 'pk000007', funeral_home_id: FH, name: 'Forwarding of Remains',  total_price: 5120.00, sort_order: 7, pkg_type: 'alacarte' },
+  { id: 'pk000008', funeral_home_id: FH, name: 'Receiving of Remains',   total_price: 3950.00, sort_order: 8, pkg_type: 'alacarte' },
+  { id: 'pk000009', funeral_home_id: FH, name: 'Tea Room Gathering',     total_price: 7240.00, sort_order: 9, pkg_type: 'alacarte' },
 ]
 
 // [package_id, service_item_id] pairs
@@ -188,6 +234,47 @@ const pkgLinks = [
   ['pk000009','si000022'],['pk000009','si000002'],['pk000009','si000088'],
   ['pk000009','si000012'],['pk000009','si000013'],['pk000009','si000010'],
   ['pk000009','si000040'],
+  // Heritage Funeral Service
+  ['pk000010','si000001'],['pk000010','si000010'],['pk000010','si000011'],
+  ['pk000010','si000013'],['pk000010','si000012'],['pk000010','si000040'],
+  ['pk000010','si000041'],['pk000010','si000042'],['pk000010','si000059'],
+  ['pk000010','si000058'],['pk000010','si000088'],['pk000010','si000202'],
+  ['pk000010','si000023'],['pk000010','si000200'],['pk000010','si000210'],
+  ['pk000010','si000207'],['pk000010','si000103'],
+  // Honour Funeral Service
+  ['pk000011','si000001'],['pk000011','si000010'],['pk000011','si000011'],
+  ['pk000011','si000013'],['pk000011','si000012'],['pk000011','si000040'],
+  ['pk000011','si000041'],['pk000011','si000042'],['pk000011','si000059'],
+  ['pk000011','si000058'],['pk000011','si000088'],['pk000011','si000203'],
+  ['pk000011','si000023'],['pk000011','si000200'],['pk000011','si000211'],
+  ['pk000011','si000208'],['pk000011','si000102'],
+  // Tribute Funeral Service
+  ['pk000012','si000001'],['pk000012','si000010'],['pk000012','si000011'],
+  ['pk000012','si000013'],['pk000012','si000012'],['pk000012','si000040'],
+  ['pk000012','si000041'],['pk000012','si000059'],
+  ['pk000012','si000058'],['pk000012','si000088'],['pk000012','si000204'],
+  ['pk000012','si000023'],['pk000012','si000200'],['pk000012','si000212'],
+  ['pk000012','si000209'],['pk000012','si000100'],
+  // Heritage Cremation Service
+  ['pk000013','si000001'],['pk000013','si000010'],['pk000013','si000011'],
+  ['pk000013','si000013'],['pk000013','si000012'],['pk000013','si000040'],
+  ['pk000013','si000042'],['pk000013','si000059'],
+  ['pk000013','si000058'],['pk000013','si000088'],['pk000013','si000205'],
+  ['pk000013','si000076'],['pk000013','si000023'],['pk000013','si000201'],
+  ['pk000013','si000213'],['pk000013','si000216'],['pk000013','si000207'],
+  ['pk000013','si000103'],
+  // Honour Cremation Service
+  ['pk000014','si000002'],['pk000014','si000010'],
+  ['pk000014','si000013'],['pk000014','si000012'],['pk000014','si000040'],
+  ['pk000014','si000059'],['pk000014','si000058'],['pk000014','si000088'],
+  ['pk000014','si000206'],['pk000014','si000076'],['pk000014','si000023'],
+  ['pk000014','si000201'],['pk000014','si000214'],['pk000014','si000217'],
+  ['pk000014','si000208'],['pk000014','si000102'],
+  // Tribute Cremation Service
+  ['pk000015','si000009'],['pk000015','si000010'],['pk000015','si000013'],
+  ['pk000015','si000026'],['pk000015','si000012'],['pk000015','si000040'],
+  ['pk000015','si000058'],['pk000015','si000076'],['pk000015','si000201'],
+  ['pk000015','si000215'],['pk000015','si000218'],
 ]
 
 const packageItems = pkgLinks.map(([pkg_id, si_id]) => {
