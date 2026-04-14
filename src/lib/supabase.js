@@ -180,22 +180,22 @@ const serviceItems = serviceItemsRaw.map(item => ({
 
 const packages = [
   // ── Named Packages ────────────────────────────────────────────────────────
-  { id: 'pk000010', funeral_home_id: FH, name: 'Heritage Funeral Service',   total_price: 17519.00, sort_order: 10, pkg_type: 'package' },
-  { id: 'pk000011', funeral_home_id: FH, name: 'Honour Funeral Service',     total_price: 16449.00, sort_order: 11, pkg_type: 'package' },
-  { id: 'pk000012', funeral_home_id: FH, name: 'Tribute Funeral Service',    total_price: 14669.00, sort_order: 12, pkg_type: 'package' },
-  { id: 'pk000013', funeral_home_id: FH, name: 'Heritage Cremation Service', total_price: 16719.00, sort_order: 13, pkg_type: 'package' },
-  { id: 'pk000014', funeral_home_id: FH, name: 'Honour Cremation Service',   total_price: 13775.00, sort_order: 14, pkg_type: 'package' },
-  { id: 'pk000015', funeral_home_id: FH, name: 'Tribute Cremation Service',  total_price:  6065.00, sort_order: 15, pkg_type: 'package' },
+  { id: 'pk000010', funeral_home_id: FH, name: 'Heritage Funeral Service',   total_price: 17519.00, sort_order: 10, pkg_type: 'package', package_discount: 515 },
+  { id: 'pk000011', funeral_home_id: FH, name: 'Honour Funeral Service',     total_price: 16449.00, sort_order: 11, pkg_type: 'package', package_discount: 485 },
+  { id: 'pk000012', funeral_home_id: FH, name: 'Tribute Funeral Service',    total_price: 14669.00, sort_order: 12, pkg_type: 'package', package_discount: 435 },
+  { id: 'pk000013', funeral_home_id: FH, name: 'Heritage Cremation Service', total_price: 16719.00, sort_order: 13, pkg_type: 'package', package_discount: 510 },
+  { id: 'pk000014', funeral_home_id: FH, name: 'Honour Cremation Service',   total_price: 13775.00, sort_order: 14, pkg_type: 'package', package_discount: 410 },
+  { id: 'pk000015', funeral_home_id: FH, name: 'Tribute Cremation Service',  total_price:  6065.00, sort_order: 15, pkg_type: 'package', package_discount:  50 },
   // ── A La Carte ────────────────────────────────────────────────────────────
-  { id: 'pk000001', funeral_home_id: FH, name: 'Full Service',           total_price: 7650.00, sort_order: 1, pkg_type: 'alacarte' },
-  { id: 'pk000002', funeral_home_id: FH, name: 'Witness Cremation',      total_price: 7000.00, sort_order: 2, pkg_type: 'alacarte' },
-  { id: 'pk000003', funeral_home_id: FH, name: 'Service of Remembrance', total_price: 7475.00, sort_order: 3, pkg_type: 'alacarte' },
-  { id: 'pk000004', funeral_home_id: FH, name: 'Graveside Service',      total_price: 6155.00, sort_order: 4, pkg_type: 'alacarte' },
-  { id: 'pk000005', funeral_home_id: FH, name: 'Urn Committal Option',   total_price: 4150.00, sort_order: 5, pkg_type: 'alacarte' },
-  { id: 'pk000006', funeral_home_id: FH, name: 'No Service Option',      total_price: 3630.00, sort_order: 6, pkg_type: 'alacarte' },
-  { id: 'pk000007', funeral_home_id: FH, name: 'Forwarding of Remains',  total_price: 5120.00, sort_order: 7, pkg_type: 'alacarte' },
-  { id: 'pk000008', funeral_home_id: FH, name: 'Receiving of Remains',   total_price: 3950.00, sort_order: 8, pkg_type: 'alacarte' },
-  { id: 'pk000009', funeral_home_id: FH, name: 'Tea Room Gathering',     total_price: 7240.00, sort_order: 9, pkg_type: 'alacarte' },
+  { id: 'pk000001', funeral_home_id: FH, name: 'Full Service',           total_price: 7650.00, sort_order: 1, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000002', funeral_home_id: FH, name: 'Witness Cremation',      total_price: 7000.00, sort_order: 2, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000003', funeral_home_id: FH, name: 'Service of Remembrance', total_price: 7475.00, sort_order: 3, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000004', funeral_home_id: FH, name: 'Graveside Service',      total_price: 6155.00, sort_order: 4, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000005', funeral_home_id: FH, name: 'Urn Committal Option',   total_price: 4150.00, sort_order: 5, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000006', funeral_home_id: FH, name: 'No Service Option',      total_price: 3630.00, sort_order: 6, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000007', funeral_home_id: FH, name: 'Forwarding of Remains',  total_price: 5120.00, sort_order: 7, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000008', funeral_home_id: FH, name: 'Receiving of Remains',   total_price: 3950.00, sort_order: 8, pkg_type: 'alacarte', package_discount: 0 },
+  { id: 'pk000009', funeral_home_id: FH, name: 'Tea Room Gathering',     total_price: 7240.00, sort_order: 9, pkg_type: 'alacarte', package_discount: 0 },
 ]
 
 // [package_id, service_item_id] pairs

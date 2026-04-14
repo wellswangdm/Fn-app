@@ -2,9 +2,41 @@ export default function CustomerForm({ values, onChange, onNotes }) {
   function set(key, val) { onChange({ [key]: val }) }
 
   return (
-    <div className="card p-4">
-      <h2 className="text-sm font-semibold text-stone-700 mb-3">Quote Details</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="card p-4 space-y-3">
+      {/* Advisor row — compact */}
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="label">Advisor Name</label>
+          <input
+            className="input text-sm"
+            placeholder="Name"
+            value={values.advisorName}
+            onChange={e => set('advisorName', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Advisor Email</label>
+          <input
+            type="email"
+            className="input text-sm"
+            placeholder="advisor@example.com"
+            value={values.advisorEmail}
+            onChange={e => set('advisorEmail', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Advisor Phone</label>
+          <input
+            type="tel"
+            className="input text-sm"
+            placeholder="604-000-0000"
+            value={values.advisorPhone}
+            onChange={e => set('advisorPhone', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="border-t border-stone-100 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="label">Deceased Name</label>
           <input
@@ -43,31 +75,11 @@ export default function CustomerForm({ values, onChange, onNotes }) {
             onChange={e => set('customerPhone', e.target.value)}
           />
         </div>
-        <div>
-          <label className="label">Advisor Name</label>
-          <input
-            className="input"
-            placeholder="Advisor name"
-            value={values.advisorName}
-            onChange={e => set('advisorName', e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label">Advisor Email</label>
-          <input
-            type="email"
-            className="input"
-            placeholder="advisor@example.com"
-            value={values.advisorEmail}
-            onChange={e => set('advisorEmail', e.target.value)}
-          />
-        </div>
         <div className="sm:col-span-2">
           <label className="label">Notes</label>
           <textarea
             className="input resize-none"
             rows={2}
-            placeholder="Internal notes…"
             value={values.notes}
             onChange={e => onNotes(e.target.value)}
           />

@@ -16,7 +16,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
     setLoading(true)
     supabase
       .from('packages')
-      .select('id, name, description, total_price, sort_order, pkg_type')
+      .select('id, name, description, total_price, sort_order, pkg_type, package_discount')
       .eq('funeral_home_id', funeralHomeId)
       .order('sort_order')
       .then(({ data }) => { setPackages(data || []); setLoading(false) })
@@ -46,7 +46,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 
   async function selectPackage(pkg) {
     if (!itemsMap[pkg.id]) await loadItems(pkg.id)
-    onSelect(pkg.id, itemsMap[pkg.id] || [])
+    onSelect(pkg.id, itemsMap[pkg.id] || [], pkg.package_discount || 0)
     setExpanded(pkg.id)
   }
 

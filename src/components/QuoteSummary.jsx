@@ -9,7 +9,8 @@ function fmt(n) {
 
 export default function QuoteSummary({
   items,
-  subtotal, discountType, discountValue, discountAmount,
+  subtotal, packageDiscount, pkgDiscAmount, userDiscAmount,
+  discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
   status,
   onRemove, onChangeQty, onDiscount, onToggleTax, onPrint,
@@ -70,44 +71,45 @@ export default function QuoteSummary({
 
         <TotalRow label="Subtotal" value={fmt(subtotal)} />
 
-        {/* Discount */}
+        {/* Package discount (auto, read-only) */}
+        {pkgDiscAmount > 0 && (
+          <TotalRow
+            label="Package Discount"
+            value={`−${fmt(pkgDiscAmount)}`}
+            className="text-emerald-600"
+          />
+        )}
+
+        {/* User % discount */}
         {!showDiscount ? (
           <button
             onClick={() => setShowDiscount(true)}
             className="text-primary-600 hover:text-primary-800 text-xs font-medium"
           >
-            + Add discount
+            + Add discount (%)
           </button>
         ) : (
           <div className="bg-stone-50 rounded-lg p-2.5 space-y-2 border border-stone-100">
             <div className="flex items-center gap-1.5">
-              <select
-                className="input text-xs py-1 w-24 bg-white"
-                value={localDiscType}
-                onChange={e => setLocalDiscType(e.target.value)}
-              >
-                <option value="percentage">%</option>
-                <option value="flat">$ flat</option>
-              </select>
               <input
-                type="number" min="0"
-                step={localDiscType === 'percentage' ? '0.1' : '1'}
+                type="number" min="0" max="100" step="0.1"
                 className="input text-xs py-1 flex-1 bg-white"
                 placeholder="0"
                 value={localDiscValue}
                 onChange={e => setLocalDiscValue(e.target.value)}
               />
+              <span className="text-xs text-stone-500 shrink-0">%</span>
               <button
-                onClick={() => onDiscount(localDiscType, Number(localDiscValue) || 0)}
+                onClick={() => onDiscount('percentage', Number(localDiscValue) || 0)}
                 className="btn-primary text-xs py-1 px-2.5"
               >
                 Apply
               </button>
             </div>
-            {discountAmount > 0 && (
+            {userDiscAmount > 0 && (
               <TotalRow
-                label={`Discount (${discountType === 'percentage' ? `${discountValue}%` : fmt(discountValue)})`}
-                value={`−${fmt(discountAmount)}`}
+                label={`Discount (${discountValue}%)`}
+                value={`−${fmt(userDiscAmount)}`}
                 className="text-red-500"
               />
             )}

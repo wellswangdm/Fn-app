@@ -16,27 +16,42 @@ function generateQuoteNumber() {
   return `Q-${date}-${rand}`
 }
 
-// ─── Totals ───────────────────────────────────────────────────────────────────
+// ─── Auto-add items (added whenever any package is selected) ──────────────────
 
-function calcTotals(items, discountType, discountValue) {
+const AUTO_ADD = [
+  { serviceItemId: 'si000110', name: 'Consumer Protection BC Fee', price: 48.00 },
+  { serviceItemId: 'si000112', name: 'Death Certificate (each)',   price: 27.00 },
+]
+
+// ─── Totals ───────────────────────────────────────────────────────────────────
+// Discount order: package flat $ first, then user % on the remainder.
+
+function calcTotals(items, packageDiscount, discountType, discountValue) {
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
-  let discountAmount = 0
+  // 1. Package flat discount
+  const pkgDiscAmount = Math.min(Number(packageDiscount) || 0, subtotal)
+  const afterPkg      = subtotal - pkgDiscAmount
+
+  // 2. User discount (applied to post-package amount)
+  let userDiscAmount = 0
   if (Number(discountValue) > 0) {
-    discountAmount = discountType === 'percentage'
-      ? subtotal * (Number(discountValue) / 100)
-      : Math.min(Number(discountValue), subtotal)
+    userDiscAmount = discountType === 'percentage'
+      ? afterPkg * (Number(discountValue) / 100)
+      : Math.min(Number(discountValue), afterPkg)
   }
 
-  const factor    = subtotal > 0 ? (subtotal - discountAmount) / subtotal : 1
-  const gstBase   = items.filter(i => i.gst !== false).reduce((s, i) => s + i.price * i.quantity, 0)
-  const pstBase   = items.filter(i => i.pst === true).reduce((s, i) => s + i.price * i.quantity, 0)
-  const gstAmount = gstBase * factor * GST_RATE
-  const pstAmount = pstBase * factor * PST_RATE
-  const taxAmount = gstAmount + pstAmount
-  const total     = subtotal - discountAmount + taxAmount
+  const discountAmount = pkgDiscAmount + userDiscAmount
+  const afterAll       = subtotal - discountAmount
+  const factor         = subtotal > 0 ? afterAll / subtotal : 1
+  const gstBase        = items.filter(i => i.gst !== false).reduce((s, i) => s + i.price * i.quantity, 0)
+  const pstBase        = items.filter(i => i.pst === true).reduce((s, i) => s + i.price * i.quantity, 0)
+  const gstAmount      = gstBase * factor * GST_RATE
+  const pstAmount      = pstBase * factor * PST_RATE
+  const taxAmount      = gstAmount + pstAmount
+  const total          = afterAll + taxAmount
 
-  return { subtotal, discountAmount, gstAmount, pstAmount, taxAmount, total }
+  return { subtotal, pkgDiscAmount, userDiscAmount, discountAmount, gstAmount, pstAmount, taxAmount, total }
 }
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
@@ -52,51 +67,59 @@ function reducer(state, action) {
       return { ...state, ...action.payload, loaded: true }
 
     case 'SET_HOME':
-      return { ...state, funeralHomeId: action.id, taxRate: action.taxRate, packageId: null, items: [] }
+      return { ...state, funeralHomeId: action.id, taxRate: action.taxRate, packageId: null, packageDiscount: 0, items: [] }
 
     case 'SET_PACKAGE': {
-      const keep  = state.items.filter(i => !i.isFromPackage)
+      const pkgDisc = action.packageDiscount || 0
+      const keep    = state.items.filter(i => !i.isFromPackage)
+      // Auto-add items if not already present in keep
+      const autoToAdd = AUTO_ADD
+        .filter(ai => !keep.some(k => k.serviceItemId === ai.serviceItemId))
+        .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }))
       const items = [
         ...action.items.map(i => freshItem({ ...i, isFromPackage: true })),
         ...keep,
+        ...autoToAdd,
       ]
-      return { ...state, packageId: action.id, items, ...calcTotals(items, state.discountType, state.discountValue) }
+      return { ...state, packageId: action.id, packageDiscount: pkgDisc, items,
+               ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
     }
 
     case 'CLEAR_PACKAGE': {
       const items = state.items.filter(i => !i.isFromPackage)
-      return { ...state, packageId: null, items, ...calcTotals(items, state.discountType, state.discountValue) }
+      return { ...state, packageId: null, packageDiscount: 0, items,
+               ...calcTotals(items, 0, state.discountType, state.discountValue) }
     }
 
     case 'ADD_ITEM': {
       const existing = action.item.isCustom
-        ? null  // custom items always create a new line
+        ? null
         : state.items.find(i => !i.isCustom && i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
         : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false })]
-      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
     case 'REMOVE_ITEM': {
       const items = state.items.filter(i => i.id !== action.id)
-      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
     case 'CHANGE_QTY': {
       const items = action.qty < 1
         ? state.items.filter(i => i.id !== action.id)
         : state.items.map(i => i.id === action.id ? { ...i, quantity: action.qty } : i)
-      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
     case 'TOGGLE_TAX': {
       const items = state.items.map(i => i.id === action.id ? { ...i, ...action.taxes } : i)
-      return { ...state, items, ...calcTotals(items, state.discountType, state.discountValue) }
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
     case 'SET_DISCOUNT': {
-      const totals = calcTotals(state.items, action.discountType, action.discountValue)
+      const totals = calcTotals(state.items, state.packageDiscount, action.discountType, action.discountValue)
       return { ...state, discountType: action.discountType, discountValue: action.discountValue, ...totals }
     }
 
@@ -109,28 +132,32 @@ function reducer(state, action) {
 }
 
 const INIT = {
-  loaded:         false,
-  funeralHomeId:  null,
-  packageId:      null,
-  quoteNumber:    '',
-  customerName:   '',
-  customerEmail:  '',
-  customerPhone:  '',
-  deceasedName:   '',
-  advisorName:    '',
-  advisorEmail:   '',
-  items:          [],
-  discountType:   'percentage',
-  discountValue:  0,
-  discountAmount: 0,
-  taxRate:        0.05,
-  gstAmount:      0,
-  pstAmount:      0,
-  taxAmount:      0,
-  subtotal:       0,
-  total:          0,
-  status:         'draft',
-  notes:          '',
+  loaded:          false,
+  funeralHomeId:   null,
+  packageId:       null,
+  quoteNumber:     '',
+  customerName:    '',
+  customerEmail:   '',
+  customerPhone:   '',
+  deceasedName:    '',
+  advisorName:     '',
+  advisorEmail:    '',
+  advisorPhone:    '',
+  items:           [],
+  packageDiscount: 0,
+  pkgDiscAmount:   0,
+  userDiscAmount:  0,
+  discountType:    'percentage',
+  discountValue:   0,
+  discountAmount:  0,
+  taxRate:         0.05,
+  gstAmount:       0,
+  pstAmount:       0,
+  taxAmount:       0,
+  subtotal:        0,
+  total:           0,
+  status:          'draft',
+  notes:           'Prices are subject to change without further notice.',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -185,6 +212,8 @@ export default function QuoteEditor({ quoteId, onDone }) {
           deceasedName:   q.deceased_name  || '',
           advisorName:    q.advisor_name   || '',
           advisorEmail:   q.advisor_email  || '',
+          advisorPhone:   q.advisor_phone  || '',
+          packageDiscount: Number(q.package_discount) || 0,
           discountType:   q.discount_type  || 'percentage',
           discountValue:  Number(q.discount_value),
           taxRate:        Number(q.tax_rate),
@@ -209,8 +238,10 @@ export default function QuoteEditor({ quoteId, onDone }) {
         customer_email:  state.customerEmail,
         customer_phone:  state.customerPhone,
         deceased_name:   state.deceasedName,
-        advisor_name:    state.advisorName,
-        advisor_email:   state.advisorEmail,
+        advisor_name:     state.advisorName,
+        advisor_email:    state.advisorEmail,
+        advisor_phone:    state.advisorPhone,
+        package_discount: state.packageDiscount,
         subtotal:        state.subtotal,
         discount_type:   state.discountType,
         discount_value:  state.discountValue,
@@ -336,6 +367,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
               customerPhone: state.customerPhone,
               advisorName:   state.advisorName,
               advisorEmail:  state.advisorEmail,
+              advisorPhone:  state.advisorPhone,
               notes:         state.notes,
             }}
             onChange={payload => dispatch({ type: 'SET_CUSTOMER', payload })}
@@ -367,7 +399,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
                   <PackageSelector
                     funeralHomeId={state.funeralHomeId}
                     selectedId={state.packageId}
-                    onSelect={(id, items) => dispatch({ type: 'SET_PACKAGE', id, items })}
+                    onSelect={(id, items, pkgDisc) => dispatch({ type: 'SET_PACKAGE', id, items, packageDiscount: pkgDisc })}
                     onClear={() => dispatch({ type: 'CLEAR_PACKAGE' })}
                   />
                 )}
@@ -386,6 +418,9 @@ export default function QuoteEditor({ quoteId, onDone }) {
           <QuoteSummary
             items={state.items}
             subtotal={state.subtotal}
+            packageDiscount={state.packageDiscount}
+            pkgDiscAmount={state.pkgDiscAmount}
+            userDiscAmount={state.userDiscAmount}
             discountType={state.discountType}
             discountValue={state.discountValue}
             discountAmount={state.discountAmount}

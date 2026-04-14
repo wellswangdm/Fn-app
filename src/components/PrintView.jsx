@@ -7,8 +7,9 @@ function fmt(n) {
 
 export default function PrintView({ home, state, onClose }) {
   const {
-    quoteNumber, advisorName, advisorEmail,
-    items, subtotal, discountType, discountValue, discountAmount,
+    quoteNumber, advisorName, advisorEmail, advisorPhone,
+    items, subtotal, discountType, discountValue,
+    pkgDiscAmount, userDiscAmount, discountAmount,
     gstAmount, pstAmount, notes,
   } = state
 
@@ -62,11 +63,12 @@ export default function PrintView({ home, state, onClose }) {
                 {quoteNumber || 'Draft'}
               </p>
               <p className="text-primary-300 text-xs mt-1">{today}</p>
-              {advisorName && (
-                <p className="text-primary-200 text-xs mt-2 font-medium">{advisorName}</p>
-              )}
-              {advisorEmail && (
-                <p className="text-primary-300 text-xs">{advisorEmail}</p>
+              {(advisorName || advisorEmail || advisorPhone) && (
+                <div className="mt-2 text-xs leading-snug">
+                  {advisorName  && <p className="text-primary-200 font-medium">{advisorName}</p>}
+                  {advisorEmail && <p className="text-primary-300">{advisorEmail}</p>}
+                  {advisorPhone && <p className="text-primary-300">{advisorPhone}</p>}
+                </div>
               )}
             </div>
           </div>
@@ -125,12 +127,11 @@ export default function PrintView({ home, state, onClose }) {
               <div className="w-64">
                 <div className="space-y-1.5 pb-3">
                   <TotalRow label="Subtotal" value={fmt(subtotal)} />
-                  {discountAmount > 0 && (
-                    <TotalRow
-                      label={`Discount (${discountType === 'percentage' ? `${discountValue}%` : fmt(discountValue)})`}
-                      value={`−${fmt(discountAmount)}`}
-                      className="text-red-500"
-                    />
+                  {pkgDiscAmount > 0 && (
+                    <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
+                  )}
+                  {userDiscAmount > 0 && (
+                    <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
                   )}
                   <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
                   {pstAmount > 0 && (
@@ -145,19 +146,14 @@ export default function PrintView({ home, state, onClose }) {
               </div>
             </div>
 
-            {/* Notes */}
-            {notes && (
-              <div className="mt-8 pt-6 border-t border-stone-100">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 mb-1.5">Notes</p>
-                <p className="text-stone-600 text-sm whitespace-pre-wrap leading-relaxed">{notes}</p>
-              </div>
-            )}
           </div>
 
-          {/* Footer band */}
-          <div className="bg-stone-50 border-t border-stone-100 px-10 py-4 text-center">
-            <p className="text-[10px] text-stone-400">All prices in CAD. Taxes are additional as indicated.</p>
-          </div>
+          {/* Footer band — shows notes */}
+          {notes && (
+            <div className="bg-stone-50 border-t border-stone-100 px-8 print:px-6 py-3 print:py-2 text-center">
+              <p className="text-[10px] text-stone-500 whitespace-pre-wrap">{notes}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
