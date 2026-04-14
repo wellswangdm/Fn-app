@@ -55,16 +55,10 @@ export default function PrintView({ home, state, onClose }) {
               )}
             </div>
 
-            <div className="text-right">
-              <p className="text-primary-300 text-[10px] font-semibold uppercase tracking-widest mb-0.5">
-                Quotation
-              </p>
-              <p className="text-white text-lg font-bold leading-tight">
-                {quoteNumber || 'Draft'}
-              </p>
-              <p className="text-primary-300 text-xs mt-1">{today}</p>
+            <div className="text-right text-xs leading-snug">
+              <p className="text-primary-300">{today}</p>
               {(advisorName || advisorEmail || advisorPhone) && (
-                <div className="mt-2 text-xs leading-snug">
+                <div className="mt-1.5">
                   {advisorName  && <p className="text-primary-200 font-medium">{advisorName}</p>}
                   {advisorEmail && <p className="text-primary-300">{advisorEmail}</p>}
                   {advisorPhone && <p className="text-primary-300">{advisorPhone}</p>}

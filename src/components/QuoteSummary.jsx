@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -13,11 +13,11 @@ export default function QuoteSummary({
   discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
   status,
-  onRemove, onChangeQty, onDiscount, onToggleTax, onPrint,
+  onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder, onPrint,
 }) {
   const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
-  const [localDiscType,  setLocalDiscType]  = useState(discountType || 'percentage')
   const [localDiscValue, setLocalDiscValue] = useState(discountValue || '')
+  const [dragId,         setDragId]         = useState(null)
 
   const packageItems = items.filter(i => i.isFromPackage)
   const extraItems   = items.filter(i => !i.isFromPackage)
@@ -27,6 +27,11 @@ export default function QuoteSummary({
     accepted:  'bg-green-50 text-green-600 border-green-200',
     draft:     'bg-amber-50 text-amber-600 border-amber-200',
   }[status] || 'bg-stone-100 text-stone-500'
+
+  function handleDrop(toId) {
+    if (dragId && dragId !== toId) onReorder(dragId, toId)
+    setDragId(null)
+  }
 
   return (
     <div className="card sticky top-[3.75rem]">
@@ -51,7 +56,14 @@ export default function QuoteSummary({
           <div className="mb-2">
             <p className="section-title px-1 mb-1.5">Package</p>
             {packageItems.map(item => (
-              <ItemRow key={item.id} item={item} onRemove={onRemove} onChangeQty={onChangeQty} onToggleTax={onToggleTax} />
+              <ItemRow
+                key={item.id} item={item}
+                onRemove={onRemove} onChangeQty={onChangeQty}
+                onToggleTax={onToggleTax} onEdit={onEdit}
+                isDragging={dragId === item.id}
+                onDragStart={() => setDragId(item.id)}
+                onDrop={() => handleDrop(item.id)}
+              />
             ))}
           </div>
         )}
@@ -60,7 +72,14 @@ export default function QuoteSummary({
           <div>
             {packageItems.length > 0 && <p className="section-title px-1 mb-1.5 mt-3">Additional</p>}
             {extraItems.map(item => (
-              <ItemRow key={item.id} item={item} onRemove={onRemove} onChangeQty={onChangeQty} onToggleTax={onToggleTax} />
+              <ItemRow
+                key={item.id} item={item}
+                onRemove={onRemove} onChangeQty={onChangeQty}
+                onToggleTax={onToggleTax} onEdit={onEdit}
+                isDragging={dragId === item.id}
+                onDragStart={() => setDragId(item.id)}
+                onDrop={() => handleDrop(item.id)}
+              />
             ))}
           </div>
         )}
@@ -73,11 +92,7 @@ export default function QuoteSummary({
 
         {/* Package discount (auto, read-only) */}
         {pkgDiscAmount > 0 && (
-          <TotalRow
-            label="Package Discount"
-            value={`−${fmt(pkgDiscAmount)}`}
-            className="text-emerald-600"
-          />
+          <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
         )}
 
         {/* User % discount */}
@@ -132,8 +147,6 @@ export default function QuoteSummary({
           <span className="text-base font-bold text-primary-700">{fmt(total)}</span>
         </div>
 
-        <p className="text-[10px] text-stone-400 pt-0.5">All prices in CAD.</p>
-
         {items.length > 0 && (
           <button
             onClick={onPrint}
@@ -147,67 +160,126 @@ export default function QuoteSummary({
   )
 }
 
-function ItemRow({ item, onRemove, onChangeQty, onToggleTax }) {
+function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging, onDragStart, onDrop }) {
   const gstOn = item.gst !== false
   const pstOn = item.pst === true
 
+  const [editName,  setEditName]  = useState(false)
+  const [editPrice, setEditPrice] = useState(false)
+  const [localName,  setLocalName]  = useState(item.name)
+  const [localPrice, setLocalPrice] = useState(item.price)
+  const nameRef  = useRef(null)
+  const priceRef = useRef(null)
+
+  useEffect(() => { setLocalName(item.name) },  [item.name])
+  useEffect(() => { setLocalPrice(item.price) }, [item.price])
+
+  function commitName() {
+    setEditName(false)
+    const n = localName.trim()
+    if (n && n !== item.name) onEdit(item.id, { name: n })
+    else setLocalName(item.name)
+  }
+
+  function commitPrice() {
+    setEditPrice(false)
+    const p = parseFloat(localPrice)
+    if (!isNaN(p) && p >= 0 && p !== item.price) onEdit(item.id, { price: p })
+    else setLocalPrice(item.price)
+  }
+
+  useEffect(() => { if (editName  && nameRef.current)  nameRef.current.select()  }, [editName])
+  useEffect(() => { if (editPrice && priceRef.current) priceRef.current.select() }, [editPrice])
+
   return (
-    <div className="group rounded-lg px-2 py-1.5 hover:bg-stone-50 transition-colors">
-      {/* Name + price */}
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-medium text-stone-700 leading-snug flex-1 min-w-0 truncate">
-          {item.name}
-        </p>
-        <span className="text-xs font-semibold text-stone-700 shrink-0">
-          {fmt(item.price * item.quantity)}
-        </span>
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={e => e.preventDefault()}
+      onDrop={onDrop}
+      onDragEnd={() => {}}
+      className={`group rounded-lg px-1 py-1.5 hover:bg-stone-50 transition-colors cursor-grab active:cursor-grabbing
+                  ${isDragging ? 'opacity-40 bg-stone-100' : ''}`}
+    >
+      {/* Name + price row */}
+      <div className="flex items-start gap-1">
+        {/* Drag handle */}
+        <span className="text-stone-300 group-hover:text-stone-400 text-xs mt-0.5 select-none shrink-0 px-0.5">⠿</span>
+
+        <div className="flex-1 min-w-0">
+          {/* Editable name */}
+          {editName ? (
+            <input
+              ref={nameRef}
+              className="input text-xs py-0.5 px-1.5 w-full font-medium"
+              value={localName}
+              onChange={e => setLocalName(e.target.value)}
+              onBlur={commitName}
+              onKeyDown={e => { if (e.key === 'Enter') commitName(); if (e.key === 'Escape') { setLocalName(item.name); setEditName(false) } }}
+            />
+          ) : (
+            <p
+              onClick={() => setEditName(true)}
+              className="text-xs font-medium text-stone-700 leading-snug truncate cursor-text
+                         hover:bg-stone-100 rounded px-1 -mx-1 py-0.5"
+              title="Click to edit"
+            >
+              {item.name}
+            </p>
+          )}
+        </div>
+
+        {/* Editable price */}
+        {editPrice ? (
+          <div className="flex items-center gap-0.5 shrink-0">
+            <span className="text-xs text-stone-400">$</span>
+            <input
+              ref={priceRef}
+              type="number" min="0" step="0.01"
+              className="input text-xs py-0.5 px-1.5 w-20 text-right font-semibold"
+              value={localPrice}
+              onChange={e => setLocalPrice(e.target.value)}
+              onBlur={commitPrice}
+              onKeyDown={e => { if (e.key === 'Enter') commitPrice(); if (e.key === 'Escape') { setLocalPrice(item.price); setEditPrice(false) } }}
+            />
+          </div>
+        ) : (
+          <span
+            onClick={() => setEditPrice(true)}
+            className="text-xs font-semibold text-stone-700 shrink-0 cursor-text
+                       hover:bg-stone-100 rounded px-1 py-0.5"
+            title="Click to edit price"
+          >
+            {fmt(item.price * item.quantity)}
+          </span>
+        )}
       </div>
 
       {/* Controls row */}
-      <div className="flex items-center gap-1.5 mt-1">
-        {/* Tax toggles */}
-        <TaxBadge
-          label="GST"
-          active={gstOn}
-          activeClass="bg-primary-700 text-white border-primary-700"
-          onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn })}
-        />
-        <TaxBadge
-          label="PST"
-          active={pstOn}
-          activeClass="bg-stone-600 text-white border-stone-600"
-          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn })}
-        />
-        <TaxBadge
-          label="Exempt"
-          active={!gstOn && !pstOn}
-          activeClass="bg-stone-400 text-white border-stone-400"
-          onClick={() => onToggleTax(item.id, { gst: false, pst: false })}
-        />
+      <div className="flex items-center gap-1.5 mt-1 pl-5">
+        <TaxBadge label="GST" active={gstOn}  activeClass="bg-primary-700 text-white border-primary-700"
+          onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn })} />
+        <TaxBadge label="PST" active={pstOn}  activeClass="bg-stone-600 text-white border-stone-600"
+          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn })} />
+        <TaxBadge label="Exempt" active={!gstOn && !pstOn} activeClass="bg-stone-400 text-white border-stone-400"
+          onClick={() => onToggleTax(item.id, { gst: false, pst: false })} />
 
         <span className="flex-1" />
 
         {/* Qty */}
         <div className="flex items-center gap-0.5">
-          <button
-            onClick={() => onChangeQty(item.id, item.quantity - 1)}
+          <button onClick={() => onChangeQty(item.id, item.quantity - 1)}
             className="w-5 h-5 rounded flex items-center justify-center text-stone-400
-                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs"
-          >−</button>
+                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs">−</button>
           <span className="text-xs text-stone-600 w-4 text-center">{item.quantity}</span>
-          <button
-            onClick={() => onChangeQty(item.id, item.quantity + 1)}
+          <button onClick={() => onChangeQty(item.id, item.quantity + 1)}
             className="w-5 h-5 rounded flex items-center justify-center text-stone-400
-                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs"
-          >+</button>
+                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs">+</button>
         </div>
 
-        {/* Remove */}
-        <button
-          onClick={() => onRemove(item.id)}
+        <button onClick={() => onRemove(item.id)}
           className="text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-sm leading-none"
-          title="Remove"
-        >×</button>
+          title="Remove">×</button>
       </div>
     </div>
   )
@@ -218,9 +290,7 @@ function TaxBadge({ label, active, activeClass, onClick }) {
     <button
       onClick={onClick}
       className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border transition-colors ${
-        active
-          ? activeClass
-          : 'text-stone-400 border-stone-200 hover:border-stone-300 hover:text-stone-500'
+        active ? activeClass : 'text-stone-400 border-stone-200 hover:border-stone-300 hover:text-stone-500'
       }`}
     >
       {label}

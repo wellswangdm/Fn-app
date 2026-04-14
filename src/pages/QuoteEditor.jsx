@@ -123,6 +123,21 @@ function reducer(state, action) {
       return { ...state, discountType: action.discountType, discountValue: action.discountValue, ...totals }
     }
 
+    case 'EDIT_ITEM': {
+      const items = state.items.map(i => i.id === action.id ? { ...i, ...action.changes } : i)
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+    }
+
+    case 'REORDER_ITEMS': {
+      const items = [...state.items]
+      const from  = items.findIndex(i => i.id === action.fromId)
+      const to    = items.findIndex(i => i.id === action.toId)
+      if (from === -1 || to === -1 || from === to) return state
+      const [moved] = items.splice(from, 1)
+      items.splice(to, 0, moved)
+      return { ...state, items }
+    }
+
     case 'SET_CUSTOMER': return { ...state, ...action.payload }
     case 'SET_STATUS':   return { ...state, status: action.status }
     case 'SET_NOTES':    return { ...state, notes: action.notes }
@@ -432,6 +447,8 @@ export default function QuoteEditor({ quoteId, onDone }) {
             onChangeQty={(id, qty) => dispatch({ type: 'CHANGE_QTY', id, qty })}
             onDiscount={(t, v) => dispatch({ type: 'SET_DISCOUNT', discountType: t, discountValue: v })}
             onToggleTax={(id, taxes) => dispatch({ type: 'TOGGLE_TAX', id, taxes })}
+            onEdit={(id, changes) => dispatch({ type: 'EDIT_ITEM', id, changes })}
+            onReorder={(fromId, toId) => dispatch({ type: 'REORDER_ITEMS', fromId, toId })}
             onPrint={() => setShowPrint(true)}
           />
         </div>
