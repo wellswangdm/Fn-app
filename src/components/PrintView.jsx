@@ -123,6 +123,9 @@ export default function PrintView({ home, state, onClose }) {
                     <div className="flex flex-col justify-start p-3 w-2/5">
                       <p className="text-xs font-semibold text-stone-800">{selectedCasket.name}</p>
                       <p className="text-xs font-semibold text-primary-700 mt-1">{fmt(selectedCasket.price)}</p>
+                      {selectedCasket.description && (
+                        <p className="text-[10px] text-stone-400 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
+                      )}
                     </div>
                   </div>
                 )}
