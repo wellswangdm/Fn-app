@@ -107,22 +107,21 @@ export default function PrintView({ home, state, onClose }) {
             </table>
 
             {/* Bottom row: casket info (left) + totals (right) */}
-            <div className="flex items-start gap-6">
+            <div className="flex items-stretch gap-6">
 
-              {/* Casket description */}
+              {/* Casket card — landscape rectangle, same height as totals */}
               <div className="flex-1">
                 {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden">
+                  <div className="border border-stone-200 rounded-xl overflow-hidden h-full flex">
                     {selectedCasket.imageUrl && (
                       <img
                         src={selectedCasket.imageUrl}
                         alt={selectedCasket.name}
-                        className="w-full object-cover"
+                        className="w-1/2 object-contain bg-stone-50 shrink-0"
                       />
                     )}
-                    <div className="p-3 print:p-2.5">
+                    <div className="p-3 print:p-2.5 flex flex-col justify-center">
                       <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
-                      <p className="text-sm font-semibold text-primary-700 mt-0.5">{fmt(selectedCasket.price)}</p>
                       {selectedCasket.description && (
                         <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
                       )}
