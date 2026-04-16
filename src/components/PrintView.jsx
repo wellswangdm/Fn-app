@@ -107,24 +107,25 @@ export default function PrintView({ home, state, onClose }) {
             </table>
 
             {/* Bottom row: casket info (left) + totals (right) */}
-            <div className="flex items-start gap-6">
+            <div className="flex items-stretch gap-6">
 
-              {/* Casket card */}
+              {/* Casket card — landscape rectangle, same height as totals */}
               <div className="flex-1">
                 {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden">
-                    <div className="px-3 pt-2 pb-1">
-                      <p className="text-xs font-semibold text-stone-700">{selectedCasket.name}</p>
-                    </div>
+                  <div className="border border-stone-200 rounded-xl overflow-hidden h-full flex">
                     {selectedCasket.imageUrl && (
-                      <div style={{height:'160px', backgroundColor:'#fafaf9', overflow:'hidden'}}>
-                        <img
-                          src={selectedCasket.imageUrl}
-                          alt={selectedCasket.name}
-                          style={{width:'100%', height:'100%', objectFit:'contain', display:'block'}}
-                        />
-                      </div>
+                      <img
+                        src={selectedCasket.imageUrl}
+                        alt={selectedCasket.name}
+                        className="w-1/2 object-contain bg-stone-50 shrink-0"
+                      />
                     )}
+                    <div className="p-3 print:p-2.5 flex flex-col justify-center">
+                      <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
+                      {selectedCasket.description && (
+                        <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
