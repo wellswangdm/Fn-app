@@ -106,83 +106,49 @@ export default function PrintView({ home, state, onClose }) {
               </tbody>
             </table>
 
-            {/* Bottom row: casket card (left) + totals (right) */}
-            {selectedCasket && (
-              <div style={{display:'table', width:'100%', borderCollapse:'separate', borderSpacing:'24px 0',
-                           marginLeft:'-24px', marginRight:'-24px'}}>
-                <div style={{display:'table-row'}}>
+            {/* Bottom row: casket info (left) + totals (right) */}
+            <div className="flex items-start gap-6">
 
-                  {/* Casket card — table-cell gives it the same height as the totals cell */}
-                  <div style={{display:'table-cell', verticalAlign:'top'}}>
-                    <div style={{height:'100%', border:'1px solid #e7e5e4', borderRadius:'12px',
-                                 overflow:'hidden', display:'flex', flexDirection:'column'}}>
-                      <p style={{fontSize:'10px', fontWeight:600, color:'#57534e',
-                                 padding:'8px 12px 4px', flexShrink:0, margin:0}}>
-                        {selectedCasket.name}
-                      </p>
-                      {selectedCasket.imageUrl && (
-                        <div style={{flex:1, minHeight:0, overflow:'hidden', backgroundColor:'#fafaf9'}}>
-                          <img
-                            src={selectedCasket.imageUrl}
-                            alt={selectedCasket.name}
-                            style={{width:'100%', height:'100%', objectFit:'contain', display:'block'}}
-                          />
-                        </div>
-                      )}
+              {/* Casket card */}
+              <div className="flex-1">
+                {selectedCasket && (
+                  <div className="border border-stone-200 rounded-xl overflow-hidden">
+                    <div className="px-3 pt-2.5 pb-1">
+                      <p className="text-xs font-semibold text-stone-700">{selectedCasket.name}</p>
                     </div>
+                    {selectedCasket.imageUrl && (
+                      <img
+                        src={selectedCasket.imageUrl}
+                        alt={selectedCasket.name}
+                        className="w-full object-cover"
+                      />
+                    )}
                   </div>
-
-                  {/* Totals */}
-                  <div style={{display:'table-cell', width:'256px', verticalAlign:'top'}}>
-                    <div className="space-y-1.5 pb-3">
-                      <TotalRow label="Subtotal" value={fmt(subtotal)} />
-                      {pkgDiscAmount > 0 && (
-                        <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
-                      )}
-                      {userDiscAmount > 0 && (
-                        <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
-                      )}
-                      <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
-                      {pstAmount > 0 && (
-                        <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
-                      )}
-                    </div>
-                    <div className="flex justify-between items-baseline border-t-2 border-primary-800 pt-3">
-                      <span className="text-sm font-bold text-primary-900">Total</span>
-                      <span className="text-lg font-bold text-primary-800">{fmt(total)}</span>
-                    </div>
-                    <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
-                  </div>
-
-                </div>
+                )}
               </div>
-            )}
 
-            {/* Totals only — shown when no casket selected */}
-            {!selectedCasket && (
-              <div className="flex justify-end">
-                <div className="w-64">
-                  <div className="space-y-1.5 pb-3">
-                    <TotalRow label="Subtotal" value={fmt(subtotal)} />
-                    {pkgDiscAmount > 0 && (
-                      <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
-                    )}
-                    {userDiscAmount > 0 && (
-                      <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
-                    )}
-                    <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
-                    {pstAmount > 0 && (
-                      <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
-                    )}
-                  </div>
-                  <div className="flex justify-between items-baseline border-t-2 border-primary-800 pt-3">
-                    <span className="text-sm font-bold text-primary-900">Total</span>
-                    <span className="text-lg font-bold text-primary-800">{fmt(total)}</span>
-                  </div>
-                  <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
+              {/* Totals */}
+              <div className="w-64 shrink-0">
+                <div className="space-y-1.5 pb-3">
+                  <TotalRow label="Subtotal" value={fmt(subtotal)} />
+                  {pkgDiscAmount > 0 && (
+                    <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
+                  )}
+                  {userDiscAmount > 0 && (
+                    <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
+                  )}
+                  <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
+                  {pstAmount > 0 && (
+                    <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
+                  )}
                 </div>
+                <div className="flex justify-between items-baseline border-t-2 border-primary-800 pt-3">
+                  <span className="text-sm font-bold text-primary-900">Total</span>
+                  <span className="text-lg font-bold text-primary-800">{fmt(total)}</span>
+                </div>
+                <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
               </div>
-            )}
+            </div>
 
           </div>
 
