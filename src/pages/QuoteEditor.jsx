@@ -112,7 +112,11 @@ function reducer(state, action) {
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
         : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false }, 'sec-extra')]
-      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+      const selectedCasket = action.item.isCasket
+        ? { id: action.item.serviceItemId, name: action.item.name, price: action.item.price,
+            description: action.item.description || null, imageUrl: action.item.imageUrl || null }
+        : state.selectedCasket
+      return { ...state, items, selectedCasket, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
     case 'REMOVE_ITEM': {
