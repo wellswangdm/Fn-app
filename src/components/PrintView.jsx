@@ -117,7 +117,7 @@ export default function PrintView({ home, state, onClose }) {
                       <img
                         src={selectedCasket.imageUrl}
                         alt={selectedCasket.name}
-                        className="w-1/2 object-contain bg-stone-50 shrink-0"
+                        className="w-3/4 object-contain bg-stone-50 shrink-0"
                       />
                     )}
                     <div className="p-3 print:p-2.5 flex flex-col justify-center">
