@@ -109,23 +109,23 @@ export default function PrintView({ home, state, onClose }) {
             {/* Bottom row: casket info (left) + totals (right) */}
             <div className="flex items-stretch gap-6">
 
-              {/* Casket card — landscape rectangle, same height as totals */}
-              <div className="flex-1">
+              {/* Casket card — name+price top line, image fills rest */}
+              <div className="flex-1 flex justify-center">
                 {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden h-full flex">
-                    {selectedCasket.imageUrl && (
-                      <img
-                        src={selectedCasket.imageUrl}
-                        alt={selectedCasket.name}
-                        className="w-3/4 object-contain bg-stone-50 shrink-0"
-                      />
-                    )}
-                    <div className="p-3 print:p-2.5 flex flex-col justify-center">
-                      <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
-                      {selectedCasket.description && (
-                        <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
-                      )}
+                  <div className="border border-stone-200 rounded-xl overflow-hidden w-full flex flex-col">
+                    <div className="flex items-center justify-between px-3 py-1.5 shrink-0">
+                      <p className="text-xs font-semibold text-stone-800">{selectedCasket.name}</p>
+                      <p className="text-xs font-semibold text-primary-700">{fmt(selectedCasket.price)}</p>
                     </div>
+                    {selectedCasket.imageUrl && (
+                      <div className="flex-1 min-h-0 bg-stone-50 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={selectedCasket.imageUrl}
+                          alt={selectedCasket.name}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
