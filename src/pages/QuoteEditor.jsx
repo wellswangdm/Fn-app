@@ -5,6 +5,7 @@ import ItemBrowser from '../components/ItemBrowser.jsx'
 import QuoteSummary from '../components/QuoteSummary.jsx'
 import CustomerForm from '../components/CustomerForm.jsx'
 import PrintView from '../components/PrintView.jsx'
+import CasketPicker from '../components/CasketPicker.jsx'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -23,17 +24,19 @@ const AUTO_ADD = [
   { serviceItemId: 'si000112', name: 'Death Certificate (each)',   price: 27.00 },
 ]
 
+const INIT_SECTIONS = [
+  { id: 'sec-main',  name: 'Services'         },
+  { id: 'sec-extra', name: 'Additional Items' },
+]
+
 // ─── Totals ───────────────────────────────────────────────────────────────────
-// Discount order: package flat $ first, then user % on the remainder.
 
 function calcTotals(items, packageDiscount, discountType, discountValue) {
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
-  // 1. Package flat discount
   const pkgDiscAmount = Math.min(Number(packageDiscount) || 0, subtotal)
   const afterPkg      = subtotal - pkgDiscAmount
 
-  // 2. User discount (applied to post-package amount)
   let userDiscAmount = 0
   if (Number(discountValue) > 0) {
     userDiscAmount = discountType === 'percentage'
@@ -56,8 +59,8 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
-function freshItem(item) {
-  return { ...item, id: crypto.randomUUID(), gst: true, pst: false }
+function freshItem(item, sectionId = 'sec-extra') {
+  return { ...item, id: crypto.randomUUID(), gst: true, pst: false, sectionId }
 }
 
 function reducer(state, action) {
@@ -67,27 +70,37 @@ function reducer(state, action) {
       return { ...state, ...action.payload, loaded: true }
 
     case 'SET_HOME':
-      return { ...state, funeralHomeId: action.id, taxRate: action.taxRate, packageId: null, packageDiscount: 0, items: [] }
+      return { ...state, funeralHomeId: action.id, taxRate: action.taxRate,
+               packageId: null, packageDiscount: 0, items: [],
+               sections: INIT_SECTIONS, selectedCasket: null }
 
     case 'SET_PACKAGE': {
       const pkgDisc = action.packageDiscount || 0
+      const pkgName = action.packageName || 'Package Services'
       const keep    = state.items.filter(i => !i.isFromPackage)
-      // Auto-add items if not already present in keep
       const autoToAdd = AUTO_ADD
         .filter(ai => !keep.some(k => k.serviceItemId === ai.serviceItemId))
-        .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }))
+        .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }, 'sec-extra'))
+      const pkgItems = action.items.map(i => freshItem({ ...i, isFromPackage: true }, 'sec-main'))
       const items = [
-        ...action.items.map(i => freshItem({ ...i, isFromPackage: true })),
-        ...keep,
+        ...pkgItems,
+        ...keep.map(i => ({ ...i, sectionId: i.sectionId || 'sec-extra' })),
         ...autoToAdd,
       ]
-      return { ...state, packageId: action.id, packageDiscount: pkgDisc, items,
-               ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
+      const sections = state.sections.map(s => s.id === 'sec-main' ? { ...s, name: pkgName } : s)
+      // Keep existing casket selection if same package, else reset
+      const defaultCasket = action.items.find(i => i.isCasket) || null
+      const selectedCasket = state.packageId === action.id ? state.selectedCasket
+        : (defaultCasket ? { id: defaultCasket.serviceItemId, name: defaultCasket.name,
+                             price: defaultCasket.price, description: defaultCasket.description } : null)
+      return { ...state, packageId: action.id, packageDiscount: pkgDisc, items, sections,
+               selectedCasket, ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
     }
 
     case 'CLEAR_PACKAGE': {
-      const items = state.items.filter(i => !i.isFromPackage)
-      return { ...state, packageId: null, packageDiscount: 0, items,
+      const items    = state.items.filter(i => !i.isFromPackage)
+      const sections = state.sections.map(s => s.id === 'sec-main' ? { ...s, name: 'Services' } : s)
+      return { ...state, packageId: null, packageDiscount: 0, items, sections, selectedCasket: null,
                ...calcTotals(items, 0, state.discountType, state.discountValue) }
     }
 
@@ -97,7 +110,7 @@ function reducer(state, action) {
         : state.items.find(i => !i.isCustom && i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false })]
+        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false }, 'sec-extra')]
       return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
@@ -138,6 +151,39 @@ function reducer(state, action) {
       return { ...state, items }
     }
 
+    case 'RENAME_SECTION': {
+      const sections = state.sections.map(s => s.id === action.id ? { ...s, name: action.name } : s)
+      return { ...state, sections }
+    }
+
+    case 'ADD_SECTION': {
+      const id = `sec-${crypto.randomUUID().slice(0, 8)}`
+      return { ...state, sections: [...state.sections, { id, name: 'New Section' }] }
+    }
+
+    case 'REMOVE_SECTION': {
+      if (action.id === 'sec-main' || action.id === 'sec-extra') return state
+      const items    = state.items.map(i => i.sectionId === action.id ? { ...i, sectionId: 'sec-extra' } : i)
+      const sections = state.sections.filter(s => s.id !== action.id)
+      return { ...state, sections, items }
+    }
+
+    case 'MOVE_ITEM_SECTION': {
+      const items = state.items.map(i => i.id === action.itemId ? { ...i, sectionId: action.sectionId } : i)
+      return { ...state, items }
+    }
+
+    case 'PICK_CASKET': {
+      const { casket } = action
+      const items = state.items.map(i =>
+        (i.isCasket && i.isFromPackage)
+          ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price, description: casket.description }
+          : i
+      )
+      return { ...state, items, selectedCasket: casket,
+               ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+    }
+
     case 'SET_CUSTOMER': return { ...state, ...action.payload }
     case 'SET_STATUS':   return { ...state, status: action.status }
     case 'SET_NOTES':    return { ...state, notes: action.notes }
@@ -159,6 +205,8 @@ const INIT = {
   advisorEmail:    '',
   advisorPhone:    '',
   items:           [],
+  sections:        INIT_SECTIONS,
+  selectedCasket:  null,
   packageDiscount: 0,
   pkgDiscAmount:   0,
   userDiscAmount:  0,
@@ -179,11 +227,12 @@ const INIT = {
 
 export default function QuoteEditor({ quoteId, onDone }) {
   const [state, dispatch] = useReducer(reducer, INIT)
-  const [homes,     setHomes]     = useState([])
-  const [saving,    setSaving]    = useState(false)
-  const [saveErr,   setSaveErr]   = useState(null)
-  const [tab,       setTab]       = useState('packages')
-  const [showPrint, setShowPrint] = useState(false)
+  const [homes,          setHomes]          = useState([])
+  const [saving,         setSaving]         = useState(false)
+  const [saveErr,        setSaveErr]        = useState(null)
+  const [tab,            setTab]            = useState('packages')
+  const [showPrint,      setShowPrint]      = useState(false)
+  const [casketPickerOpen, setCasketPickerOpen] = useState(false)
 
   useEffect(() => {
     supabase
@@ -214,6 +263,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
         notes:         i.notes,
         gst:           i.is_gst  ?? true,
         pst:           i.is_pst  ?? false,
+        sectionId:     i.section_id || (i.is_from_package ? 'sec-main' : 'sec-extra'),
       }))
       dispatch({
         type: 'LOAD',
@@ -241,6 +291,12 @@ export default function QuoteEditor({ quoteId, onDone }) {
     }
     load()
   }, [quoteId])
+
+  function handlePackageSelect(id, items, pkgDisc, pkgName) {
+    dispatch({ type: 'SET_PACKAGE', id, items, packageDiscount: pkgDisc, packageName: pkgName })
+    const hasCasket = items.some(i => i.isCasket)
+    if (hasCasket) setCasketPickerOpen(true)
+  }
 
   async function save(status) {
     setSaving(true); setSaveErr(null)
@@ -286,6 +342,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
             is_from_package: i.isFromPackage,
             is_gst:          i.gst !== false,
             is_pst:          i.pst === true,
+            section_id:      i.sectionId || null,
             notes:           i.notes || null,
           }))
         )
@@ -414,7 +471,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
                   <PackageSelector
                     funeralHomeId={state.funeralHomeId}
                     selectedId={state.packageId}
-                    onSelect={(id, items, pkgDisc) => dispatch({ type: 'SET_PACKAGE', id, items, packageDiscount: pkgDisc })}
+                    onSelect={handlePackageSelect}
                     onClear={() => dispatch({ type: 'CLEAR_PACKAGE' })}
                   />
                 )}
@@ -432,6 +489,8 @@ export default function QuoteEditor({ quoteId, onDone }) {
         <div className="lg:col-span-1">
           <QuoteSummary
             items={state.items}
+            sections={state.sections}
+            selectedCasket={state.selectedCasket}
             subtotal={state.subtotal}
             packageDiscount={state.packageDiscount}
             pkgDiscAmount={state.pkgDiscAmount}
@@ -449,6 +508,11 @@ export default function QuoteEditor({ quoteId, onDone }) {
             onToggleTax={(id, taxes) => dispatch({ type: 'TOGGLE_TAX', id, taxes })}
             onEdit={(id, changes) => dispatch({ type: 'EDIT_ITEM', id, changes })}
             onReorder={(fromId, toId) => dispatch({ type: 'REORDER_ITEMS', fromId, toId })}
+            onRenameSection={(id, name) => dispatch({ type: 'RENAME_SECTION', id, name })}
+            onAddSection={() => dispatch({ type: 'ADD_SECTION' })}
+            onRemoveSection={id => dispatch({ type: 'REMOVE_SECTION', id })}
+            onMoveItem={(itemId, sectionId) => dispatch({ type: 'MOVE_ITEM_SECTION', itemId, sectionId })}
+            onChangeCasket={() => setCasketPickerOpen(true)}
             onPrint={() => setShowPrint(true)}
           />
         </div>
@@ -456,6 +520,14 @@ export default function QuoteEditor({ quoteId, onDone }) {
 
       {showPrint && (
         <PrintView home={currentHome} state={state} onClose={() => setShowPrint(false)} />
+      )}
+
+      {casketPickerOpen && (
+        <CasketPicker
+          currentCasketId={state.selectedCasket?.id}
+          onSelect={casket => dispatch({ type: 'PICK_CASKET', casket })}
+          onClose={() => setCasketPickerOpen(false)}
+        />
       )}
     </div>
   )

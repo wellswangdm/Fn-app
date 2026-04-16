@@ -8,19 +8,18 @@ function fmt(n) {
 }
 
 export default function QuoteSummary({
-  items,
+  items, sections, selectedCasket,
   subtotal, packageDiscount, pkgDiscAmount, userDiscAmount,
   discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
   status,
-  onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder, onPrint,
+  onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder,
+  onRenameSection, onAddSection, onRemoveSection, onMoveItem,
+  onChangeCasket, onPrint,
 }) {
   const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
   const [localDiscValue, setLocalDiscValue] = useState(discountValue || '')
   const [dragId,         setDragId]         = useState(null)
-
-  const packageItems = items.filter(i => i.isFromPackage)
-  const extraItems   = items.filter(i => !i.isFromPackage)
 
   const statusStyle = {
     finalized: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -32,6 +31,13 @@ export default function QuoteSummary({
     if (dragId && dragId !== toId) onReorder(dragId, toId)
     setDragId(null)
   }
+
+  const activeSections = (sections || []).filter(sec =>
+    items.some(i => (i.sectionId || 'sec-extra') === sec.id)
+  )
+  const unsectioned = items.filter(i =>
+    !(sections || []).some(s => s.id === (i.sectionId || 'sec-extra'))
+  )
 
   return (
     <div className="card sticky top-[3.75rem]">
@@ -45,21 +51,44 @@ export default function QuoteSummary({
       </div>
 
       {/* Items */}
-      <div className="px-3 py-3 max-h-[420px] overflow-y-auto space-y-0.5">
+      <div className="px-3 py-3 max-h-[500px] overflow-y-auto space-y-0.5">
         {items.length === 0 && (
           <p className="text-xs text-stone-400 text-center py-8 leading-relaxed">
             No items added yet.<br />Select a package or add individual items.
           </p>
         )}
 
-        {packageItems.length > 0 && (
-          <div className="mb-2">
-            <p className="section-title px-1 mb-1.5">Package</p>
-            {packageItems.map(item => (
+        {activeSections.map(sec => {
+          const secItems = items.filter(i => (i.sectionId || 'sec-extra') === sec.id)
+          return (
+            <SectionBlock
+              key={sec.id}
+              section={sec}
+              items={secItems}
+              sections={sections}
+              dragId={dragId}
+              onDragStart={id => setDragId(id)}
+              onDrop={handleDrop}
+              onRemove={onRemove}
+              onChangeQty={onChangeQty}
+              onToggleTax={onToggleTax}
+              onEdit={onEdit}
+              onRenameSection={onRenameSection}
+              onRemoveSection={onRemoveSection}
+              onMoveItem={onMoveItem}
+            />
+          )
+        })}
+
+        {unsectioned.length > 0 && (
+          <div className="space-y-0.5">
+            {unsectioned.map(item => (
               <ItemRow
                 key={item.id} item={item}
+                sections={sections}
                 onRemove={onRemove} onChangeQty={onChangeQty}
                 onToggleTax={onToggleTax} onEdit={onEdit}
+                onMoveItem={onMoveItem}
                 isDragging={dragId === item.id}
                 onDragStart={() => setDragId(item.id)}
                 onDrop={() => handleDrop(item.id)}
@@ -68,21 +97,36 @@ export default function QuoteSummary({
           </div>
         )}
 
-        {extraItems.length > 0 && (
-          <div>
-            {packageItems.length > 0 && <p className="section-title px-1 mb-1.5 mt-3">Additional</p>}
-            {extraItems.map(item => (
-              <ItemRow
-                key={item.id} item={item}
-                onRemove={onRemove} onChangeQty={onChangeQty}
-                onToggleTax={onToggleTax} onEdit={onEdit}
-                isDragging={dragId === item.id}
-                onDragStart={() => setDragId(item.id)}
-                onDrop={() => handleDrop(item.id)}
-              />
-            ))}
+        {/* Casket info */}
+        {selectedCasket && (
+          <div className="mt-3 bg-stone-50 rounded-lg p-2.5 border border-stone-100">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-600 mb-0.5">Selected Casket</p>
+                <p className="text-xs font-semibold text-stone-700">{selectedCasket.name}</p>
+                {selectedCasket.description && (
+                  <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">{selectedCasket.description}</p>
+                )}
+              </div>
+              <button
+                onClick={onChangeCasket}
+                className="text-[10px] text-primary-600 hover:text-primary-800 font-medium shrink-0"
+              >
+                Change
+              </button>
+            </div>
           </div>
         )}
+
+        {/* Add section button */}
+        <button
+          onClick={onAddSection}
+          className="w-full mt-2 text-[10px] font-medium text-stone-400 hover:text-stone-600
+                     border border-dashed border-stone-200 hover:border-stone-300 rounded-lg py-1.5
+                     transition-colors"
+        >
+          + Add Section
+        </button>
       </div>
 
       {/* Totals */}
@@ -90,12 +134,10 @@ export default function QuoteSummary({
 
         <TotalRow label="Subtotal" value={fmt(subtotal)} />
 
-        {/* Package discount (auto, read-only) */}
         {pkgDiscAmount > 0 && (
           <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
         )}
 
-        {/* User % discount */}
         {!showDiscount ? (
           <button
             onClick={() => setShowDiscount(true)}
@@ -160,7 +202,82 @@ export default function QuoteSummary({
   )
 }
 
-function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging, onDragStart, onDrop }) {
+// ─── Section Block ────────────────────────────────────────────────────────────
+
+function SectionBlock({ section, items, sections, dragId, onDragStart, onDrop,
+                        onRemove, onChangeQty, onToggleTax, onEdit,
+                        onRenameSection, onRemoveSection, onMoveItem }) {
+  const [editingName, setEditingName] = useState(false)
+  const [localName,   setLocalName]   = useState(section.name)
+  const nameRef = useRef(null)
+
+  useEffect(() => { setLocalName(section.name) }, [section.name])
+  useEffect(() => { if (editingName && nameRef.current) nameRef.current.select() }, [editingName])
+
+  function commitName() {
+    setEditingName(false)
+    const n = localName.trim()
+    if (n && n !== section.name) onRenameSection(section.id, n)
+    else setLocalName(section.name)
+  }
+
+  const isProtected = section.id === 'sec-main' || section.id === 'sec-extra'
+
+  return (
+    <div className="mb-3">
+      <div className="flex items-center gap-1 px-1 mb-1 group/sec">
+        {editingName ? (
+          <input
+            ref={nameRef}
+            className="input text-[10px] py-0.5 px-1.5 flex-1 font-semibold uppercase tracking-wider"
+            value={localName}
+            onChange={e => setLocalName(e.target.value)}
+            onBlur={commitName}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitName()
+              if (e.key === 'Escape') { setLocalName(section.name); setEditingName(false) }
+            }}
+          />
+        ) : (
+          <p
+            onClick={() => setEditingName(true)}
+            className="section-title flex-1 cursor-text hover:bg-stone-100 rounded px-1 -mx-1 py-0.5"
+            title="Click to rename"
+          >
+            {section.name}
+          </p>
+        )}
+        {!isProtected && (
+          <button
+            onClick={() => onRemoveSection(section.id)}
+            className="text-stone-300 hover:text-red-400 opacity-0 group-hover/sec:opacity-100
+                       transition-all text-sm leading-none shrink-0"
+            title="Remove section"
+          >
+            ×
+          </button>
+        )}
+      </div>
+      {items.map(item => (
+        <ItemRow
+          key={item.id} item={item}
+          sections={sections}
+          onRemove={onRemove} onChangeQty={onChangeQty}
+          onToggleTax={onToggleTax} onEdit={onEdit}
+          onMoveItem={onMoveItem}
+          isDragging={dragId === item.id}
+          onDragStart={() => onDragStart(item.id)}
+          onDrop={() => onDrop(item.id)}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ─── Item Row ─────────────────────────────────────────────────────────────────
+
+function ItemRow({ item, sections, onRemove, onChangeQty, onToggleTax, onEdit, onMoveItem,
+                   isDragging, onDragStart, onDrop }) {
   const gstOn = item.gst !== false
   const pstOn = item.pst === true
 
@@ -168,6 +285,7 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging,
   const [editPrice, setEditPrice] = useState(false)
   const [localName,  setLocalName]  = useState(item.name)
   const [localPrice, setLocalPrice] = useState(item.price)
+  const [showMove,   setShowMove]   = useState(false)
   const nameRef  = useRef(null)
   const priceRef = useRef(null)
 
@@ -191,6 +309,8 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging,
   useEffect(() => { if (editName  && nameRef.current)  nameRef.current.select()  }, [editName])
   useEffect(() => { if (editPrice && priceRef.current) priceRef.current.select() }, [editPrice])
 
+  const otherSections = (sections || []).filter(s => s.id !== (item.sectionId || 'sec-extra'))
+
   return (
     <div
       draggable
@@ -203,11 +323,9 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging,
     >
       {/* Name + price row */}
       <div className="flex items-start gap-1">
-        {/* Drag handle */}
         <span className="text-stone-300 group-hover:text-stone-400 text-xs mt-0.5 select-none shrink-0 px-0.5">⠿</span>
 
         <div className="flex-1 min-w-0">
-          {/* Editable name */}
           {editName ? (
             <input
               ref={nameRef}
@@ -229,7 +347,6 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging,
           )}
         </div>
 
-        {/* Editable price */}
         {editPrice ? (
           <div className="flex items-center gap-0.5 shrink-0">
             <span className="text-xs text-stone-400">$</span>
@@ -265,6 +382,33 @@ function ItemRow({ item, onRemove, onChangeQty, onToggleTax, onEdit, isDragging,
           onClick={() => onToggleTax(item.id, { gst: false, pst: false })} />
 
         <span className="flex-1" />
+
+        {/* Move to section */}
+        {otherSections.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setShowMove(v => !v)}
+              className="text-[10px] text-stone-400 hover:text-stone-600 opacity-0 group-hover:opacity-100 transition-all px-1"
+              title="Move to section"
+            >
+              ⇄
+            </button>
+            {showMove && (
+              <div className="absolute right-0 bottom-full mb-1 bg-white border border-stone-200 rounded-lg shadow-lg z-10 min-w-[130px] py-1">
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-stone-400">Move to</p>
+                {otherSections.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => { onMoveItem(item.id, s.id); setShowMove(false) }}
+                    className="block w-full text-left px-3 py-1.5 text-xs text-stone-600 hover:bg-stone-50"
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Qty */}
         <div className="flex items-center gap-0.5">

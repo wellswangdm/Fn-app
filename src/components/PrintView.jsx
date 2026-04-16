@@ -8,18 +8,25 @@ function fmt(n) {
 export default function PrintView({ home, state, onClose }) {
   const {
     quoteNumber, advisorName, advisorEmail, advisorPhone,
-    items, subtotal, discountType, discountValue,
+    items, sections, selectedCasket,
+    subtotal, discountType, discountValue,
     pkgDiscAmount, userDiscAmount, discountAmount,
     gstAmount, pstAmount, notes,
   } = state
 
   const total = subtotal - discountAmount + gstAmount + pstAmount
 
-  const pkgItems   = items.filter(i => i.isFromPackage)
-  const extraItems = items.filter(i => !i.isFromPackage)
-  const today      = new Date().toLocaleDateString('en-CA', {
+  const today = new Date().toLocaleDateString('en-CA', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
+
+  // Group items by section for printing
+  const activeSections = (sections || []).filter(sec =>
+    items.some(i => (i.sectionId || 'sec-extra') === sec.id)
+  )
+  const unsectioned = items.filter(i =>
+    !(sections || []).some(s => s.id === (i.sectionId || 'sec-extra'))
+  )
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
@@ -89,36 +96,37 @@ export default function PrintView({ home, state, onClose }) {
                 </tr>
               </thead>
               <tbody>
-                {pkgItems.length > 0 && (
-                  <>
-                    <tr>
-                      <td colSpan={4} className="pt-4 pb-1.5">
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">
-                          Package Services
-                        </span>
-                      </td>
-                    </tr>
-                    {pkgItems.map((item, i) => <ItemRow key={i} item={item} />)}
-                  </>
-                )}
-                {extraItems.length > 0 && (
-                  <>
-                    <tr>
-                      <td colSpan={4} className="pt-4 pb-1.5">
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">
-                          Additional Items
-                        </span>
-                      </td>
-                    </tr>
-                    {extraItems.map((item, i) => <ItemRow key={i} item={item} />)}
-                  </>
+                {activeSections.map(sec => {
+                  const secItems = items.filter(i => (i.sectionId || 'sec-extra') === sec.id)
+                  return <SectionRows key={sec.id} title={sec.name} items={secItems} />
+                })}
+                {unsectioned.length > 0 && (
+                  <SectionRows title="Items" items={unsectioned} />
                 )}
               </tbody>
             </table>
 
-            {/* Totals */}
-            <div className="flex justify-end">
-              <div className="w-64">
+            {/* Bottom row: casket info (left) + totals (right) */}
+            <div className="flex items-start gap-6">
+
+              {/* Casket description */}
+              <div className="flex-1">
+                {selectedCasket && (
+                  <div className="border border-stone-200 rounded-xl p-4 print:p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-700 mb-1">
+                      Selected Casket
+                    </p>
+                    <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
+                    <p className="text-sm font-semibold text-primary-700 mt-0.5">{fmt(selectedCasket.price)}</p>
+                    {selectedCasket.description && (
+                      <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Totals */}
+              <div className="w-64 shrink-0">
                 <div className="space-y-1.5 pb-3">
                   <TotalRow label="Subtotal" value={fmt(subtotal)} />
                   {pkgDiscAmount > 0 && (
@@ -151,6 +159,22 @@ export default function PrintView({ home, state, onClose }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function SectionRows({ title, items }) {
+  if (!items.length) return null
+  return (
+    <>
+      <tr>
+        <td colSpan={4} className="pt-4 pb-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">
+            {title}
+          </span>
+        </td>
+      </tr>
+      {items.map((item, i) => <ItemRow key={i} item={item} />)}
+    </>
   )
 }
 
