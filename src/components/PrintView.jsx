@@ -109,22 +109,20 @@ export default function PrintView({ home, state, onClose }) {
             {/* Bottom row: casket info (left) + totals (right) */}
             <div className="flex items-stretch gap-6">
 
-              {/* Casket card — name+price top line, image fills rest */}
-              <div className="flex-1 flex justify-center">
+              {/* Casket card — name+price left, image right (3/4) */}
+              <div className="flex-1">
                 {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden w-full flex flex-col">
-                    <div className="flex items-center justify-between px-3 py-1.5 shrink-0">
+                  <div className="border border-stone-200 rounded-xl overflow-hidden h-full flex">
+                    <div className="flex flex-col justify-center p-3 shrink-0 w-1/4">
                       <p className="text-xs font-semibold text-stone-800">{selectedCasket.name}</p>
-                      <p className="text-xs font-semibold text-primary-700">{fmt(selectedCasket.price)}</p>
+                      <p className="text-xs font-semibold text-primary-700 mt-1">{fmt(selectedCasket.price)}</p>
                     </div>
                     {selectedCasket.imageUrl && (
-                      <div className="flex-1 min-h-0 bg-stone-50 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={selectedCasket.imageUrl}
-                          alt={selectedCasket.name}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+                      <img
+                        src={selectedCasket.imageUrl}
+                        alt={selectedCasket.name}
+                        className="w-3/4 object-contain bg-stone-50 shrink-0"
+                      />
                     )}
                   </div>
                 )}
