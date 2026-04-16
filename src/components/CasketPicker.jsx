@@ -31,7 +31,7 @@ export default function CasketPicker({ currentCasketId, onSelect, onClose }) {
   }, [])
 
   function confirm() {
-    if (selected) onSelect(selected)
+    if (selected) onSelect({ ...selected, imageUrl: selected.image_url || null })
     onClose()
   }
 
