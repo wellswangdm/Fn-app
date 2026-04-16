@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom'
+
 const GST_RATE = 0.05
 const PST_RATE = 0.07
 
@@ -28,7 +30,7 @@ export default function PrintView({ home, state, onClose }) {
     !(sections || []).some(s => s.id === (i.sectionId || 'sec-extra'))
   )
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
       {/* Toolbar — hidden when printing */}
       <div className="w-full max-w-3xl mx-4">
@@ -164,7 +166,8 @@ export default function PrintView({ home, state, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
