@@ -107,49 +107,82 @@ export default function PrintView({ home, state, onClose }) {
             </table>
 
             {/* Bottom row: casket card (left) + totals (right) */}
-            <div style={{display:'grid', gridTemplateColumns:'1fr 256px', gap:'24px', alignItems:'stretch'}}>
+            {selectedCasket && (
+              <div style={{display:'table', width:'100%', borderCollapse:'separate', borderSpacing:'24px 0',
+                           marginLeft:'-24px', marginRight:'-24px'}}>
+                <div style={{display:'table-row'}}>
 
-              {/* Casket card */}
-              {selectedCasket ? (
-                <div style={{border:'1px solid #e7e5e4', borderRadius:'12px', overflow:'hidden',
-                             display:'flex', flexDirection:'column'}}>
-                  <p style={{fontSize:'10px', fontWeight:600, color:'#57534e',
-                             padding:'8px 12px 4px', flexShrink:0}}>
-                    {selectedCasket.name}
-                  </p>
-                  {selectedCasket.imageUrl && (
-                    <img
-                      src={selectedCasket.imageUrl}
-                      alt={selectedCasket.name}
-                      style={{width:'100%', flexGrow:1, minHeight:0, objectFit:'contain',
-                              backgroundColor:'#fafaf9', display:'block'}}
-                    />
-                  )}
-                </div>
-              ) : <div />}
+                  {/* Casket card — table-cell gives it the same height as the totals cell */}
+                  <div style={{display:'table-cell', verticalAlign:'top'}}>
+                    <div style={{height:'100%', border:'1px solid #e7e5e4', borderRadius:'12px',
+                                 overflow:'hidden', display:'flex', flexDirection:'column'}}>
+                      <p style={{fontSize:'10px', fontWeight:600, color:'#57534e',
+                                 padding:'8px 12px 4px', flexShrink:0, margin:0}}>
+                        {selectedCasket.name}
+                      </p>
+                      {selectedCasket.imageUrl && (
+                        <div style={{flex:1, minHeight:0, overflow:'hidden', backgroundColor:'#fafaf9'}}>
+                          <img
+                            src={selectedCasket.imageUrl}
+                            alt={selectedCasket.name}
+                            style={{width:'100%', height:'100%', objectFit:'contain', display:'block'}}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Totals */}
-              <div>
-                <div className="space-y-1.5 pb-3">
-                  <TotalRow label="Subtotal" value={fmt(subtotal)} />
-                  {pkgDiscAmount > 0 && (
-                    <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
-                  )}
-                  {userDiscAmount > 0 && (
-                    <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
-                  )}
-                  <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
-                  {pstAmount > 0 && (
-                    <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
-                  )}
+                  {/* Totals */}
+                  <div style={{display:'table-cell', width:'256px', verticalAlign:'top'}}>
+                    <div className="space-y-1.5 pb-3">
+                      <TotalRow label="Subtotal" value={fmt(subtotal)} />
+                      {pkgDiscAmount > 0 && (
+                        <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
+                      )}
+                      {userDiscAmount > 0 && (
+                        <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
+                      )}
+                      <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
+                      {pstAmount > 0 && (
+                        <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
+                      )}
+                    </div>
+                    <div className="flex justify-between items-baseline border-t-2 border-primary-800 pt-3">
+                      <span className="text-sm font-bold text-primary-900">Total</span>
+                      <span className="text-lg font-bold text-primary-800">{fmt(total)}</span>
+                    </div>
+                    <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
+                  </div>
+
                 </div>
-                <div className="flex justify-between items-baseline border-t-2 border-primary-800 pt-3">
-                  <span className="text-sm font-bold text-primary-900">Total</span>
-                  <span className="text-lg font-bold text-primary-800">{fmt(total)}</span>
-                </div>
-                <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
               </div>
-            </div>
+            )}
+
+            {/* Totals only — shown when no casket selected */}
+            {!selectedCasket && (
+              <div className="flex justify-end">
+                <div className="w-64">
+                  <div className="space-y-1.5 pb-3">
+                    <TotalRow label="Subtotal" value={fmt(subtotal)} />
+                    {pkgDiscAmount > 0 && (
+                      <TotalRow label="Package Discount" value={`−${fmt(pkgDiscAmount)}`} className="text-emerald-600" />
+                    )}
+                    {userDiscAmount > 0 && (
+                      <TotalRow label={`Discount (${discountValue}%)`} value={`−${fmt(userDiscAmount)}`} className="text-red-500" />
+                    )}
+                    <TotalRow label={`GST (${(GST_RATE * 100).toFixed(0)}%)`} value={fmt(gstAmount)} />
+                    {pstAmount > 0 && (
+                      <TotalRow label={`PST (${(PST_RATE * 100).toFixed(0)}%)`} value={fmt(pstAmount)} />
+                    )}
+                  </div>
+                  <div className="flex justify-between items-baseline border-t-2 border-primary-800 pt-3">
+                    <span className="text-sm font-bold text-primary-900">Total</span>
+                    <span className="text-lg font-bold text-primary-800">{fmt(total)}</span>
+                  </div>
+                  <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
+                </div>
+              </div>
+            )}
 
           </div>
 
