@@ -117,11 +117,13 @@ export default function PrintView({ home, state, onClose }) {
                       {selectedCasket.name}
                     </p>
                     {selectedCasket.imageUrl && (
-                      <img
-                        src={selectedCasket.imageUrl}
-                        alt={selectedCasket.name}
-                        className="w-full flex-1 object-contain bg-stone-50 min-h-0"
-                      />
+                      <div className="flex-1 min-h-0 overflow-hidden">
+                        <img
+                          src={selectedCasket.imageUrl}
+                          alt={selectedCasket.name}
+                          className="w-full h-full object-contain bg-stone-50"
+                        />
+                      </div>
                     )}
                   </div>
                 )}
