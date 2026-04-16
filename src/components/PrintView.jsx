@@ -113,15 +113,17 @@ export default function PrintView({ home, state, onClose }) {
               <div className="flex-1">
                 {selectedCasket && (
                   <div className="border border-stone-200 rounded-xl overflow-hidden">
-                    <div className="px-3 pt-2.5 pb-1">
+                    <div className="px-3 pt-2 pb-1">
                       <p className="text-xs font-semibold text-stone-700">{selectedCasket.name}</p>
                     </div>
                     {selectedCasket.imageUrl && (
-                      <img
-                        src={selectedCasket.imageUrl}
-                        alt={selectedCasket.name}
-                        className="w-full object-cover"
-                      />
+                      <div style={{height:'160px', backgroundColor:'#fafaf9', overflow:'hidden'}}>
+                        <img
+                          src={selectedCasket.imageUrl}
+                          alt={selectedCasket.name}
+                          style={{width:'100%', height:'100%', objectFit:'contain', display:'block'}}
+                        />
+                      </div>
                     )}
                   </div>
                 )}
