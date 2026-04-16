@@ -112,19 +112,15 @@ export default function PrintView({ home, state, onClose }) {
               {/* Casket description */}
               <div className="flex-1">
                 {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden" style={{maxWidth: '260px'}}>
+                  <div className="border border-stone-200 rounded-xl overflow-hidden">
                     {selectedCasket.imageUrl && (
                       <img
                         src={selectedCasket.imageUrl}
                         alt={selectedCasket.name}
                         className="w-full object-cover"
-                        style={{maxHeight: '140px'}}
                       />
                     )}
                     <div className="p-3 print:p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-700 mb-1">
-                        Selected Casket
-                      </p>
                       <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
                       <p className="text-sm font-semibold text-primary-700 mt-0.5">{fmt(selectedCasket.price)}</p>
                       {selectedCasket.description && (
