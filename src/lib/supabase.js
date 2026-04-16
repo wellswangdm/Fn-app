@@ -142,20 +142,23 @@ const serviceItemsRaw = [
   { id: 'si000207', category_id: C.c2, name: 'Catered Reception III',           price: 2150.00 },
   { id: 'si000208', category_id: C.c2, name: 'Catered Reception II',            price: 1980.00 },
   { id: 'si000209', category_id: C.c2, name: 'Catered Reception I',             price: 1350.00 },
-  // Caskets
-  { id: 'si000210', category_id: C.c8, name: 'Casket',
-    description: 'Batesville Merlot, Victoriaville Dominion HC Wood Maple Crepe, Batesville Fireside, Batesville Eleanor Oak', price: 4099.00 },
-  { id: 'si000211', category_id: C.c8, name: 'Casket',
-    description: 'Batesville Misty Blue, Batesville Watson, Batesville Bailey, Victoriaville Hartvic', price: 3599.00 },
-  { id: 'si000212', category_id: C.c8, name: 'Casket',
-    description: 'Batesville Coleridge, Batesville Montgomery, Victoriaville Heavenly White, Victoriaville Winfield', price: 2999.00 },
-  // Containers
-  { id: 'si000216', category_id: C.c8, name: 'Ceremonial Container',
-    description: 'Batesville Brockton Oak Ceremonial', price: 1599.00 },
-  { id: 'si000217', category_id: C.c8, name: 'Rental Container',
-    description: 'Batesville Brockton Oak (1 Hour Rental)', price: 850.00 },
-  { id: 'si000218', category_id: C.c8, name: 'Container',
-    description: 'Vancouver Casket Cypress', price: 650.00 },
+  // Caskets (individual — c8)
+  { id: 'csk001', category_id: C.c8, name: 'Batesville Merlot',            is_casket: true, price: 4099.00, description: 'Premium hardwood in deep merlot finish with high-gloss lacquer and ivory velvet interior.' },
+  { id: 'csk002', category_id: C.c8, name: 'Victoriaville Dominion HC',    is_casket: true, price: 4099.00, description: 'Heritage solid hardwood in rich maple tone with hand-crafted crepe interior and classic moulding.' },
+  { id: 'csk003', category_id: C.c8, name: 'Batesville Fireside',          is_casket: true, price: 4099.00, description: 'Warm cherry hardwood with satin finish, brushed copper hardware, and rosé crepe interior.' },
+  { id: 'csk004', category_id: C.c8, name: 'Batesville Eleanor Oak',       is_casket: true, price: 4099.00, description: 'Classic oak hardwood with natural grain, satin-finish hardware, and champagne crepe interior.' },
+  { id: 'csk005', category_id: C.c8, name: 'Batesville Misty Blue',        is_casket: true, price: 3599.00, description: 'Brushed steel exterior in soft misty blue with matching blue velvet interior and silver hardware.' },
+  { id: 'csk006', category_id: C.c8, name: 'Batesville Watson',            is_casket: true, price: 3599.00, description: 'Select hardwood in warm chestnut stain with satin finish and ivory crepe interior.' },
+  { id: 'csk007', category_id: C.c8, name: 'Batesville Bailey',            is_casket: true, price: 3599.00, description: 'Light oak hardwood with silver-tone hardware and white crepe interior.' },
+  { id: 'csk008', category_id: C.c8, name: 'Victoriaville Hartvic',        is_casket: true, price: 3599.00, description: 'Solid hardwood in warm walnut finish with traditional detailing and beige velvet interior.' },
+  { id: 'csk009', category_id: C.c8, name: 'Batesville Coleridge',         is_casket: true, price: 2999.00, description: 'Hardwood with natural oak finish, classic styling, and powder-blue crepe interior.' },
+  { id: 'csk010', category_id: C.c8, name: 'Batesville Montgomery',        is_casket: true, price: 2999.00, description: 'Select hardwood with walnut-stained exterior, high-gloss finish, and rose-tan crepe interior.' },
+  { id: 'csk011', category_id: C.c8, name: 'Victoriaville Heavenly White', is_casket: true, price: 2999.00, description: 'Pure white hardwood finish with gold-tone accents and cream satin interior.' },
+  { id: 'csk012', category_id: C.c8, name: 'Victoriaville Winfield',       is_casket: true, price: 2999.00, description: 'Rich mahogany hardwood with brushed bronze hardware and ivory velvet interior.' },
+  // Containers (c8)
+  { id: 'cont001', category_id: C.c8, name: 'Ceremonial Container', price: 1599.00, description: 'Batesville Brockton Oak — oak veneer ceremonial container with satin finish.' },
+  { id: 'cont002', category_id: C.c8, name: 'Rental Container',     price:  850.00, description: 'Batesville Brockton Oak — rental oak ceremonial container (1 hour).' },
+  { id: 'cont003', category_id: C.c8, name: 'Container',            price:  650.00, description: 'Vancouver Casket Cypress — simple cypress wood alternative container.' },
   // Urns
   { id: 'si000213', category_id: C.c9, name: 'Memorial Urn Selection',
     description: 'LoveUrns HeartFelt Gold, Terrybear Eminence White Marble Urn, Granville Lucinda Blue Horizontal Urn, Granville Charlotte Horizontal Urn', price: 1295.00 },
@@ -234,26 +237,26 @@ const pkgLinks = [
   ['pk000009','si000022'],['pk000009','si000002'],['pk000009','si000088'],
   ['pk000009','si000012'],['pk000009','si000013'],['pk000009','si000010'],
   ['pk000009','si000040'],
-  // Heritage Funeral Service
+  // Heritage Funeral Service — default casket: Batesville Merlot (csk001)
   ['pk000010','si000001'],['pk000010','si000010'],['pk000010','si000011'],
   ['pk000010','si000013'],['pk000010','si000012'],['pk000010','si000040'],
   ['pk000010','si000041'],['pk000010','si000042'],['pk000010','si000059'],
   ['pk000010','si000058'],['pk000010','si000088'],['pk000010','si000202'],
-  ['pk000010','si000023'],['pk000010','si000200'],['pk000010','si000210'],
+  ['pk000010','si000023'],['pk000010','si000200'],['pk000010','csk001'],
   ['pk000010','si000207'],['pk000010','si000103'],
-  // Honour Funeral Service
+  // Honour Funeral Service — default casket: Batesville Misty Blue (csk005)
   ['pk000011','si000001'],['pk000011','si000010'],['pk000011','si000011'],
   ['pk000011','si000013'],['pk000011','si000012'],['pk000011','si000040'],
   ['pk000011','si000041'],['pk000011','si000042'],['pk000011','si000059'],
   ['pk000011','si000058'],['pk000011','si000088'],['pk000011','si000203'],
-  ['pk000011','si000023'],['pk000011','si000200'],['pk000011','si000211'],
+  ['pk000011','si000023'],['pk000011','si000200'],['pk000011','csk005'],
   ['pk000011','si000208'],['pk000011','si000102'],
-  // Tribute Funeral Service
+  // Tribute Funeral Service — default casket: Batesville Coleridge (csk009)
   ['pk000012','si000001'],['pk000012','si000010'],['pk000012','si000011'],
   ['pk000012','si000013'],['pk000012','si000012'],['pk000012','si000040'],
   ['pk000012','si000041'],['pk000012','si000059'],
   ['pk000012','si000058'],['pk000012','si000088'],['pk000012','si000204'],
-  ['pk000012','si000023'],['pk000012','si000200'],['pk000012','si000212'],
+  ['pk000012','si000023'],['pk000012','si000200'],['pk000012','csk009'],
   ['pk000012','si000209'],['pk000012','si000100'],
   // Heritage Cremation Service
   ['pk000013','si000001'],['pk000013','si000010'],['pk000013','si000011'],
@@ -261,20 +264,20 @@ const pkgLinks = [
   ['pk000013','si000042'],['pk000013','si000059'],
   ['pk000013','si000058'],['pk000013','si000088'],['pk000013','si000205'],
   ['pk000013','si000076'],['pk000013','si000023'],['pk000013','si000201'],
-  ['pk000013','si000213'],['pk000013','si000216'],['pk000013','si000207'],
+  ['pk000013','si000213'],['pk000013','cont001'],['pk000013','si000207'],
   ['pk000013','si000103'],
   // Honour Cremation Service
   ['pk000014','si000002'],['pk000014','si000010'],
   ['pk000014','si000013'],['pk000014','si000012'],['pk000014','si000040'],
   ['pk000014','si000059'],['pk000014','si000058'],['pk000014','si000088'],
   ['pk000014','si000206'],['pk000014','si000076'],['pk000014','si000023'],
-  ['pk000014','si000201'],['pk000014','si000214'],['pk000014','si000217'],
+  ['pk000014','si000201'],['pk000014','si000214'],['pk000014','cont002'],
   ['pk000014','si000208'],['pk000014','si000102'],
   // Tribute Cremation Service
   ['pk000015','si000009'],['pk000015','si000010'],['pk000015','si000013'],
   ['pk000015','si000026'],['pk000015','si000012'],['pk000015','si000040'],
   ['pk000015','si000058'],['pk000015','si000076'],['pk000015','si000201'],
-  ['pk000015','si000215'],['pk000015','si000218'],
+  ['pk000015','si000215'],['pk000015','cont003'],
 ]
 
 const packageItems = pkgLinks.map(([pkg_id, si_id]) => {
@@ -283,7 +286,9 @@ const packageItems = pkgLinks.map(([pkg_id, si_id]) => {
     package_id:      pkg_id,
     service_item_id: si_id,
     quantity:        1,
-    service_items:   si ? { id: si.id, name: si.name, price: si.price || 0 } : null,
+    service_items:   si ? { id: si.id, name: si.name, price: si.price || 0,
+                            is_casket: si.is_casket || false,
+                            description: si.description || null } : null,
   }
 })
 
