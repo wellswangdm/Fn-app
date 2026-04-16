@@ -37,6 +37,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
         quantity:      r.quantity,
         isCasket:      r.service_items.is_casket || false,
         description:   r.service_items.description || null,
+        imageUrl:      r.service_items.image_url || null,
       })),
     }))
   }

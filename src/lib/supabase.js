@@ -152,7 +152,7 @@ const serviceItemsRaw = [
   { id: 'csk007', category_id: C.c8, name: 'Batesville Bailey',            is_casket: true, price: 3599.00, description: 'Light oak hardwood with silver-tone hardware and white crepe interior.' },
   { id: 'csk008', category_id: C.c8, name: 'Victoriaville Hartvic',        is_casket: true, price: 3599.00, description: 'Solid hardwood in warm walnut finish with traditional detailing and beige velvet interior.' },
   { id: 'csk009', category_id: C.c8, name: 'Batesville Coleridge',         is_casket: true, price: 2999.00, description: 'Hardwood with natural oak finish, classic styling, and powder-blue crepe interior.' },
-  { id: 'csk010', category_id: C.c8, name: 'Batesville Montgomery',        is_casket: true, price: 2999.00, description: 'Select hardwood with walnut-stained exterior, high-gloss finish, and rose-tan crepe interior.' },
+  { id: 'csk010', category_id: C.c8, name: 'Batesville Montgomery',        is_casket: true, price: 2999.00, description: 'Select hardwood with walnut-stained exterior, high-gloss finish, and rose-tan crepe interior.', image_url: '/caskets/montgomery.jpg' },
   { id: 'csk011', category_id: C.c8, name: 'Victoriaville Heavenly White', is_casket: true, price: 2999.00, description: 'Pure white hardwood finish with gold-tone accents and cream satin interior.' },
   { id: 'csk012', category_id: C.c8, name: 'Victoriaville Winfield',       is_casket: true, price: 2999.00, description: 'Rich mahogany hardwood with brushed bronze hardware and ivory velvet interior.' },
   // Containers (c8)
@@ -288,7 +288,8 @@ const packageItems = pkgLinks.map(([pkg_id, si_id]) => {
     quantity:        1,
     service_items:   si ? { id: si.id, name: si.name, price: si.price || 0,
                             is_casket: si.is_casket || false,
-                            description: si.description || null } : null,
+                            description: si.description || null,
+                            image_url: si.image_url || null } : null,
   }
 })
 

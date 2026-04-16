@@ -112,15 +112,25 @@ export default function PrintView({ home, state, onClose }) {
               {/* Casket description */}
               <div className="flex-1">
                 {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl p-4 print:p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-700 mb-1">
-                      Selected Casket
-                    </p>
-                    <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
-                    <p className="text-sm font-semibold text-primary-700 mt-0.5">{fmt(selectedCasket.price)}</p>
-                    {selectedCasket.description && (
-                      <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
+                  <div className="border border-stone-200 rounded-xl overflow-hidden" style={{maxWidth: '260px'}}>
+                    {selectedCasket.imageUrl && (
+                      <img
+                        src={selectedCasket.imageUrl}
+                        alt={selectedCasket.name}
+                        className="w-full object-cover"
+                        style={{maxHeight: '140px'}}
+                      />
                     )}
+                    <div className="p-3 print:p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-700 mb-1">
+                        Selected Casket
+                      </p>
+                      <p className="text-sm font-bold text-stone-800">{selectedCasket.name}</p>
+                      <p className="text-sm font-semibold text-primary-700 mt-0.5">{fmt(selectedCasket.price)}</p>
+                      {selectedCasket.description && (
+                        <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{selectedCasket.description}</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

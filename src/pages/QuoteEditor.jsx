@@ -92,7 +92,8 @@ function reducer(state, action) {
       const defaultCasket = action.items.find(i => i.isCasket) || null
       const selectedCasket = state.packageId === action.id ? state.selectedCasket
         : (defaultCasket ? { id: defaultCasket.serviceItemId, name: defaultCasket.name,
-                             price: defaultCasket.price, description: defaultCasket.description } : null)
+                             price: defaultCasket.price, description: defaultCasket.description,
+                             imageUrl: defaultCasket.imageUrl || null } : null)
       return { ...state, packageId: action.id, packageDiscount: pkgDisc, items, sections,
                selectedCasket, ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
     }

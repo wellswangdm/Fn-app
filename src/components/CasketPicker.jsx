@@ -19,7 +19,7 @@ export default function CasketPicker({ currentCasketId, onSelect, onClose }) {
   useEffect(() => {
     supabase
       .from('service_items')
-      .select('id, name, price, description')
+      .select('id, name, price, description, image_url')
       .eq('is_casket', true)
       .order('price', { ascending: false })
       .then(({ data }) => {
@@ -71,27 +71,41 @@ export default function CasketPicker({ currentCasketId, onSelect, onClose }) {
                             : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          {/* Thumbnail */}
+                          {c.image_url ? (
+                            <img
+                              src={c.image_url}
+                              alt={c.name}
+                              className="w-20 h-14 object-cover rounded-lg shrink-0 border border-stone-200"
+                            />
+                          ) : (
+                            <div className="w-20 h-14 rounded-lg shrink-0 border border-stone-200 bg-stone-100 flex items-center justify-center">
+                              <span className="text-stone-300 text-xl">⬜</span>
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              {selected?.id === c.id && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary-600 shrink-0" />
-                              )}
-                              <p className={`text-sm font-semibold ${selected?.id === c.id ? 'text-primary-800' : 'text-stone-800'}`}>
-                                {c.name}
-                              </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                {selected?.id === c.id && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary-600 shrink-0" />
+                                )}
+                                <p className={`text-sm font-semibold ${selected?.id === c.id ? 'text-primary-800' : 'text-stone-800'}`}>
+                                  {c.name}
+                                </p>
+                              </div>
+                              <span className={`text-sm font-bold shrink-0 ${
+                                selected?.id === c.id ? 'text-primary-700' : 'text-stone-600'
+                              }`}>
+                                {fmt(c.price)}
+                              </span>
                             </div>
                             {c.description && (
-                              <p className="text-xs text-stone-500 mt-0.5 leading-relaxed pl-3.5">
+                              <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
                                 {c.description}
                               </p>
                             )}
                           </div>
-                          <span className={`text-sm font-bold shrink-0 mt-0.5 ${
-                            selected?.id === c.id ? 'text-primary-700' : 'text-stone-600'
-                          }`}>
-                            {fmt(c.price)}
-                          </span>
                         </div>
                       </button>
                     ))}

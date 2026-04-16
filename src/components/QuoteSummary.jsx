@@ -100,20 +100,29 @@ export default function QuoteSummary({
         {/* Casket info */}
         {selectedCasket && (
           <div className="mt-3 bg-stone-50 rounded-lg p-2.5 border border-stone-100">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2.5">
+              {selectedCasket.imageUrl && (
+                <img
+                  src={selectedCasket.imageUrl}
+                  alt={selectedCasket.name}
+                  className="w-16 h-11 object-cover rounded-md shrink-0 border border-stone-200"
+                />
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-600 mb-0.5">Selected Casket</p>
-                <p className="text-xs font-semibold text-stone-700">{selectedCasket.name}</p>
+                <div className="flex items-start justify-between gap-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">Selected Casket</p>
+                  <button
+                    onClick={onChangeCasket}
+                    className="text-[10px] text-primary-600 hover:text-primary-800 font-medium shrink-0"
+                  >
+                    Change
+                  </button>
+                </div>
+                <p className="text-xs font-semibold text-stone-700 mt-0.5">{selectedCasket.name}</p>
                 {selectedCasket.description && (
                   <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">{selectedCasket.description}</p>
                 )}
               </div>
-              <button
-                onClick={onChangeCasket}
-                className="text-[10px] text-primary-600 hover:text-primary-800 font-medium shrink-0"
-              >
-                Change
-              </button>
             </div>
           </div>
         )}
