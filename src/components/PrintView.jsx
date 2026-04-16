@@ -1,4 +1,4 @@
-import { createPortal } from 'react-dom'
+import { useEffect } from 'react'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -30,8 +30,19 @@ export default function PrintView({ home, state, onClose }) {
     !(sections || []).some(s => s.id === (i.sectionId || 'sec-extra'))
   )
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
+  useEffect(() => {
+    function onBeforePrint() {
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+      const scrollEl = document.getElementById('print-modal')
+      if (scrollEl) scrollEl.scrollTop = 0
+    }
+    window.addEventListener('beforeprint', onBeforePrint)
+    return () => window.removeEventListener('beforeprint', onBeforePrint)
+  }, [])
+
+  return (
+    <div id="print-modal" className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
       {/* Toolbar — hidden when printing */}
       <div className="w-full max-w-3xl mx-4">
         <div className="flex items-center justify-between mb-4 print:hidden">
@@ -166,8 +177,7 @@ export default function PrintView({ home, state, onClose }) {
           )}
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
 
