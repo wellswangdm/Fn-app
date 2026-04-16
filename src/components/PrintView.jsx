@@ -106,31 +106,30 @@ export default function PrintView({ home, state, onClose }) {
               </tbody>
             </table>
 
-            {/* Bottom row: casket info (left) + totals (right) */}
-            <div className="flex items-stretch gap-6">
+            {/* Bottom row: casket card (left) + totals (right) */}
+            <div style={{display:'grid', gridTemplateColumns:'1fr 256px', gap:'24px', alignItems:'stretch'}}>
 
-              {/* Casket card — name on top, image fills the rest */}
-              <div className="flex-1">
-                {selectedCasket && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden h-full flex flex-col">
-                    <p className="text-[10px] font-semibold text-stone-600 px-3 pt-2 pb-1 shrink-0">
-                      {selectedCasket.name}
-                    </p>
-                    {selectedCasket.imageUrl && (
-                      <div className="flex-1 min-h-0 overflow-hidden">
-                        <img
-                          src={selectedCasket.imageUrl}
-                          alt={selectedCasket.name}
-                          className="w-full h-full object-contain bg-stone-50"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* Casket card */}
+              {selectedCasket ? (
+                <div style={{border:'1px solid #e7e5e4', borderRadius:'12px', overflow:'hidden',
+                             display:'flex', flexDirection:'column'}}>
+                  <p style={{fontSize:'10px', fontWeight:600, color:'#57534e',
+                             padding:'8px 12px 4px', flexShrink:0}}>
+                    {selectedCasket.name}
+                  </p>
+                  {selectedCasket.imageUrl && (
+                    <img
+                      src={selectedCasket.imageUrl}
+                      alt={selectedCasket.name}
+                      style={{width:'100%', flexGrow:1, minHeight:0, objectFit:'contain',
+                              backgroundColor:'#fafaf9', display:'block'}}
+                    />
+                  )}
+                </div>
+              ) : <div />}
 
               {/* Totals */}
-              <div className="w-64 shrink-0">
+              <div>
                 <div className="space-y-1.5 pb-3">
                   <TotalRow label="Subtotal" value={fmt(subtotal)} />
                   {pkgDiscAmount > 0 && (
