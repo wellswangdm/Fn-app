@@ -1,130 +1,152 @@
--- ============================================================
--- Funeral Quote Calculator - Supabase Schema
--- Run this in your Supabase SQL Editor
--- ============================================================
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SCHEMA — Funeral Quote App
+-- Run this first in Supabase SQL Editor (Dashboard → SQL Editor → New query)
+-- ─────────────────────────────────────────────────────────────────────────────
 
--- Funeral homes
-CREATE TABLE funeral_homes (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        TEXT NOT NULL,
-  address     TEXT,
-  phone       TEXT,
-  website     TEXT,
-  managing_director TEXT,
-  tax_rate    NUMERIC(5,4) NOT NULL DEFAULT 0.05, -- BC GST 5%
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+create table if not exists funeral_homes (
+  id          uuid    primary key default gen_random_uuid(),
+  name        text    not null,
+  address     text,
+  phone       text,
+  website     text,
+  tax_rate    numeric(5,4) not null default 0.05,
+  created_at  timestamptz  default now()
 );
 
--- Service categories (e.g. Transportation, Facilities, etc.)
-CREATE TABLE service_categories (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        TEXT NOT NULL,
-  sort_order  INTEGER DEFAULT 0
+-- Shared master list — same category names across all funeral homes
+create table if not exists service_categories (
+  id          uuid    primary key default gen_random_uuid(),
+  name        text    not null,
+  sort_order  int     default 0
 );
 
--- Individual service/merchandise items per funeral home
-CREATE TABLE service_items (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  funeral_home_id UUID REFERENCES funeral_homes(id) ON DELETE CASCADE,
-  category_id     UUID REFERENCES service_categories(id),
-  item_code       TEXT,
-  name            TEXT NOT NULL,
-  description     TEXT,
-  price           NUMERIC(10,2),          -- null if cash advance / as-selected
-  price_min       NUMERIC(10,2),          -- for range prices
-  price_max       NUMERIC(10,2),          -- for range prices
-  is_cash_advance BOOLEAN DEFAULT FALSE,  -- "As Selected" / variable pricing
-  is_taxable      BOOLEAN DEFAULT TRUE,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+-- Service & merchandise items — one set per funeral home (prices differ per home)
+create table if not exists service_items (
+  id              text    primary key,   -- human-readable codes e.g. 'si000001'
+  funeral_home_id uuid    references funeral_homes on delete cascade,
+  category_id     uuid    references service_categories,
+  item_code       text,
+  name            text    not null,
+  description     text,
+  price           numeric(10,2),         -- null for cash-advance / range items
+  price_min       numeric(10,2),
+  price_max       numeric(10,2),
+  is_cash_advance boolean default false,
+  sort_order      int     default 0,
+  created_at      timestamptz default now()
 );
 
--- Predefined packages (Full Service, No Service, etc.)
-CREATE TABLE packages (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  funeral_home_id UUID REFERENCES funeral_homes(id) ON DELETE CASCADE,
-  name            TEXT NOT NULL,
-  description     TEXT,
-  total_price     NUMERIC(10,2),
-  sort_order      INTEGER DEFAULT 0,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+-- Caskets & containers — separate from service items, one set per funeral home
+create table if not exists caskets (
+  id              text    primary key,   -- e.g. 'csk001', 'cont001'
+  funeral_home_id uuid    references funeral_homes on delete cascade,
+  name            text    not null,
+  price           numeric(10,2),
+  description     text,
+  image_url       text,                  -- relative path or Supabase Storage URL
+  sort_order      int     default 0,
+  created_at      timestamptz default now()
 );
 
--- Line items belonging to a package
-CREATE TABLE package_items (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  package_id      UUID REFERENCES packages(id) ON DELETE CASCADE,
-  service_item_id UUID REFERENCES service_items(id) ON DELETE CASCADE,
-  quantity        INTEGER DEFAULT 1
+-- Service packages (named bundles + à la carte options)
+create table if not exists packages (
+  id                text    primary key,   -- e.g. 'pk000001'
+  funeral_home_id   uuid    references funeral_homes on delete cascade,
+  name              text    not null,
+  pkg_type          text    default 'alacarte',  -- 'package' | 'alacarte'
+  total_price       numeric(10,2) default 0,
+  package_discount  numeric(10,2) default 0,
+  default_casket_id text    references caskets,  -- null for à la carte
+  sort_order        int     default 0,
+  created_at        timestamptz default now()
+);
+
+-- Which service items belong to a package
+create table if not exists package_items (
+  id              uuid primary key default gen_random_uuid(),
+  package_id      text references packages    on delete cascade,
+  service_item_id text references service_items,
+  quantity        int  default 1
 );
 
 -- Quotes
-CREATE TABLE quotes (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  funeral_home_id UUID REFERENCES funeral_homes(id),
-  package_id      UUID REFERENCES packages(id),
-  -- People
-  customer_name   TEXT,
-  customer_email  TEXT,
-  customer_phone  TEXT,
-  deceased_name   TEXT,
-  -- Financial
-  subtotal        NUMERIC(10,2) DEFAULT 0,
-  discount_type   TEXT CHECK (discount_type IN ('percentage','flat') OR discount_type IS NULL),
-  discount_value  NUMERIC(10,2) DEFAULT 0,
-  discount_amount NUMERIC(10,2) DEFAULT 0,
-  tax_rate        NUMERIC(5,4) DEFAULT 0.05,
-  tax_amount      NUMERIC(10,2) DEFAULT 0,
-  total           NUMERIC(10,2) DEFAULT 0,
-  -- Meta
-  status          TEXT DEFAULT 'draft' CHECK (status IN ('draft','finalized','accepted')),
-  notes           TEXT,
-  created_at      TIMESTAMPTZ DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ DEFAULT NOW()
+create table if not exists quotes (
+  id               uuid  primary key default gen_random_uuid(),
+  funeral_home_id  uuid  references funeral_homes,
+  package_id       text  references packages,
+  quote_number     text,
+  customer_name    text,
+  customer_email   text,
+  customer_phone   text,
+  deceased_name    text,
+  advisor_name     text,
+  advisor_email    text,
+  advisor_phone    text,
+  package_discount numeric(10,2) default 0,
+  subtotal         numeric(10,2) default 0,
+  discount_type    text          default 'percentage',
+  discount_value   numeric(10,4) default 0,
+  discount_amount  numeric(10,2) default 0,
+  tax_rate         numeric(5,4)  default 0.05,
+  tax_amount       numeric(10,2) default 0,
+  total            numeric(10,2) default 0,
+  status           text          default 'draft',
+  notes            text,
+  created_at       timestamptz   default now(),
+  updated_at       timestamptz   default now()
 );
 
--- Quote line items (price snapshot at time of quoting)
-CREATE TABLE quote_items (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  quote_id        UUID REFERENCES quotes(id) ON DELETE CASCADE,
-  service_item_id UUID REFERENCES service_items(id),
-  name            TEXT NOT NULL,     -- snapshot
-  price           NUMERIC(10,2) NOT NULL DEFAULT 0,  -- snapshot
-  quantity        INTEGER DEFAULT 1,
-  is_from_package BOOLEAN DEFAULT FALSE,
-  notes           TEXT,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+-- Quote line items — price/name are snapshots at time of quoting
+create table if not exists quote_items (
+  id              uuid primary key default gen_random_uuid(),
+  quote_id        uuid references quotes       on delete cascade,
+  service_item_id text references service_items,  -- null for casket rows & custom items
+  casket_id       text references caskets,         -- set only when is_casket_item = true
+  name            text    not null,
+  price           numeric(10,2) default 0,
+  quantity        int           default 1,
+  is_from_package boolean       default false,
+  is_gst          boolean       default true,
+  is_pst          boolean       default false,
+  no_disc         boolean       default false,    -- excluded from discount calculations
+  is_casket_item  boolean       default false,
+  section_id      text,
+  notes           text,
+  created_at      timestamptz   default now()
 );
 
--- Auto-update updated_at on quotes
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- ─── Auto-update updated_at ───────────────────────────────────────────────────
 
-CREATE TRIGGER quotes_updated_at
-  BEFORE UPDATE ON quotes
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+create or replace function update_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
 
--- ============================================================
--- Row Level Security (optional — enable if using auth)
--- For now, allow all access (single-user / internal tool)
--- ============================================================
-ALTER TABLE funeral_homes     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE service_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE service_items     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE packages          ENABLE ROW LEVEL SECURITY;
-ALTER TABLE package_items     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE quotes            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE quote_items       ENABLE ROW LEVEL SECURITY;
+create trigger quotes_updated_at
+  before update on quotes
+  for each row execute function update_updated_at();
 
--- Allow anon full access (internal tool — tighten later with auth)
-CREATE POLICY "allow_all" ON funeral_homes     FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "allow_all" ON service_categories FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "allow_all" ON service_items     FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "allow_all" ON packages          FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "allow_all" ON package_items     FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "allow_all" ON quotes            FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "allow_all" ON quote_items       FOR ALL USING (true) WITH CHECK (true);
+-- ─── Row Level Security ───────────────────────────────────────────────────────
+-- Open read/write for now (internal tool, no auth yet).
+-- When auth is added: replace with per-user / per-funeral-home policies.
+
+alter table funeral_homes      enable row level security;
+alter table service_categories enable row level security;
+alter table service_items      enable row level security;
+alter table caskets             enable row level security;
+alter table packages            enable row level security;
+alter table package_items       enable row level security;
+alter table quotes              enable row level security;
+alter table quote_items         enable row level security;
+
+create policy "allow_all" on funeral_homes      for all using (true) with check (true);
+create policy "allow_all" on service_categories for all using (true) with check (true);
+create policy "allow_all" on service_items      for all using (true) with check (true);
+create policy "allow_all" on caskets            for all using (true) with check (true);
+create policy "allow_all" on packages           for all using (true) with check (true);
+create policy "allow_all" on package_items      for all using (true) with check (true);
+create policy "allow_all" on quotes             for all using (true) with check (true);
+create policy "allow_all" on quote_items        for all using (true) with check (true);
