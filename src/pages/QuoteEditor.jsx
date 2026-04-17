@@ -20,8 +20,8 @@ function generateQuoteNumber() {
 // ─── Auto-add items (added whenever any package is selected) ──────────────────
 
 const AUTO_ADD = [
-  { serviceItemId: 'si000110', name: 'Consumer Protection BC Fee', price: 48.00 },
-  { serviceItemId: 'si000112', name: 'Death Certificate (each)',   price: 27.00 },
+  { serviceItemId: 'si000110', name: 'Consumer Protection BC Fee', price: 48.00, gst: false, pst: false, noDisc: true },
+  { serviceItemId: 'si000112', name: 'Death Certificate (each)',   price: 27.00, gst: false, pst: false, noDisc: true },
 ]
 
 const INIT_SECTIONS = [
@@ -64,7 +64,7 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
 function freshItem(item, sectionId = 'sec-extra') {
-  return { ...item, id: crypto.randomUUID(), gst: true, pst: false, sectionId }
+  return { id: crypto.randomUUID(), gst: true, pst: false, ...item, sectionId }
 }
 
 function reducer(state, action) {
