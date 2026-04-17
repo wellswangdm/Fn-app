@@ -155,6 +155,7 @@ const serviceItemsRaw = [
   { id: 'csk010', category_id: C.c8, name: 'Batesville Montgomery',        is_casket: true, price: 2999.00, description: 'Select hardwood with walnut-stained exterior, high-gloss finish, and rose-tan crepe interior.', image_url: '/caskets/montgomery.jpg' },
   { id: 'csk011', category_id: C.c8, name: 'Victoriaville Heavenly White', is_casket: true, price: 2999.00, description: 'Pure white hardwood finish with gold-tone accents and cream satin interior.' },
   { id: 'csk012', category_id: C.c8, name: 'Victoriaville Winfield',       is_casket: true, price: 2999.00, description: 'Rich mahogany hardwood with brushed bronze hardware and ivory velvet interior.' },
+  { id: 'csk013', category_id: C.c8, name: 'Freelton',                    is_casket: true, price: 2599.00, description: 'Select hardwood casket with a medium finished exterior and ivory crepe interior.', image_url: '/caskets/freelton.jpg' },
   // Containers (c8)
   { id: 'cont001', category_id: C.c8, name: 'Ceremonial Container', price: 1599.00, description: 'Batesville Brockton Oak — oak veneer ceremonial container with satin finish.' },
   { id: 'cont002', category_id: C.c8, name: 'Rental Container',     price:  850.00, description: 'Batesville Brockton Oak — rental oak ceremonial container (1 hour).' },
