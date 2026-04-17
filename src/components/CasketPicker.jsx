@@ -6,21 +6,23 @@ function fmt(n) {
 }
 
 const TIERS = [
-  { label: 'Premium',  min: 4000 },
-  { label: 'Standard', min: 3000 },
-  { label: 'Value',    min: 0    },
+  { label: 'Premium',   min: 4000 },
+  { label: 'Standard',  min: 3000 },
+  { label: 'Value',     min: 2500 },
+  { label: 'Container', min: 0    },
 ]
 
-export default function CasketPicker({ currentCasketId, onSelect, onClose }) {
+export default function CasketPicker({ funeralHomeId, currentCasketId, onSelect, onClose }) {
   const [caskets,  setCaskets]  = useState([])
   const [loading,  setLoading]  = useState(true)
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
+    if (!funeralHomeId) return
     supabase
-      .from('service_items')
+      .from('caskets')
       .select('id, name, price, description, image_url')
-      .eq('is_casket', true)
+      .eq('funeral_home_id', funeralHomeId)
       .order('price', { ascending: false })
       .then(({ data }) => {
         const rows = data || []
@@ -28,7 +30,7 @@ export default function CasketPicker({ currentCasketId, onSelect, onClose }) {
         setSelected(rows.find(c => c.id === currentCasketId) || null)
         setLoading(false)
       })
-  }, [])
+  }, [funeralHomeId])
 
   function confirm() {
     if (selected) onSelect({ ...selected, imageUrl: selected.image_url || null })

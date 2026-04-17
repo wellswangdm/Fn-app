@@ -26,7 +26,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
     if (itemsMap[pkgId]) return
     const { data } = await supabase
       .from('package_items')
-      .select('quantity, service_items(id, name, price, is_casket, description)')
+      .select('quantity, service_items(id, name, price)')
       .eq('package_id', pkgId)
     setItemsMap(m => ({
       ...m,
@@ -35,9 +35,6 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
         name:          r.service_items.name,
         price:         Number(r.service_items.price || 0),
         quantity:      r.quantity,
-        isCasket:      r.service_items.is_casket || false,
-        description:   r.service_items.description || null,
-        imageUrl:      r.service_items.image_url || null,
       })),
     }))
   }
@@ -49,7 +46,14 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 
   async function selectPackage(pkg) {
     if (!itemsMap[pkg.id]) await loadItems(pkg.id)
-    onSelect(pkg.id, itemsMap[pkg.id] || [], pkg.package_discount || 0, pkg.name)
+    const defaultCasket = pkg.caskets ? {
+      id:          pkg.caskets.id,
+      name:        pkg.caskets.name,
+      price:       Number(pkg.caskets.price || 0),
+      description: pkg.caskets.description || null,
+      imageUrl:    pkg.caskets.image_url || null,
+    } : null
+    onSelect(pkg.id, itemsMap[pkg.id] || [], pkg.package_discount || 0, pkg.name, defaultCasket)
     setExpanded(pkg.id)
   }
 
