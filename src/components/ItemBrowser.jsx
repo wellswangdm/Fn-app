@@ -36,7 +36,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
       supabase.from('service_categories').select('id, name').order('sort_order'),
       supabase
         .from('service_items')
-        .select('id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, is_casket, image_url, service_categories(name)')
+        .select('id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, service_categories(name)')
         .eq('funeral_home_id', funeralHomeId)
         .order('name'),
     ]).then(([{ data: cats }, { data: itms }]) => {
@@ -56,14 +56,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
     const price = item.is_cash_advance
       ? Number(cashPrices[item.id] || 0)
       : Number(item.price ?? item.price_min ?? 0)
-    onAdd({
-      serviceItemId: item.id,
-      name: item.name,
-      price,
-      isCasket: item.is_casket || false,
-      description: item.description || null,
-      imageUrl: item.image_url || null,
-    })
+    onAdd({ serviceItemId: item.id, name: item.name, price })
   }
 
   return (
