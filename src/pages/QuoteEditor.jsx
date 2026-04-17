@@ -32,10 +32,11 @@ const INIT_SECTIONS = [
 // ─── Totals ───────────────────────────────────────────────────────────────────
 
 function calcTotals(items, packageDiscount, discountType, discountValue) {
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const subtotal  = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const discBase  = items.filter(i => !i.noDisc).reduce((s, i) => s + i.price * i.quantity, 0)
 
-  const pkgDiscAmount = Math.min(Number(packageDiscount) || 0, subtotal)
-  const afterPkg      = subtotal - pkgDiscAmount
+  const pkgDiscAmount = Math.min(Number(packageDiscount) || 0, discBase)
+  const afterPkg      = discBase - pkgDiscAmount
 
   let userDiscAmount = 0
   if (Number(discountValue) > 0) {
@@ -46,13 +47,16 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
 
   const discountAmount = pkgDiscAmount + userDiscAmount
   const afterAll       = subtotal - discountAmount
-  const factor         = subtotal > 0 ? afterAll / subtotal : 1
-  const gstBase        = items.filter(i => i.gst !== false).reduce((s, i) => s + i.price * i.quantity, 0)
-  const pstBase        = items.filter(i => i.pst === true).reduce((s, i) => s + i.price * i.quantity, 0)
-  const gstAmount      = gstBase * factor * GST_RATE
-  const pstAmount      = pstBase * factor * PST_RATE
-  const taxAmount      = gstAmount + pstAmount
-  const total          = afterAll + taxAmount
+  const discFactor     = discBase > 0 ? (discBase - discountAmount) / discBase : 1
+
+  const gstBase = items.filter(i => i.gst !== false)
+                       .reduce((s, i) => s + i.price * i.quantity * (i.noDisc ? 1 : discFactor), 0)
+  const pstBase = items.filter(i => i.pst === true)
+                       .reduce((s, i) => s + i.price * i.quantity * (i.noDisc ? 1 : discFactor), 0)
+  const gstAmount = gstBase * GST_RATE
+  const pstAmount = pstBase * PST_RATE
+  const taxAmount = gstAmount + pstAmount
+  const total     = afterAll + taxAmount
 
   return { subtotal, pkgDiscAmount, userDiscAmount, discountAmount, gstAmount, pstAmount, taxAmount, total }
 }

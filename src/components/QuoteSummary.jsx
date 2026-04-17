@@ -384,11 +384,13 @@ function ItemRow({ item, sections, onRemove, onChangeQty, onToggleTax, onEdit, o
       {/* Controls row */}
       <div className="flex items-center gap-1.5 mt-1 pl-5">
         <TaxBadge label="GST" active={gstOn}  activeClass="bg-primary-700 text-white border-primary-700"
-          onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn })} />
+          onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn, noDisc: item.noDisc })} />
         <TaxBadge label="PST" active={pstOn}  activeClass="bg-stone-600 text-white border-stone-600"
-          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn })} />
+          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn, noDisc: item.noDisc })} />
         <TaxBadge label="Exempt" active={!gstOn && !pstOn} activeClass="bg-stone-400 text-white border-stone-400"
-          onClick={() => onToggleTax(item.id, { gst: false, pst: false })} />
+          onClick={() => onToggleTax(item.id, { gst: false, pst: false, noDisc: item.noDisc })} />
+        <TaxBadge label="No Disc" active={item.noDisc === true} activeClass="bg-amber-500 text-white border-amber-500"
+          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: pstOn, noDisc: !item.noDisc })} />
 
         <span className="flex-1" />
 
