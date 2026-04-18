@@ -4,7 +4,7 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists funeral_homes (
-  id          uuid    primary key default gen_random_uuid(),
+  id          text    primary key,          -- company-assigned ID e.g. '3745'
   name        text    not null,
   address     text,
   phone       text,
@@ -23,7 +23,7 @@ create table if not exists service_categories (
 -- Service & merchandise items — one set per funeral home (prices differ per home)
 create table if not exists service_items (
   id              text    primary key,   -- human-readable codes e.g. 'si000001'
-  funeral_home_id uuid    references funeral_homes on delete cascade,
+  funeral_home_id text    references funeral_homes on delete cascade,
   category_id     uuid    references service_categories,
   item_code       text,
   name            text    not null,
@@ -39,7 +39,7 @@ create table if not exists service_items (
 -- Caskets & containers — separate from service items, one set per funeral home
 create table if not exists caskets (
   id              text    primary key,   -- e.g. 'csk001', 'cont001'
-  funeral_home_id uuid    references funeral_homes on delete cascade,
+  funeral_home_id text    references funeral_homes on delete cascade,
   name            text    not null,
   price           numeric(10,2),
   description     text,
@@ -72,7 +72,7 @@ create table if not exists package_items (
 -- Quotes
 create table if not exists quotes (
   id               uuid  primary key default gen_random_uuid(),
-  funeral_home_id  uuid  references funeral_homes,
+  funeral_home_id  text  references funeral_homes,
   package_id       text  references packages,
   quote_number     text,
   customer_name    text,
@@ -90,10 +90,20 @@ create table if not exists quotes (
   tax_rate         numeric(5,4)  default 0.05,
   tax_amount       numeric(10,2) default 0,
   total            numeric(10,2) default 0,
-  status           text          default 'draft',
-  notes            text,
-  created_at       timestamptz   default now(),
-  updated_at       timestamptz   default now()
+  status              text          default 'draft',
+  notes               text,
+  beneficiary_phone   text,
+  beneficiary_email   text,
+  beneficiary_birthdate date,
+  beneficiary_address text,
+  purchaser_different boolean       default false,
+  purchaser_name      text,
+  purchaser_phone     text,
+  purchaser_email     text,
+  purchaser_birthdate date,
+  purchaser_address   text,
+  created_at          timestamptz   default now(),
+  updated_at          timestamptz   default now()
 );
 
 -- Quote line items — price/name are snapshots at time of quoting
