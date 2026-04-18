@@ -70,18 +70,17 @@ export default function PrintView({ home, state, onClose }) {
               {home?.address && (
                 <p className="text-primary-200 text-xs mt-1">{home.address}</p>
               )}
-              {home?.phone && (
-                <p className="text-primary-200 text-xs">{home.phone}</p>
+              {advisorPhone && (
+                <p className="text-primary-200 text-xs">{advisorPhone}</p>
               )}
             </div>
 
             <div className="text-right text-xs leading-snug">
               <p className="text-primary-300">{today}</p>
-              {(advisorName || advisorEmail || advisorPhone) && (
+              {(advisorName || advisorEmail) && (
                 <div className="mt-1.5">
                   {advisorName  && <p className="text-primary-200 font-medium">{advisorName}</p>}
                   {advisorEmail && <p className="text-primary-300">{advisorEmail}</p>}
-                  {advisorPhone && <p className="text-primary-300">{advisorPhone}</p>}
                 </div>
               )}
             </div>
