@@ -8,7 +8,7 @@ function fmt(n) {
 }
 
 export default function QuoteSummary({
-  items, sections, selectedCasket,
+  items, sections, packageName, arrangementType, selectedCasket,
   subtotal, packageDiscount, pkgDiscAmount, userDiscAmount,
   discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
@@ -60,10 +60,14 @@ export default function QuoteSummary({
 
         {activeSections.map(sec => {
           const secItems = items.filter(i => (i.sectionId || 'sec-extra') === sec.id)
+          const subtitle = sec.id === 'sec-main' && packageName
+            ? `${packageName} · ${arrangementType ? arrangementType.charAt(0).toUpperCase() + arrangementType.slice(1) : ''}`
+            : null
           return (
             <SectionBlock
               key={sec.id}
               section={sec}
+              subtitle={subtitle}
               items={secItems}
               sections={sections}
               dragId={dragId}
@@ -213,7 +217,7 @@ export default function QuoteSummary({
 
 // ─── Section Block ────────────────────────────────────────────────────────────
 
-function SectionBlock({ section, items, sections, dragId, onDragStart, onDrop,
+function SectionBlock({ section, subtitle, items, sections, dragId, onDragStart, onDrop,
                         onRemove, onChangeQty, onToggleTax, onEdit,
                         onRenameSection, onRemoveSection, onMoveItem }) {
   const [editingName, setEditingName] = useState(false)
@@ -230,10 +234,13 @@ function SectionBlock({ section, items, sections, dragId, onDragStart, onDrop,
     else setLocalName(section.name)
   }
 
-  const isProtected = section.id === 'sec-main' || section.id === 'sec-extra'
+  const isProtected = ['sec-main', 'sec-third-party', 'sec-extra'].includes(section.id)
 
   return (
     <div className="mb-3">
+      {subtitle && (
+        <p className="text-[10px] text-stone-400 px-1 mb-0.5 leading-tight">{subtitle}</p>
+      )}
       <div className="flex items-center gap-1 px-1 mb-1 group/sec">
         {editingName ? (
           <input

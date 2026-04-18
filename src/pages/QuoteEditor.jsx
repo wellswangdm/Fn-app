@@ -30,8 +30,9 @@ const CREMATORY_FEE = { serviceItemId: 'si000076', name: 'Crematory Fee', price:
 const OPTIONAL_ITEM_IDS = new Set(['si000042', 'si000088', 'si000207', 'si000208', 'si000209'])
 
 const INIT_SECTIONS = [
-  { id: 'sec-main',  name: 'Services'         },
-  { id: 'sec-extra', name: 'Additional Items' },
+  { id: 'sec-main',        name: 'Guaranteed Items' },
+  { id: 'sec-third-party', name: 'Third Party Items' },
+  { id: 'sec-extra',       name: 'Additional Items'  },
 ]
 
 // ─── Totals ───────────────────────────────────────────────────────────────────
@@ -93,11 +94,11 @@ function reducer(state, action) {
       const keep    = state.items.filter(i => !i.isFromPackage)
       const autoToAdd = AUTO_ADD
         .filter(ai => !keep.some(k => k.serviceItemId === ai.serviceItemId))
-        .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }, 'sec-extra'))
+        .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }, 'sec-third-party'))
       const pkgItems = action.items.map(i => freshItem({ ...i, isFromPackage: true }, 'sec-main'))
       const hasCremFee = action.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
       const cremItem = (action.addCrematoryFee && !hasCremFee && !keep.some(k => k.serviceItemId === CREMATORY_FEE.serviceItemId))
-        ? freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-extra')
+        ? freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')
         : null
       const casketItem = action.defaultCasket ? freshItem({
         serviceItemId: action.defaultCasket.id,
@@ -115,19 +116,18 @@ function reducer(state, action) {
         ...autoToAdd,
         ...(cremItem ? [cremItem] : []),
       ]
-      const sections = state.sections.map(s => s.id === 'sec-main' ? { ...s, name: pkgName } : s)
       const selectedCasket = state.packageId === action.id
         ? state.selectedCasket
         : (action.defaultCasket || null)
-      return { ...state, packageId: action.id, packageDiscount: pkgDisc, items, sections,
-               selectedCasket, ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
+      return { ...state, packageId: action.id, packageDiscount: pkgDisc, packageName: pkgName,
+               items, sections: state.sections, selectedCasket,
+               ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
     }
 
     case 'CLEAR_PACKAGE': {
-      const items    = state.items.filter(i => !i.isFromPackage)
-      const sections = state.sections.map(s => s.id === 'sec-main' ? { ...s, name: 'Services' } : s)
-      return { ...state, packageId: null, packageDiscount: 0, items, sections, selectedCasket: null,
-               ...calcTotals(items, 0, state.discountType, state.discountValue) }
+      const items = state.items.filter(i => !i.isFromPackage)
+      return { ...state, packageId: null, packageDiscount: 0, packageName: '', items,
+               selectedCasket: null, ...calcTotals(items, 0, state.discountType, state.discountValue) }
     }
 
     case 'ADD_ITEM': {
@@ -188,7 +188,7 @@ function reducer(state, action) {
     }
 
     case 'REMOVE_SECTION': {
-      if (action.id === 'sec-main' || action.id === 'sec-extra') return state
+      if (['sec-main', 'sec-third-party', 'sec-extra'].includes(action.id)) return state
       const items    = state.items.map(i => i.sectionId === action.id ? { ...i, sectionId: 'sec-extra' } : i)
       const sections = state.sections.filter(s => s.id !== action.id)
       return { ...state, sections, items }
@@ -216,7 +216,7 @@ function reducer(state, action) {
             pst:           true,
             isCasketItem:  true,
             isFromPackage: false,
-          }, 'sec-extra')]
+          }, 'sec-main')]
       return { ...state, items, selectedCasket: casket,
                ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
@@ -253,6 +253,7 @@ const INIT = {
   items:           [],
   sections:        INIT_SECTIONS,
   selectedCasket:  null,
+  packageName:     '',
   packageDiscount: 0,
   pkgDiscAmount:   0,
   userDiscAmount:  0,
@@ -304,6 +305,9 @@ export default function QuoteEditor({ quoteId, onDone }) {
         supabase.from('quotes').select('*').eq('id', quoteId).single(),
         supabase.from('quote_items').select('*').eq('quote_id', quoteId).order('created_at'),
       ])
+      const packageName = q?.package_id
+        ? (await supabase.from('packages').select('name').eq('id', q.package_id).single()).data?.name || ''
+        : ''
       if (!q) return
       const items = (qi || []).map(i => ({
         id:            i.id,
@@ -355,6 +359,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
           advisorName:    q.advisor_name   || '',
           advisorEmail:   q.advisor_email  || '',
           advisorPhone:   q.advisor_phone  || '',
+          packageName,
           packageDiscount: Number(q.package_discount) || 0,
           discountType:   q.discount_type  || 'percentage',
           discountValue:  Number(q.discount_value),
@@ -617,6 +622,8 @@ export default function QuoteEditor({ quoteId, onDone }) {
           <QuoteSummary
             items={state.items}
             sections={state.sections}
+            packageName={state.packageName}
+            arrangementType={state.arrangementType}
             selectedCasket={state.selectedCasket}
             subtotal={state.subtotal}
             packageDiscount={state.packageDiscount}
