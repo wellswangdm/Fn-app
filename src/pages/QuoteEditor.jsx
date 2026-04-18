@@ -53,12 +53,13 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
                        .reduce((s, i) => s + i.price * i.quantity * (i.noDisc ? 1 : discFactor), 0)
   const pstBase = items.filter(i => i.pst === true)
                        .reduce((s, i) => s + i.price * i.quantity * (i.noDisc ? 1 : discFactor), 0)
-  const gstAmount = gstBase * GST_RATE
-  const pstAmount = pstBase * PST_RATE
-  const taxAmount = gstAmount + pstAmount
-  const total     = afterAll + taxAmount
+  const r2 = n => Math.round(n * 100) / 100
+  const gstAmount = r2(gstBase * GST_RATE)
+  const pstAmount = r2(pstBase * PST_RATE)
+  const taxAmount = r2(gstAmount + pstAmount)
+  const total     = r2(afterAll + taxAmount)
 
-  return { subtotal, pkgDiscAmount, userDiscAmount, discountAmount, gstAmount, pstAmount, taxAmount, total }
+  return { subtotal: r2(subtotal), pkgDiscAmount: r2(pkgDiscAmount), userDiscAmount: r2(userDiscAmount), discountAmount: r2(discountAmount), gstAmount, pstAmount, taxAmount, total }
 }
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
