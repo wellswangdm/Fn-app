@@ -91,6 +91,7 @@ function reducer(state, action) {
         name:          action.defaultCasket.name,
         price:         action.defaultCasket.price,
         quantity:      1,
+        pst:           true,
         isCasketItem:  true,
         isFromPackage: true,
       }, 'sec-main') : null
@@ -186,11 +187,22 @@ function reducer(state, action) {
 
     case 'PICK_CASKET': {
       const { casket } = action
-      const items = state.items.map(i =>
-        i.isCasketItem
-          ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price }
-          : i
-      )
+      const hasCasketItem = state.items.some(i => i.isCasketItem)
+      const items = hasCasketItem
+        ? state.items.map(i =>
+            i.isCasketItem
+              ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price, pst: true }
+              : i
+          )
+        : [...state.items, freshItem({
+            serviceItemId: casket.id,
+            name:          casket.name,
+            price:         casket.price,
+            quantity:      1,
+            pst:           true,
+            isCasketItem:  true,
+            isFromPackage: false,
+          }, 'sec-extra')]
       return { ...state, items, selectedCasket: casket,
                ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
@@ -494,10 +506,21 @@ export default function QuoteEditor({ quoteId, onDone }) {
                   />
                 )}
                 {tab === 'items' && (
-                  <ItemBrowser
-                    funeralHomeId={state.funeralHomeId}
-                    onAdd={item => dispatch({ type: 'ADD_ITEM', item })}
-                  />
+                  <>
+                    <div className="mb-3">
+                      <button
+                        onClick={() => setCasketPickerOpen(true)}
+                        className="text-xs font-medium text-primary-700 hover:text-primary-800 flex items-center gap-1"
+                      >
+                        <span className="text-base leading-none">⬜</span>
+                        {state.selectedCasket ? `Casket: ${state.selectedCasket.name}` : 'Select Casket…'}
+                      </button>
+                    </div>
+                    <ItemBrowser
+                      funeralHomeId={state.funeralHomeId}
+                      onAdd={item => dispatch({ type: 'ADD_ITEM', item })}
+                    />
+                  </>
                 )}
               </div>
             </div>
