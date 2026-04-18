@@ -12,10 +12,11 @@ const TIERS = [
   { label: 'Container', min: 0    },
 ]
 
-export default function CasketPicker({ funeralHomeId, currentCasketId, onSelect, onClose }) {
-  const [caskets,  setCaskets]  = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [selected, setSelected] = useState(null)
+export default function CasketPicker({ funeralHomeId, currentCasketId, optionalItems = [], onSelect, onClose }) {
+  const [caskets,   setCaskets]   = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [selected,  setSelected]  = useState(null)
+  const [checkedOptionals, setCheckedOptionals] = useState(new Set())
 
   useEffect(() => {
     if (!funeralHomeId) return
@@ -32,8 +33,19 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, onSelect,
       })
   }, [funeralHomeId])
 
+  function toggleOptional(id) {
+    setCheckedOptionals(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
   function confirm() {
-    if (selected) onSelect({ ...selected, imageUrl: selected.image_url || null })
+    if (selected) {
+      const selectedOptionals = optionalItems.filter(i => checkedOptionals.has(i.serviceItemId))
+      onSelect({ ...selected, imageUrl: selected.image_url || null }, selectedOptionals)
+    }
     onClose()
   }
 
@@ -50,6 +62,30 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, onSelect,
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+
+          {/* Optional add-ons */}
+          {optionalItems.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs font-semibold text-amber-800 mb-2">
+                Optional add-ons included in this package
+              </p>
+              <div className="space-y-2">
+                {optionalItems.map(item => (
+                  <label key={item.serviceItemId} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={checkedOptionals.has(item.serviceItemId)}
+                      onChange={() => toggleOptional(item.serviceItemId)}
+                      className="w-4 h-4 accent-primary-700 cursor-pointer"
+                    />
+                    <span className="flex-1 text-sm text-stone-700 group-hover:text-stone-900">{item.name}</span>
+                    <span className="text-sm font-semibold text-stone-500">{fmt(item.price)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <p className="text-xs text-stone-400 text-center py-10">Loading caskets…</p>
           ) : (
@@ -74,7 +110,6 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, onSelect,
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          {/* Thumbnail */}
                           {c.image_url ? (
                             <img
                               src={c.image_url}

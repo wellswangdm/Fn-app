@@ -24,6 +24,11 @@ const AUTO_ADD = [
   { serviceItemId: 'si000112', name: 'Death Certificate (each)',   price: 27.00, gst: false, pst: false, noDisc: true },
 ]
 
+const CREMATORY_FEE = { serviceItemId: 'si000076', name: 'Crematory Fee', price: 995.00 }
+
+// Items that are opt-in within a package (excluded from auto-add, user picks them in casket picker)
+const OPTIONAL_ITEM_IDS = new Set(['si000042', 'si000088', 'si000207', 'si000208', 'si000209'])
+
 const INIT_SECTIONS = [
   { id: 'sec-main',  name: 'Services'         },
   { id: 'sec-extra', name: 'Additional Items' },
@@ -79,6 +84,9 @@ function reducer(state, action) {
                packageId: null, packageDiscount: 0, items: [],
                sections: INIT_SECTIONS, selectedCasket: null }
 
+    case 'SET_ARRANGEMENT':
+      return { ...state, arrangementType: action.value }
+
     case 'SET_PACKAGE': {
       const pkgDisc = action.packageDiscount || 0
       const pkgName = action.packageName || 'Package Services'
@@ -87,6 +95,10 @@ function reducer(state, action) {
         .filter(ai => !keep.some(k => k.serviceItemId === ai.serviceItemId))
         .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }, 'sec-extra'))
       const pkgItems = action.items.map(i => freshItem({ ...i, isFromPackage: true }, 'sec-main'))
+      const hasCremFee = action.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+      const cremItem = (action.addCrematoryFee && !hasCremFee && !keep.some(k => k.serviceItemId === CREMATORY_FEE.serviceItemId))
+        ? freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-extra')
+        : null
       const casketItem = action.defaultCasket ? freshItem({
         serviceItemId: action.defaultCasket.id,
         name:          action.defaultCasket.name,
@@ -101,6 +113,7 @@ function reducer(state, action) {
         ...(casketItem ? [casketItem] : []),
         ...keep.map(i => ({ ...i, sectionId: i.sectionId || 'sec-extra' })),
         ...autoToAdd,
+        ...(cremItem ? [cremItem] : []),
       ]
       const sections = state.sections.map(s => s.id === 'sec-main' ? { ...s, name: pkgName } : s)
       const selectedCasket = state.packageId === action.id
@@ -252,6 +265,7 @@ const INIT = {
   taxAmount:       0,
   subtotal:        0,
   total:           0,
+  arrangementType: 'burial',
   status:          'draft',
   notes:           'Prices are subject to change without further notice.',
 }
@@ -266,6 +280,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
   const [tab,            setTab]            = useState('packages')
   const [showPrint,      setShowPrint]      = useState(false)
   const [casketPickerOpen, setCasketPickerOpen] = useState(false)
+  const [pendingOptionals, setPendingOptionals] = useState([])
   const [priceMap,        setPriceMap]        = useState(null) // { itemId -> newPrice } when stale
 
   useEffect(() => {
@@ -354,9 +369,15 @@ export default function QuoteEditor({ quoteId, onDone }) {
     load()
   }, [quoteId])
 
-  function handlePackageSelect(id, items, pkgDisc, pkgName, defaultCasket) {
-    dispatch({ type: 'SET_PACKAGE', id, items, packageDiscount: pkgDisc, packageName: pkgName, defaultCasket })
-    if (defaultCasket) setCasketPickerOpen(true)
+  function handlePackageSelect(id, allItems, pkgDisc, pkgName, defaultCasket) {
+    const optionals      = allItems.filter(i => OPTIONAL_ITEM_IDS.has(i.serviceItemId))
+    const regularItems   = allItems.filter(i => !OPTIONAL_ITEM_IDS.has(i.serviceItemId))
+    const hasCremFee     = regularItems.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+    const addCrematoryFee = state.arrangementType === 'cremation' && !hasCremFee
+    dispatch({ type: 'SET_PACKAGE', id, items: regularItems, packageDiscount: pkgDisc,
+               packageName: pkgName, defaultCasket, addCrematoryFee })
+    setPendingOptionals(optionals)
+    if (defaultCasket || optionals.length > 0) setCasketPickerOpen(true)
   }
 
   async function save(status) {
@@ -521,6 +542,26 @@ export default function QuoteEditor({ quoteId, onDone }) {
             onNotes={notes => dispatch({ type: 'SET_NOTES', notes })}
           />
 
+          {/* ── Arrangement Type ─────────────────────────────────────────── */}
+          <div className="card px-4 py-3 flex items-center gap-3">
+            <span className="text-xs font-semibold text-stone-500 shrink-0">Arrangement Type</span>
+            <div className="flex gap-1">
+              {['burial', 'cremation', 'other'].map(type => (
+                <button
+                  key={type}
+                  onClick={() => dispatch({ type: 'SET_ARRANGEMENT', value: type })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
+                    state.arrangementType === type
+                      ? 'bg-primary-700 text-white'
+                      : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {state.funeralHomeId && (
             <div className="card overflow-hidden">
               <div className="flex border-b border-stone-100 bg-stone-50/80">
@@ -612,8 +653,12 @@ export default function QuoteEditor({ quoteId, onDone }) {
         <CasketPicker
           funeralHomeId={state.funeralHomeId}
           currentCasketId={state.selectedCasket?.id}
-          onSelect={casket => dispatch({ type: 'PICK_CASKET', casket })}
-          onClose={() => setCasketPickerOpen(false)}
+          optionalItems={pendingOptionals}
+          onSelect={(casket, selectedOptionals) => {
+            dispatch({ type: 'PICK_CASKET', casket })
+            selectedOptionals.forEach(item => dispatch({ type: 'ADD_ITEM', item }))
+          }}
+          onClose={() => { setCasketPickerOpen(false); setPendingOptionals([]) }}
         />
       )}
     </div>
