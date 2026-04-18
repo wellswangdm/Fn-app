@@ -10,7 +10,7 @@ function fmt(n) {
 export default function PrintView({ home, state, onClose }) {
   const {
     quoteNumber, advisorName, advisorEmail, advisorPhone,
-    items, sections, selectedCasket,
+    items, sections, selectedCasket, packageName, arrangementType,
     subtotal, discountType, discountValue,
     pkgDiscAmount, userDiscAmount, discountAmount,
     gstAmount, pstAmount, notes,
@@ -88,6 +88,16 @@ export default function PrintView({ home, state, onClose }) {
 
           {/* Body */}
           <div className="px-8 py-6 print:px-6 print:py-4">
+
+            {/* Package title */}
+            {packageName && (
+              <div className="mb-5">
+                <h2 className="text-base font-bold text-stone-800">{packageName}</h2>
+                {arrangementType && (
+                  <p className="text-xs text-stone-400 mt-0.5 capitalize">{arrangementType}</p>
+                )}
+              </div>
+            )}
 
             {/* Items table */}
             <table className="w-full text-sm print:text-xs mb-6 print:mb-4">
