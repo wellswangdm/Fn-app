@@ -249,10 +249,13 @@ export default function QuoteEditor({ quoteId, onDone }) {
     supabase
       .from('funeral_homes')
       .select('id, name, tax_rate, address, phone, website')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error('funeral_homes load error:', error)
         setHomes(data || [])
         if (data?.length && !quoteId)
           dispatch({ type: 'SET_HOME', id: data[0].id, taxRate: Number(data[0].tax_rate) })
+        else if (!quoteId)
+          dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber() } })
       })
   }, [])
 
