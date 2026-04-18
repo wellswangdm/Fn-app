@@ -91,10 +91,12 @@ export default function PrintView({ home, state, onClose }) {
 
             {/* Package title */}
             {packageName && (
-              <div className="mb-5">
+              <div className="flex items-center justify-between mb-5 pb-4 border-b border-stone-200">
                 <h2 className="text-base font-bold text-stone-800">{packageName}</h2>
                 {arrangementType && (
-                  <p className="text-xs text-stone-400 mt-0.5 capitalize">{arrangementType}</p>
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-400 border border-stone-200 rounded-full px-3 py-1 capitalize">
+                    {arrangementType}
+                  </span>
                 )}
               </div>
             )}
