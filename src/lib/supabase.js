@@ -1,7 +1,7 @@
 // MOCK MODE – full in-memory data, no Supabase needed.
 // Replace this file with the real one (supabase.real.js) once you have credentials.
 
-const FH = 'fh000000-0000-0000-0000-000000000001'
+const FH = 'f0000000-0000-0000-0000-000000000001'
 const C = {
   c1: 'c1000000-0000-0000-0000-000000000001',
   c2: 'c1000000-0000-0000-0000-000000000002',
