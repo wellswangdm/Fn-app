@@ -51,7 +51,7 @@ create table if not exists caskets (
 -- Service packages (named bundles + à la carte options)
 create table if not exists packages (
   id                text    primary key,   -- e.g. 'pk000001'
-  funeral_home_id   uuid    references funeral_homes on delete cascade,
+  funeral_home_id   text    references funeral_homes on delete cascade,
   name              text    not null,
   pkg_type          text    default 'alacarte',  -- 'package' | 'alacarte'
   total_price       numeric(10,2) default 0,
