@@ -208,6 +208,15 @@ function reducer(state, action) {
                ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
+    case 'REFRESH_PRICES': {
+      const items = state.items.map(i =>
+        action.priceMap[i.serviceItemId] != null
+          ? { ...i, price: action.priceMap[i.serviceItemId] }
+          : i
+      )
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+    }
+
     case 'SET_CUSTOMER': return { ...state, ...action.payload }
     case 'SET_STATUS':   return { ...state, status: action.status }
     case 'SET_NOTES':    return { ...state, notes: action.notes }
@@ -257,6 +266,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
   const [tab,            setTab]            = useState('packages')
   const [showPrint,      setShowPrint]      = useState(false)
   const [casketPickerOpen, setCasketPickerOpen] = useState(false)
+  const [priceMap,        setPriceMap]        = useState(null) // { itemId -> newPrice } when stale
 
   useEffect(() => {
     supabase
@@ -294,6 +304,29 @@ export default function QuoteEditor({ quoteId, onDone }) {
         noDisc:        i.no_disc ?? false,
         sectionId:     i.section_id || (i.is_from_package ? 'sec-main' : 'sec-extra'),
       }))
+      // Check for stale prices
+      const serviceIds = items.filter(i => i.serviceItemId && !i.isCasketItem).map(i => i.serviceItemId)
+      const casketIds  = items.filter(i => i.isCasketItem).map(i => i.serviceItemId)
+      const [{ data: siPrices }, { data: cskPrices }] = await Promise.all([
+        serviceIds.length
+          ? supabase.from('service_items').select('id, price').in('id', serviceIds)
+          : Promise.resolve({ data: [] }),
+        casketIds.length
+          ? supabase.from('caskets').select('id, price').in('id', casketIds)
+          : Promise.resolve({ data: [] }),
+      ])
+      const currentPrices = Object.fromEntries(
+        [...(siPrices || []), ...(cskPrices || [])].map(r => [r.id, Number(r.price)])
+      )
+      const stale = {}
+      items.forEach(i => {
+        if (i.serviceItemId && currentPrices[i.serviceItemId] != null &&
+            currentPrices[i.serviceItemId] !== i.price) {
+          stale[i.serviceItemId] = currentPrices[i.serviceItemId]
+        }
+      })
+      if (Object.keys(stale).length > 0) setPriceMap(stale)
+
       dispatch({
         type: 'LOAD',
         payload: {
@@ -455,6 +488,17 @@ export default function QuoteEditor({ quoteId, onDone }) {
         </div>
         {saveErr && (
           <div className="bg-red-600 text-white text-xs px-4 py-2">Error: {saveErr}</div>
+        )}
+        {priceMap && (
+          <div className="bg-amber-500 text-white text-xs px-4 py-2 flex items-center justify-between">
+            <span>{Object.keys(priceMap).length} item{Object.keys(priceMap).length > 1 ? 's have' : ' has'} updated prices in the database.</span>
+            <button
+              onClick={() => { dispatch({ type: 'REFRESH_PRICES', priceMap }); setPriceMap(null) }}
+              className="ml-4 font-semibold underline hover:no-underline shrink-0"
+            >
+              Refresh Prices
+            </button>
+          </div>
         )}
       </header>
 
