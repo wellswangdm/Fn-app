@@ -42,9 +42,10 @@ insert into caskets (id, funeral_home_id, name, price, description, image_url, s
   ('csk011',  '3745', 'Victoriaville Heavenly White', 2999.00, 'Pure white hardwood finish with gold-tone accents and cream satin interior.',                             NULL,                      11),
   ('csk012',  '3745', 'Victoriaville Winfield',       2999.00, 'Rich mahogany hardwood with brushed bronze hardware and ivory velvet interior.',                          NULL,                      12),
   ('csk013',  '3745', 'Freelton',                     2599.00, 'Select hardwood casket with a medium finished exterior and ivory crepe interior.',                        '/caskets/freelton.jpg',   13),
-  ('cont001', '3745', 'Ceremonial Container',         1599.00, 'Batesville Brockton Oak — oak veneer ceremonial container with satin finish.',                            NULL,                      14),
-  ('cont002', '3745', 'Rental Container',              850.00, 'Batesville Brockton Oak — rental oak ceremonial container (1 hour).',                                    NULL,                      15),
-  ('cont003', '3745', 'Container',                     650.00, 'Vancouver Casket Cypress — simple cypress wood alternative container.',                                   NULL,                      16);
+  ('csk014',  '3745', 'Dominion HC Wood Maple Crepe', 4099.00, 'Solid Maple casket with Titan stain and polished exterior with tan crepe interior.',                    '/caskets/dominion-hc-maple.jpg', 14),
+  ('cont001', '3745', 'Ceremonial Container',         1599.00, 'Batesville Brockton Oak — oak veneer ceremonial container with satin finish.',                            NULL,                      15),
+  ('cont002', '3745', 'Rental Container',              850.00, 'Batesville Brockton Oak — rental oak ceremonial container (1 hour).',                                    NULL,                      16),
+  ('cont003', '3745', 'Container',                     650.00, 'Vancouver Casket Cypress — simple cypress wood alternative container.',                                   NULL,                      17);
 
 -- ─── Service Items ────────────────────────────────────────────────────────────
 
