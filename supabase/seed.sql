@@ -43,9 +43,11 @@ insert into caskets (id, funeral_home_id, name, price, description, image_url, s
   ('csk012',  '3745', 'Victoriaville Winfield',       2999.00, 'Rich mahogany hardwood with brushed bronze hardware and ivory velvet interior.',                          NULL,                      12),
   ('csk013',  '3745', 'Freelton',                     2599.00, 'Select hardwood casket with a medium finished exterior and ivory crepe interior.',                        '/caskets/freelton.jpg',   13),
   ('csk014',  '3745', 'Dominion HC Wood Maple Crepe', 4099.00, 'Solid Maple casket with Titan stain and polished exterior with tan crepe interior.',                    '/caskets/dominion-hc-maple.jpg', 14),
-  ('cont001', '3745', 'Ceremonial Container',         1599.00, 'Batesville Brockton Oak — oak veneer ceremonial container with satin finish.',                            NULL,                      15),
-  ('cont002', '3745', 'Rental Container',              850.00, 'Batesville Brockton Oak — rental oak ceremonial container (1 hour).',                                    NULL,                      16),
-  ('cont003', '3745', 'Container',                     650.00, 'Vancouver Casket Cypress — simple cypress wood alternative container.',                                   NULL,                      17);
+  ('csk015',  '3745', 'Prominence',                   6499.00, 'Solid maple casket with a dark hand-rubbed, high gloss, cherry stain exterior with a champagne velvet interior.', '/caskets/prominence.jpg', 15),
+  ('csk016',  '3745', 'Regent',                       8299.00, 'Solid mahogany casket with a dark finished exterior and champagne velvet interior.',                     '/caskets/regent.jpg',     16),
+  ('cont001', '3745', 'Ceremonial Container',         1599.00, 'Batesville Brockton Oak — oak veneer ceremonial container with satin finish.',                            NULL,                      17),
+  ('cont002', '3745', 'Rental Container',              850.00, 'Batesville Brockton Oak — rental oak ceremonial container (1 hour).',                                    NULL,                      18),
+  ('cont003', '3745', 'Container',                     650.00, 'Vancouver Casket Cypress — simple cypress wood alternative container.',                                   NULL,                      19);
 
 -- ─── Service Items ────────────────────────────────────────────────────────────
 
