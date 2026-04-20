@@ -85,11 +85,11 @@ insert into caskets (id, funeral_home_id, name, price, description, image_url, s
   ('csk005', '3745', 'Misty Blue',                    3599.00, '20 gauge steel casket with a blue shaded exterior and blue accents, and a light blue crepe interior.',                                        NULL, 51),
   -- Cremation Oriented Caskets
   ('csk053', '3745', 'McConnell',                      999.00, 'Hollow cored poplar and poplar faced plywood with medium flat stain and tan crepe lining with pillow.',                                        NULL, 52),
-  ('csk054', '3745', 'Plywood Container',              699.00, 'Plywood cremation container cut top.',                                                                                                         NULL, 53),
+  ('cont004', '3745', 'Plywood Container',              699.00, 'Plywood cremation container cut top.',                                                                                                         NULL, 53),
   ('cont003', '3745', 'Cypress',                       650.00, 'Hollow cored poplar container with natural finish and white satin mattress and pillow only.',                                                  NULL, 54),
-  ('csk055', '3745', 'Particle Board Container',       350.00, 'Particle board cremation container with two strap handles, and no interior.',                                                                  NULL, 55),
+  ('cont005', '3745', 'Particle Board Container',       350.00, 'Particle board cremation container with two strap handles, and no interior.',                                                                  NULL, 55),
   -- Alternative Containers
-  ('csk056', '3745', 'Trayview',                       450.00, 'Cardboard container - cremation oriented with a cardboard exterior and crepe paper mattress and pillow.',                                      NULL, 56),
+  ('cont006', '3745', 'Trayview',                       450.00, 'Cardboard container - cremation oriented with a cardboard exterior and crepe paper mattress and pillow.',                                      NULL, 56),
   -- Rental Caskets
   ('cont001', '3745', 'Brockton Oak Ceremonial',      1599.00, 'Hardwood ceremonial casket with medium, oak stained exterior and rosetan crepe interior.',                                                     NULL, 57),
   ('cont002', '3745', 'Brockton Oak (1 Hour Rental)',   850.00, 'Hardwood ceremonial casket with medium oak stain finish.',                                                                                    NULL, 58);
