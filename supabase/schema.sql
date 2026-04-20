@@ -84,6 +84,7 @@ create table if not exists quotes (
   advisor_phone    text,
   package_discount numeric(10,2) default 0,
   subtotal         numeric(10,2) default 0,
+  arrangement_type text          default 'burial',
   discount_type    text          default 'percentage',
   discount_value   numeric(10,4) default 0,
   discount_amount  numeric(10,2) default 0,
