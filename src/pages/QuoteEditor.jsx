@@ -85,19 +85,32 @@ function reducer(state, action) {
                packageId: null, packageDiscount: 0, items: [],
                sections: INIT_SECTIONS, selectedCasket: null }
 
-    case 'SET_ARRANGEMENT':
-      return { ...state, arrangementType: action.value }
+    case 'SET_ARRANGEMENT': {
+      const newType = action.value
+      if (newType === 'cremation') {
+        const hasCremFee = state.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+        if (!hasCremFee) {
+          const items = [...state.items, freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')]
+          return { ...state, arrangementType: newType, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+        }
+      }
+      return { ...state, arrangementType: newType }
+    }
 
     case 'SET_PACKAGE': {
       const pkgDisc = action.packageDiscount || 0
       const pkgName = action.packageName || 'Package Services'
       const keep    = state.items.filter(i => !i.isFromPackage)
+      const hasCremFee = action.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+      // If package has crematory fee, remove any standalone crematory fee from keep to prevent duplicate
+      const cleanKeep = hasCremFee
+        ? keep.filter(k => k.serviceItemId !== CREMATORY_FEE.serviceItemId)
+        : keep
       const autoToAdd = AUTO_ADD
-        .filter(ai => !keep.some(k => k.serviceItemId === ai.serviceItemId))
+        .filter(ai => !cleanKeep.some(k => k.serviceItemId === ai.serviceItemId))
         .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }, 'sec-third-party'))
       const pkgItems = action.items.map(i => freshItem({ ...i, isFromPackage: true }, 'sec-main'))
-      const hasCremFee = action.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
-      const cremItem = (action.addCrematoryFee && !hasCremFee && !keep.some(k => k.serviceItemId === CREMATORY_FEE.serviceItemId))
+      const cremItem = (action.addCrematoryFee && !hasCremFee && !cleanKeep.some(k => k.serviceItemId === CREMATORY_FEE.serviceItemId))
         ? freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')
         : null
       const casketItem = action.defaultCasket ? freshItem({
@@ -112,7 +125,7 @@ function reducer(state, action) {
       const items = [
         ...pkgItems,
         ...(casketItem ? [casketItem] : []),
-        ...keep.map(i => ({ ...i, sectionId: i.sectionId || 'sec-extra' })),
+        ...cleanKeep.map(i => ({ ...i, sectionId: i.sectionId || 'sec-extra' })),
         ...autoToAdd,
         ...(cremItem ? [cremItem] : []),
       ]
