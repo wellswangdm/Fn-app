@@ -70,6 +70,13 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
+function defaultPst(item, arrangementType) {
+  if (item.isCasketItem) return arrangementType === 'burial'
+  const name = (item.name || '').toLowerCase()
+  if (name.includes('flower') || name.includes('stationer')) return true
+  return false
+}
+
 function freshItem(item, sectionId = 'sec-extra') {
   return { id: crypto.randomUUID(), gst: true, pst: false, ...item, sectionId }
 }
@@ -87,14 +94,17 @@ function reducer(state, action) {
 
     case 'SET_ARRANGEMENT': {
       const newType = action.value
+      // Update casket PST based on new arrangement type
+      let items = state.items.map(i =>
+        i.isCasketItem ? { ...i, pst: newType === 'burial' } : i
+      )
       if (newType === 'cremation') {
-        const hasCremFee = state.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+        const hasCremFee = items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
         if (!hasCremFee) {
-          const items = [...state.items, freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')]
-          return { ...state, arrangementType: newType, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+          items = [...items, freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')]
         }
       }
-      return { ...state, arrangementType: newType }
+      return { ...state, arrangementType: newType, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
     case 'SET_PACKAGE': {
@@ -109,7 +119,10 @@ function reducer(state, action) {
       const autoToAdd = AUTO_ADD
         .filter(ai => !cleanKeep.some(k => k.serviceItemId === ai.serviceItemId))
         .map(ai => freshItem({ ...ai, quantity: 1, isFromPackage: false }, 'sec-third-party'))
-      const pkgItems = action.items.map(i => freshItem({ ...i, isFromPackage: true }, 'sec-main'))
+      const pkgItems = action.items.map(i => freshItem({
+        ...i, isFromPackage: true,
+        pst: i.pst !== undefined ? i.pst : defaultPst(i, state.arrangementType),
+      }, 'sec-main'))
       const cremItem = (action.addCrematoryFee && !hasCremFee && !cleanKeep.some(k => k.serviceItemId === CREMATORY_FEE.serviceItemId))
         ? freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')
         : null
@@ -118,7 +131,7 @@ function reducer(state, action) {
         name:          action.defaultCasket.name,
         price:         action.defaultCasket.price,
         quantity:      1,
-        pst:           true,
+        pst:           state.arrangementType === 'burial',
         isCasketItem:  true,
         isFromPackage: true,
       }, 'sec-main') : null
@@ -149,7 +162,7 @@ function reducer(state, action) {
         : state.items.find(i => !i.isCustom && i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false }, 'sec-extra')]
+        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false, pst: defaultPst(action.item, state.arrangementType) }, 'sec-extra')]
       return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
@@ -218,7 +231,7 @@ function reducer(state, action) {
       const items = hasCasketItem
         ? state.items.map(i =>
             i.isCasketItem
-              ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price, pst: true }
+              ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price, pst: state.arrangementType === 'burial' }
               : i
           )
         : [...state.items, freshItem({
@@ -226,7 +239,7 @@ function reducer(state, action) {
             name:          casket.name,
             price:         casket.price,
             quantity:      1,
-            pst:           true,
+            pst:           state.arrangementType === 'burial',
             isCasketItem:  true,
             isFromPackage: false,
           }, 'sec-main')]
