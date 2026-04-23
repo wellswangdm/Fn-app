@@ -2,7 +2,7 @@ name: Deploy to Firebase
 
 on:
   push:
-    branches: [ main ]
+    branches: [ claude/funeral-quote-app-pTPY7 ]
 
 jobs:
   deploy:
