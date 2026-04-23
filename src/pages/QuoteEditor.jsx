@@ -351,7 +351,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
           ? supabase.from('service_items').select('id, price').in('id', serviceIds)
           : Promise.resolve({ data: [] }),
         casketIds.length
-          ? supabase.from('caskets').select('id, price').in('id', casketIds)
+          ? supabase.from('caskets').select('id, name, price, description, image_url').in('id', casketIds)
           : Promise.resolve({ data: [] }),
       ])
       const currentPrices = Object.fromEntries(
@@ -365,6 +365,16 @@ export default function QuoteEditor({ quoteId, onDone }) {
         }
       })
       if (Object.keys(stale).length > 0) setPriceMap(stale)
+
+      const casketItem = items.find(i => i.isCasketItem)
+      const casketData = (cskPrices || []).find(c => c.id === casketItem?.serviceItemId)
+      const selectedCasket = casketData ? {
+        id:          casketData.id,
+        name:        casketData.name,
+        price:       Number(casketData.price),
+        description: casketData.description || null,
+        imageUrl:    casketData.image_url || null,
+      } : null
 
       dispatch({
         type: 'LOAD',
@@ -395,6 +405,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
           status:           q.status,
           notes:            q.notes || '',
           items,
+          selectedCasket,
           ...calcTotals(items, Number(q.package_discount) || 0, q.discount_type || 'percentage', Number(q.discount_value)),
         },
       })
