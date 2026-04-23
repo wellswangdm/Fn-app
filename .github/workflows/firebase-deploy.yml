@@ -17,9 +17,5 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_TOKEN }}
-          channelId: live
-          projectId: dignity-fn-quote
+      - run: npm install -g firebase-tools
+      - run: firebase deploy --only hosting --project dignity-fn-quote --token "${{ secrets.FIREBASE_TOKEN }}"
