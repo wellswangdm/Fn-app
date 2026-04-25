@@ -56,7 +56,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
     const price = item.is_cash_advance
       ? Number(cashPrices[item.id] || 0)
       : Number(item.price ?? item.price_min ?? 0)
-    onAdd({ serviceItemId: item.id, name: item.name, price })
+    onAdd({ serviceItemId: item.id, name: item.name, price, categoryId: item.category_id })
   }
 
   return (

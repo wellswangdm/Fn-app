@@ -26,8 +26,11 @@ const AUTO_ADD = [
 
 const CREMATORY_FEE = { serviceItemId: 'si000076', name: 'Crematory Fee', price: 995.00 }
 
+const STATIONERY_CATEGORY_ID = 'c1000000-0000-0000-0000-000000000006'
+const URN_ITEM_IDS = new Set(['si000213', 'si000214', 'si000215'])
+
 // Items that are opt-in within a package (excluded from auto-add, user picks them in casket picker)
-const OPTIONAL_ITEM_IDS = new Set(['si000042', 'si000088', 'si000207', 'si000208', 'si000209'])
+const OPTIONAL_ITEM_IDS = new Set(['si000042', 'si000088', 'si000207', 'si000208', 'si000209', 'si000213', 'si000214', 'si000215'])
 
 const INIT_SECTIONS = [
   { id: 'sec-main',        name: 'Guaranteed Items' },
@@ -72,8 +75,10 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
 
 function defaultPst(item, arrangementType) {
   if (item.isCasketItem) return arrangementType === 'burial'
+  if (URN_ITEM_IDS.has(item.serviceItemId)) return true
+  if (item.categoryId === STATIONERY_CATEGORY_ID) return true
   const name = (item.name || '').toLowerCase()
-  if (name.includes('flower') || name.includes('stationer')) return true
+  if (name.includes('flower')) return true
   return false
 }
 
