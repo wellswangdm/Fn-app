@@ -166,8 +166,8 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
 
   return (
     <>
-      {/* Screen modal — hidden during print */}
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8 print:hidden">
+      {/* Screen modal */}
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
         <div className="w-full max-w-3xl mx-4">
           <div className="flex items-center justify-between mb-4">
             <button onClick={onClose} className="text-white/80 hover:text-white text-sm transition-colors">
@@ -185,9 +185,15 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
         </div>
       </div>
 
-      {/* Print portal — lives directly in <body>, only visible when printing */}
+      {/* Print portal — lives directly in <body> outside #root, only visible when printing */}
       {createPortal(
-        <div className="hidden print:block w-full p-0 m-0">
+        <div id="print-portal" style={{ display: 'none' }}>
+          <style>{`
+            @media print {
+              #root { display: none !important; }
+              #print-portal { display: block !important; }
+            }
+          `}</style>
           <QuoteCard home={home} state={state} attachedImage={attachedImage} />
         </div>,
         document.body
