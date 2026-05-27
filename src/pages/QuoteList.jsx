@@ -17,6 +17,7 @@ export default function QuoteList({ onNew, onEdit }) {
   const [error,    setError]    = useState(null)
   const [search,   setSearch]   = useState('')
   const [deleting, setDeleting] = useState(null)
+  const [expanded, setExpanded] = useState(new Set())
 
   useEffect(() => { loadQuotes() }, [])
 
@@ -24,7 +25,7 @@ export default function QuoteList({ onNew, onEdit }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('quotes')
-      .select('id, deceased_name, customer_name, status, total, created_at, funeral_homes(name)')
+      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, funeral_homes(name)')
       .order('created_at', { ascending: false })
     if (error) setError(error.message)
     else setQuotes(data)
@@ -39,10 +40,75 @@ export default function QuoteList({ onNew, onEdit }) {
     setDeleting(null)
   }
 
+  function toggleExpand(groupKey) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      next.has(groupKey) ? next.delete(groupKey) : next.add(groupKey)
+      return next
+    })
+  }
+
   const filtered = quotes.filter(q => {
     const s = search.toLowerCase()
     return !s || q.deceased_name?.toLowerCase().includes(s) || q.customer_name?.toLowerCase().includes(s)
   })
+
+  // Group quotes by contact_id; quotes missing contact_id each get their own group keyed by id
+  const groups = []
+  const groupMap = new Map()
+  for (const q of filtered) {
+    const key = q.contact_id || q.id
+    if (!groupMap.has(key)) {
+      const group = { key, quotes: [] }
+      groupMap.set(key, group)
+      groups.push(group)
+    }
+    groupMap.get(key).quotes.push(q)
+  }
+
+  function renderRow(q, isSubRow = false) {
+    const s = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
+    return (
+      <tr
+        key={q.id}
+        className={`hover:bg-stone-50/60 transition-colors cursor-pointer ${isSubRow ? 'bg-stone-50/30' : ''}`}
+        onClick={() => onEdit(q.id)}
+      >
+        <td className={`px-4 py-3 text-sm font-medium ${isSubRow ? 'pl-8 text-stone-500' : 'text-stone-800'}`}>
+          {isSubRow
+            ? <span className="text-xs text-stone-400">{q.deceased_name || <span className="text-stone-300">—</span>}</span>
+            : (q.deceased_name || <span className="text-stone-300">—</span>)
+          }
+        </td>
+        <td className="px-4 py-3 text-sm text-stone-500">
+          {q.customer_name || <span className="text-stone-300">—</span>}
+        </td>
+        <td className="px-4 py-3 text-xs text-stone-400">
+          {q.funeral_homes?.name || '—'}
+        </td>
+        <td className="px-4 py-3">
+          <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>
+            {s.label}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">
+          {fmt(q.total)}
+        </td>
+        <td className="px-4 py-3 text-xs text-stone-400">
+          {new Date(q.created_at).toLocaleDateString('en-CA')}
+        </td>
+        <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+          <button
+            onClick={() => deleteQuote(q.id)}
+            disabled={deleting === q.id}
+            className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -80,7 +146,7 @@ export default function QuoteList({ onNew, onEdit }) {
         {error   && <p className="text-sm text-red-500">Error: {error}</p>}
 
         {!loading && !error && (
-          filtered.length === 0 ? (
+          groups.length === 0 ? (
             <div className="card p-16 text-center">
               <p className="text-stone-400 text-sm mb-3">No quotes yet</p>
               <button onClick={onNew} className="btn-primary">Create your first quote</button>
@@ -100,44 +166,63 @@ export default function QuoteList({ onNew, onEdit }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-50">
-                  {filtered.map(q => {
-                    const s = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
+                  {groups.map(group => {
+                    const primary = group.quotes[0]
+                    const rest    = group.quotes.slice(1)
+                    const hasMultiple = rest.length > 0
+                    const isOpen = expanded.has(group.key)
+                    const s = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
                     return (
-                      <tr
-                        key={q.id}
-                        className="hover:bg-stone-50/60 transition-colors cursor-pointer"
-                        onClick={() => onEdit(q.id)}
-                      >
-                        <td className="px-4 py-3 text-sm font-medium text-stone-800">
-                          {q.deceased_name || <span className="text-stone-300">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-stone-500">
-                          {q.customer_name || <span className="text-stone-300">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-stone-400">
-                          {q.funeral_homes?.name || '—'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>
-                            {s.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">
-                          {fmt(q.total)}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-stone-400">
-                          {new Date(q.created_at).toLocaleDateString('en-CA')}
-                        </td>
-                        <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                          <button
-                            onClick={() => deleteQuote(q.id)}
-                            disabled={deleting === q.id}
-                            className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
+                      <>
+                        {/* Primary row */}
+                        <tr
+                          key={primary.id}
+                          className="hover:bg-stone-50/60 transition-colors cursor-pointer"
+                          onClick={() => onEdit(primary.id)}
+                        >
+                          <td className="px-4 py-3 text-sm font-medium text-stone-800">
+                            <div className="flex items-center gap-2">
+                              {primary.deceased_name || <span className="text-stone-300">—</span>}
+                              {hasMultiple && (
+                                <button
+                                  onClick={e => { e.stopPropagation(); toggleExpand(group.key) }}
+                                  className="text-[10px] text-primary-500 hover:text-primary-700 border border-primary-200 hover:border-primary-400 rounded-full px-1.5 py-0.5 font-semibold transition-colors shrink-0"
+                                >
+                                  {isOpen ? '▾' : '▸'} {rest.length + 1} versions
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-stone-500">
+                            {primary.customer_name || <span className="text-stone-300">—</span>}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-stone-400">
+                            {primary.funeral_homes?.name || '—'}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>
+                              {s.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">
+                            {fmt(primary.total)}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-stone-400">
+                            {new Date(primary.created_at).toLocaleDateString('en-CA')}
+                          </td>
+                          <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => deleteQuote(primary.id)}
+                              disabled={deleting === primary.id}
+                              className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                        {/* Sub-rows for additional versions */}
+                        {isOpen && rest.map(q => renderRow(q, true))}
+                      </>
                     )
                   })}
                 </tbody>

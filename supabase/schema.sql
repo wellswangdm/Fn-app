@@ -104,7 +104,8 @@ create table if not exists quotes (
   purchaser_birthdate date,
   purchaser_address   text,
   created_at          timestamptz   default now(),
-  updated_at          timestamptz   default now()
+  updated_at          timestamptz   default now(),
+  contact_id          uuid
 );
 
 -- Quote line items — price/name are snapshots at time of quoting
