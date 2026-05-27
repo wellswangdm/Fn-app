@@ -43,6 +43,14 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
 
   return (
     <div id="print-modal" className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
+      {/* Print-only: hide everything except the quote card */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #print-zone, #print-zone * { visibility: visible; }
+          #print-zone { position: absolute; top: 0; left: 0; width: 100%; border-radius: 0; box-shadow: none; }
+        }
+      `}</style>
       {/* Toolbar — hidden when printing */}
       <div className="w-full max-w-3xl mx-4">
         <div className="flex items-center justify-between mb-4 print:hidden">
@@ -186,20 +194,18 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
               <p className="text-[10px] text-stone-500 whitespace-pre-wrap">{notes}</p>
             </div>
           )}
-        </div>
 
-        {/* Attached image — new print page */}
-        {attachedImage && (
-          <div className="mt-8 print:mt-0 print:break-before-page flex items-center justify-center
-                          bg-white rounded-2xl shadow-sm border border-stone-100 p-6 print:p-0
-                          print:border-0 print:shadow-none print:rounded-none">
-            <img
-              src={attachedImage}
-              alt="Attached"
-              className="max-w-full max-h-[80vh] print:max-h-screen object-contain"
-            />
-          </div>
-        )}
+          {/* Attached image — same page, below notes */}
+          {attachedImage && (
+            <div className="border-t border-stone-100 px-8 print:px-6 py-4 flex justify-center">
+              <img
+                src={attachedImage}
+                alt="Attached"
+                className="max-w-full object-contain max-h-64 print:max-h-[400px]"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
