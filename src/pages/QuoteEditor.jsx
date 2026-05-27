@@ -6,6 +6,7 @@ import QuoteSummary from '../components/QuoteSummary.jsx'
 import CustomerForm from '../components/CustomerForm.jsx'
 import PrintView from '../components/PrintView.jsx'
 import CasketPicker from '../components/CasketPicker.jsx'
+import ComparisonView from '../components/ComparisonView.jsx'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -273,6 +274,7 @@ const INIT = {
   loaded:              false,
   funeralHomeId:       null,
   packageId:           null,
+  contactId:           null,
   quoteNumber:         '',
   beneficiaryName:     '',
   beneficiaryPhone:    '',
@@ -311,7 +313,7 @@ const INIT = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function QuoteEditor({ quoteId, onDone }) {
+export default function QuoteEditor({ quoteId, onDone, onEdit }) {
   const [state, dispatch] = useReducer(reducer, INIT)
   const [homes,          setHomes]          = useState([])
   const [saving,         setSaving]         = useState(false)
@@ -322,6 +324,8 @@ export default function QuoteEditor({ quoteId, onDone }) {
   const [casketPickerOpen, setCasketPickerOpen] = useState(false)
   const [pendingOptionals, setPendingOptionals] = useState([])
   const [priceMap,        setPriceMap]        = useState(null) // { itemId -> newPrice } when stale
+  const [versions,        setVersions]        = useState([])
+  const [showCompare,     setShowCompare]     = useState(false)
 
   useEffect(() => {
     supabase
@@ -333,12 +337,12 @@ export default function QuoteEditor({ quoteId, onDone }) {
         if (data?.length && !quoteId)
           dispatch({ type: 'SET_HOME', id: data[0].id, taxRate: Number(data[0].tax_rate) })
         else if (!quoteId)
-          dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber() } })
+          dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber(), contactId: crypto.randomUUID() } })
       })
   }, [])
 
   useEffect(() => {
-    if (!quoteId) { dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber() } }); return }
+    if (!quoteId) { dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber(), contactId: crypto.randomUUID() } }); return }
     async function load() {
       const [{ data: q }, { data: qi }] = await Promise.all([
         supabase.from('quotes').select('*').eq('id', quoteId).single(),
@@ -400,6 +404,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
         payload: {
           funeralHomeId:       q.funeral_home_id,
           packageId:           q.package_id,
+          contactId:           q.contact_id || crypto.randomUUID(),
           quoteNumber:         q.quote_number || generateQuoteNumber(),
           beneficiaryName:     q.deceased_name        || '',
           beneficiaryPhone:    q.beneficiary_phone     || '',
@@ -432,6 +437,10 @@ export default function QuoteEditor({ quoteId, onDone }) {
     load()
   }, [quoteId])
 
+  useEffect(() => {
+    if (state.contactId && quoteId) loadVersions(state.contactId)
+  }, [state.contactId, quoteId])
+
   function handlePackageSelect(id, allItems, pkgDisc, pkgName, defaultCasket) {
     const optionals      = allItems.filter(i => OPTIONAL_ITEM_IDS.has(i.serviceItemId))
     const regularItems   = allItems.filter(i => !OPTIONAL_ITEM_IDS.has(i.serviceItemId))
@@ -443,41 +452,66 @@ export default function QuoteEditor({ quoteId, onDone }) {
     if (defaultCasket || optionals.length > 0) setCasketPickerOpen(true)
   }
 
+  function buildItemRows(items, qid) {
+    return items.map(i => ({
+      quote_id:        qid,
+      service_item_id: i.isCasketItem ? null : (i.isCustom ? null : (i.serviceItemId || null)),
+      casket_id:       i.isCasketItem ? (i.serviceItemId || null) : null,
+      name:            i.name,
+      price:           i.price,
+      quantity:        i.quantity,
+      is_from_package: i.isFromPackage,
+      is_gst:          i.gst !== false,
+      is_pst:          i.pst === true,
+      no_disc:         i.noDisc || false,
+      is_casket_item:  i.isCasketItem || false,
+      section_id:      i.sectionId || null,
+      notes:           i.notes || null,
+    }))
+  }
+
+  function buildQuoteData() {
+    return {
+      funeral_home_id:      state.funeralHomeId,
+      package_id:           state.packageId || null,
+      deceased_name:        state.beneficiaryName,
+      customer_name:        state.purchaserDifferent ? state.purchaserName  : state.beneficiaryName,
+      customer_email:       state.purchaserDifferent ? state.purchaserEmail : state.beneficiaryEmail,
+      customer_phone:       state.purchaserDifferent ? state.purchaserPhone : state.beneficiaryPhone,
+      beneficiary_phone:    state.beneficiaryPhone,
+      beneficiary_email:    state.beneficiaryEmail,
+      beneficiary_birthdate: state.beneficiaryBirthdate || null,
+      beneficiary_address:  state.beneficiaryAddress,
+      purchaser_different:  state.purchaserDifferent || false,
+      purchaser_name:       state.purchaserName,
+      purchaser_phone:      state.purchaserPhone,
+      purchaser_email:      state.purchaserEmail,
+      purchaser_birthdate:  state.purchaserBirthdate || null,
+      purchaser_address:    state.purchaserAddress,
+      advisor_name:         state.advisorName,
+      advisor_email:        state.advisorEmail,
+      advisor_phone:        state.advisorPhone,
+      package_discount:     state.packageDiscount,
+      subtotal:             state.subtotal,
+      arrangement_type:     state.arrangementType,
+      discount_type:        state.discountType,
+      discount_value:       state.discountValue,
+      discount_amount:      state.discountAmount,
+      tax_rate:             state.taxRate,
+      tax_amount:           state.taxAmount,
+      total:                state.total,
+      notes:                state.notes,
+      contact_id:           state.contactId,
+    }
+  }
+
   async function save(status) {
     setSaving(true); setSaveErr(null)
     try {
       const quoteData = {
-        funeral_home_id: state.funeralHomeId,
-        package_id:           state.packageId || null,
-        quote_number:         state.quoteNumber || generateQuoteNumber(),
-        deceased_name:        state.beneficiaryName,
-        customer_name:        state.purchaserDifferent ? state.purchaserName  : state.beneficiaryName,
-        customer_email:       state.purchaserDifferent ? state.purchaserEmail : state.beneficiaryEmail,
-        customer_phone:       state.purchaserDifferent ? state.purchaserPhone : state.beneficiaryPhone,
-        beneficiary_phone:    state.beneficiaryPhone,
-        beneficiary_email:    state.beneficiaryEmail,
-        beneficiary_birthdate: state.beneficiaryBirthdate || null,
-        beneficiary_address:  state.beneficiaryAddress,
-        purchaser_different:  state.purchaserDifferent || false,
-        purchaser_name:       state.purchaserName,
-        purchaser_phone:      state.purchaserPhone,
-        purchaser_email:      state.purchaserEmail,
-        purchaser_birthdate:  state.purchaserBirthdate || null,
-        purchaser_address:    state.purchaserAddress,
-        advisor_name:         state.advisorName,
-        advisor_email:        state.advisorEmail,
-        advisor_phone:        state.advisorPhone,
-        package_discount:     state.packageDiscount,
-        subtotal:             state.subtotal,
-        arrangement_type:     state.arrangementType,
-        discount_type:        state.discountType,
-        discount_value:       state.discountValue,
-        discount_amount:      state.discountAmount,
-        tax_rate:             state.taxRate,
-        tax_amount:           state.taxAmount,
-        total:                state.total,
-        status:               status || state.status,
-        notes:                state.notes,
+        ...buildQuoteData(),
+        quote_number: state.quoteNumber || generateQuoteNumber(),
+        status:       status || state.status,
       }
       let qid = quoteId
       if (quoteId) {
@@ -488,29 +522,71 @@ export default function QuoteEditor({ quoteId, onDone }) {
       }
       await supabase.from('quote_items').delete().eq('quote_id', qid)
       if (state.items.length) {
-        await supabase.from('quote_items').insert(
-          state.items.map(i => ({
-            quote_id:        qid,
-            service_item_id: i.isCasketItem ? null : (i.isCustom ? null : (i.serviceItemId || null)),
-            casket_id:       i.isCasketItem ? (i.serviceItemId || null) : null,
-            name:            i.name,
-            price:           i.price,
-            quantity:        i.quantity,
-            is_from_package: i.isFromPackage,
-            is_gst:          i.gst !== false,
-            is_pst:          i.pst === true,
-            no_disc:         i.noDisc || false,
-            is_casket_item:  i.isCasketItem || false,
-            section_id:      i.sectionId || null,
-            notes:           i.notes || null,
-          }))
-        )
+        await supabase.from('quote_items').insert(buildItemRows(state.items, qid))
       }
       if (status) dispatch({ type: 'SET_STATUS', status })
       onDone()
     } catch (e) {
       setSaveErr(e.message)
     }
+    setSaving(false)
+  }
+
+  async function loadVersions(contactId) {
+    if (!contactId || !quoteId) return
+    const { data } = await supabase
+      .from('quotes')
+      .select('id, quote_number, status, total, created_at')
+      .eq('contact_id', contactId)
+      .order('created_at', { ascending: true })
+    setVersions(data || [])
+  }
+
+  async function duplicateQuote() {
+    setSaving(true); setSaveErr(null)
+    try {
+      const { data: newQ } = await supabase.from('quotes').insert({
+        ...buildQuoteData(),
+        quote_number: generateQuoteNumber(),
+        status: 'draft',
+        contact_id: state.contactId,
+      }).select('id').single()
+      if (state.items.length) {
+        await supabase.from('quote_items').insert(buildItemRows(state.items, newQ.id))
+      }
+      if (onEdit) onEdit(newQ.id)
+    } catch (e) { setSaveErr(e.message) }
+    setSaving(false)
+  }
+
+  async function newVersion() {
+    setSaving(true); setSaveErr(null)
+    try {
+      const { data: newQ } = await supabase.from('quotes').insert({
+        funeral_home_id:      state.funeralHomeId,
+        quote_number:         generateQuoteNumber(),
+        contact_id:           state.contactId,
+        deceased_name:        state.beneficiaryName,
+        beneficiary_phone:    state.beneficiaryPhone,
+        beneficiary_email:    state.beneficiaryEmail,
+        beneficiary_birthdate: state.beneficiaryBirthdate || null,
+        beneficiary_address:  state.beneficiaryAddress,
+        purchaser_different:  state.purchaserDifferent,
+        purchaser_name:       state.purchaserName,
+        purchaser_phone:      state.purchaserPhone,
+        purchaser_email:      state.purchaserEmail,
+        purchaser_birthdate:  state.purchaserBirthdate || null,
+        purchaser_address:    state.purchaserAddress,
+        advisor_name:         state.advisorName,
+        advisor_email:        state.advisorEmail,
+        advisor_phone:        state.advisorPhone,
+        tax_rate:             state.taxRate,
+        status:               'draft',
+        notes:                state.notes,
+        arrangement_type:     'burial',
+      }).select('id').single()
+      if (onEdit) onEdit(newQ.id)
+    } catch (e) { setSaveErr(e.message) }
     setSaving(false)
   }
 
@@ -557,6 +633,26 @@ export default function QuoteEditor({ quoteId, onDone }) {
           </select>
 
           <div className="flex items-center gap-2 shrink-0">
+            {quoteId && (
+              <>
+                <button
+                  onClick={duplicateQuote}
+                  disabled={saving}
+                  className="text-primary-300 hover:text-white disabled:opacity-40 text-xs transition-colors"
+                  title="Duplicate this quote (same contact)"
+                >
+                  Duplicate
+                </button>
+                <button
+                  onClick={newVersion}
+                  disabled={saving}
+                  className="text-[11px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-full transition-colors"
+                  title="New blank version for same contact"
+                >
+                  + Version
+                </button>
+              </>
+            )}
             <label className="text-primary-200 hover:text-white text-xs px-3 py-1.5
                               border border-white/20 rounded-lg transition-colors cursor-pointer"
                    title={attachedImage ? 'Replace attached image' : 'Attach image to print'}>
@@ -619,6 +715,52 @@ export default function QuoteEditor({ quoteId, onDone }) {
           </div>
         )}
       </header>
+
+      {/* ── Version Switcher Bar ────────────────────────────────────────────── */}
+      {quoteId && versions.length > 1 && (
+        <div className="bg-primary-900 border-b border-primary-700 px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
+            <span className="text-primary-400 text-[11px] font-semibold uppercase tracking-widest mr-1">Versions</span>
+            {versions.map((v, i) => (
+              <button
+                key={v.id}
+                onClick={() => v.id !== quoteId && onEdit && onEdit(v.id)}
+                className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
+                  v.id === quoteId
+                    ? 'bg-white text-primary-800'
+                    : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
+                }`}
+              >
+                V{i + 1}
+              </button>
+            ))}
+            <div className="ml-auto flex items-center gap-2">
+              {versions.length >= 2 && (
+                <button
+                  onClick={() => setShowCompare(true)}
+                  className="text-[11px] text-primary-400 hover:text-white transition-colors"
+                >
+                  Compare
+                </button>
+              )}
+              <button
+                onClick={duplicateQuote}
+                disabled={saving}
+                className="text-[11px] text-primary-400 hover:text-white transition-colors"
+              >
+                Duplicate
+              </button>
+              <button
+                onClick={newVersion}
+                disabled={saving}
+                className="text-[11px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-full transition-colors"
+              >
+                + New Version
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -753,6 +895,14 @@ export default function QuoteEditor({ quoteId, onDone }) {
 
       {showPrint && (
         <PrintView home={currentHome} state={state} attachedImage={attachedImage} onClose={() => setShowPrint(false)} />
+      )}
+
+      {showCompare && state.contactId && (
+        <ComparisonView
+          contactId={state.contactId}
+          currentQuoteId={quoteId}
+          onClose={() => setShowCompare(false)}
+        />
       )}
 
       {casketPickerOpen && (
