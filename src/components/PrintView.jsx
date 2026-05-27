@@ -1,5 +1,3 @@
-import { useEffect } from 'react'
-
 const GST_RATE = 0.05
 const PST_RATE = 0.07
 
@@ -7,36 +5,39 @@ function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function handlePrint() {
+function openPrintWindow() {
   const zone = document.getElementById('print-zone')
-  if (!zone) { window.print(); return }
+  if (!zone) return
 
-  // Clone the rendered quote DOM and place it directly in <body>
-  const clone = zone.cloneNode(true)
-  clone.id = 'print-clone'
-  document.body.appendChild(clone)
+  // Collect all stylesheets from the current page so Tailwind applies in the new window
+  const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+    .map(l => `<link rel="stylesheet" href="${l.href}">`)
+    .join('\n')
 
-  // Hide everything except the clone during print
-  const style = document.createElement('style')
-  style.id = 'print-clone-style'
-  style.textContent = `
-    @media print {
-      body > *:not(#print-clone) { display: none !important; }
-      #print-clone { display: block !important; border-radius: 0; box-shadow: none; }
-    }
-  `
-  document.head.appendChild(style)
+  const win = window.open('', '_blank')
+  if (!win) { alert('Allow popups for this site to print.'); return }
 
-  window.print()
-
-  // Clean up after print dialog closes
-  const cleanup = () => {
-    document.getElementById('print-clone')?.remove()
-    document.getElementById('print-clone-style')?.remove()
-    window.removeEventListener('afterprint', cleanup)
-  }
-  window.addEventListener('afterprint', cleanup)
-  setTimeout(cleanup, 5000) // fallback if afterprint doesn't fire
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  ${stylesheets}
+  <style>
+    body { margin: 0; padding: 24px; background: #fff; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  ${zone.outerHTML}
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() { window.print(); }, 400);
+    });
+  <\/script>
+</body>
+</html>`)
+  win.document.close()
 }
 
 export default function PrintView({ home, state, attachedImage, onClose }) {
@@ -71,7 +72,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
             ← Back
           </button>
           <button
-            onClick={handlePrint}
+            onClick={openPrintWindow}
             className="bg-white text-primary-800 text-sm font-semibold px-5 py-2
                        rounded-lg hover:bg-stone-100 transition-colors shadow"
           >
@@ -79,11 +80,11 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
           </button>
         </div>
 
-        {/* Quote card — this is what gets cloned for printing */}
+        {/* Quote preview + what gets printed */}
         <div id="print-zone" className="bg-white rounded-2xl shadow-2xl overflow-hidden">
 
           {/* Letterhead */}
-          <div className="bg-primary-800 px-8 py-5 print:px-6 print:py-4 flex items-start justify-between">
+          <div className="bg-primary-800 px-8 py-5 flex items-start justify-between">
             <div>
               <h1 className="text-white text-xl font-bold tracking-tight leading-tight">
                 {home?.name || 'Funeral Centre'}
@@ -103,7 +104,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
           </div>
 
           {/* Body */}
-          <div className="px-8 py-6 print:px-6 print:py-4">
+          <div className="px-8 py-6">
 
             {packageName && (
               <div className="flex items-center justify-between mb-5 pb-4 border-b border-stone-200">
