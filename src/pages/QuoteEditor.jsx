@@ -318,6 +318,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
   const [saveErr,        setSaveErr]        = useState(null)
   const [tab,            setTab]            = useState('packages')
   const [showPrint,      setShowPrint]      = useState(false)
+  const [attachedImage,  setAttachedImage]  = useState(null)
   const [casketPickerOpen, setCasketPickerOpen] = useState(false)
   const [pendingOptionals, setPendingOptionals] = useState([])
   const [priceMap,        setPriceMap]        = useState(null) // { itemId -> newPrice } when stale
@@ -556,6 +557,29 @@ export default function QuoteEditor({ quoteId, onDone }) {
           </select>
 
           <div className="flex items-center gap-2 shrink-0">
+            <label className="text-primary-200 hover:text-white text-xs px-3 py-1.5
+                              border border-white/20 rounded-lg transition-colors cursor-pointer"
+                   title={attachedImage ? 'Replace attached image' : 'Attach image to print'}>
+              {attachedImage ? 'Image ✓' : 'Attach image'}
+              <input
+                type="file" accept="image/*" className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = ev => setAttachedImage(ev.target.result)
+                  reader.readAsDataURL(file)
+                  e.target.value = ''
+                }}
+              />
+            </label>
+            {attachedImage && (
+              <button
+                onClick={() => setAttachedImage(null)}
+                className="text-primary-300 hover:text-white text-xs transition-colors"
+                title="Remove attached image"
+              >✕</button>
+            )}
             <button
               onClick={() => setShowPrint(true)}
               disabled={!state.items.length}
@@ -728,7 +752,7 @@ export default function QuoteEditor({ quoteId, onDone }) {
       </div>
 
       {showPrint && (
-        <PrintView home={currentHome} state={state} onClose={() => setShowPrint(false)} />
+        <PrintView home={currentHome} state={state} attachedImage={attachedImage} onClose={() => setShowPrint(false)} />
       )}
 
       {casketPickerOpen && (

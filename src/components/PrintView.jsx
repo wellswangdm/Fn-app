@@ -7,7 +7,7 @@ function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-export default function PrintView({ home, state, onClose }) {
+export default function PrintView({ home, state, attachedImage, onClose }) {
   const {
     quoteNumber, advisorName, advisorEmail, advisorPhone,
     items, sections, selectedCasket, packageName, arrangementType,
@@ -187,6 +187,19 @@ export default function PrintView({ home, state, onClose }) {
             </div>
           )}
         </div>
+
+        {/* Attached image — new print page */}
+        {attachedImage && (
+          <div className="mt-8 print:mt-0 print:break-before-page flex items-center justify-center
+                          bg-white rounded-2xl shadow-sm border border-stone-100 p-6 print:p-0
+                          print:border-0 print:shadow-none print:rounded-none">
+            <img
+              src={attachedImage}
+              alt="Attached"
+              className="max-w-full max-h-[80vh] print:max-h-screen object-contain"
+            />
+          </div>
+        )}
       </div>
     </div>
   )
