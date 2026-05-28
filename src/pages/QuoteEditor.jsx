@@ -328,6 +328,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
   const [showCompare,     setShowCompare]     = useState(false)
   const [addVersionOpen,  setAddVersionOpen]  = useState(false)
   const [editingLabel,    setEditingLabel]    = useState(null) // { id, value }
+  const [savedFlash,      setSavedFlash]      = useState(false)
 
   useEffect(() => {
     supabase
@@ -527,7 +528,12 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
         await supabase.from('quote_items').insert(buildItemRows(state.items, qid))
       }
       if (status) dispatch({ type: 'SET_STATUS', status })
-      onDone()
+      if (!quoteId && onEdit) {
+        onEdit(qid) // first-time save: navigate to the newly created quote
+      } else {
+        setSavedFlash(true)
+        setTimeout(() => setSavedFlash(false), 2500)
+      }
     } catch (e) {
       setSaveErr(e.message)
     }
@@ -703,6 +709,11 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
         </div>
         {saveErr && (
           <div className="bg-red-600 text-white text-xs px-4 py-2">Error: {saveErr}</div>
+        )}
+        {savedFlash && (
+          <div className="bg-emerald-600 text-white text-xs px-4 py-1.5 text-center font-medium transition-all">
+            Saved ✓
+          </div>
         )}
         {priceMap && (
           <div className="bg-amber-500 text-white text-xs px-4 py-2 flex items-center justify-between">
