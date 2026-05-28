@@ -326,6 +326,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
   const [priceMap,        setPriceMap]        = useState(null) // { itemId -> newPrice } when stale
   const [versions,        setVersions]        = useState([])
   const [showCompare,     setShowCompare]     = useState(false)
+  const [addVersionOpen,  setAddVersionOpen]  = useState(false)
 
   useEffect(() => {
     supabase
@@ -590,6 +591,18 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
     setSaving(false)
   }
 
+  async function deleteVersion(versionId) {
+    if (!window.confirm('Delete this version? This cannot be undone.')) return
+    await supabase.from('quote_items').delete().eq('quote_id', versionId)
+    await supabase.from('quotes').delete().eq('id', versionId)
+    const remaining = versions.filter(v => v.id !== versionId)
+    if (versionId === quoteId && remaining.length > 0 && onEdit) {
+      onEdit(remaining[0].id)
+    } else {
+      setVersions(remaining)
+    }
+  }
+
   const currentHome = homes.find(h => h.id === state.funeralHomeId) || null
 
   if (!state.loaded) return (
@@ -633,26 +646,6 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
           </select>
 
           <div className="flex items-center gap-2 shrink-0">
-            {quoteId && (
-              <>
-                <button
-                  onClick={duplicateQuote}
-                  disabled={saving}
-                  className="text-primary-300 hover:text-white disabled:opacity-40 text-xs transition-colors"
-                  title="Duplicate this quote (same contact)"
-                >
-                  Duplicate
-                </button>
-                <button
-                  onClick={newVersion}
-                  disabled={saving}
-                  className="text-[11px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-full transition-colors"
-                  title="New blank version for same contact"
-                >
-                  + Version
-                </button>
-              </>
-            )}
             <label className="text-primary-200 hover:text-white text-xs px-3 py-1.5
                               border border-white/20 rounded-lg transition-colors cursor-pointer"
                    title={attachedImage ? 'Replace attached image' : 'Attach image to print'}>
@@ -716,48 +709,87 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
         )}
       </header>
 
-      {/* ── Version Switcher Bar ────────────────────────────────────────────── */}
-      {quoteId && versions.length > 1 && (
+      {/* ── Version Bar ─────────────────────────────────────────────────────── */}
+      {quoteId && (
         <div className="bg-primary-900 border-b border-primary-700 px-4 py-2">
           <div className="max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
-            <span className="text-primary-400 text-[11px] font-semibold uppercase tracking-widest mr-1">Versions</span>
-            {versions.map((v, i) => (
+            <span className="text-primary-500 text-[11px] font-semibold uppercase tracking-widest shrink-0">Versions</span>
+
+            {/* Version pills */}
+            {versions.map((v, i) => {
+              const isCurrent = v.id === quoteId
+              return (
+                <div key={v.id} className="flex items-center gap-0.5 group">
+                  <button
+                    onClick={() => !isCurrent && onEdit && onEdit(v.id)}
+                    className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                      isCurrent
+                        ? 'bg-white text-primary-800 cursor-default'
+                        : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
+                    }`}
+                  >
+                    V{i + 1}
+                    <span className={`ml-1.5 text-[10px] ${isCurrent ? 'text-primary-500' : 'text-primary-600'}`}>
+                      {v.status === 'finalized' ? '✓' : v.status === 'accepted' ? '★' : ''}
+                    </span>
+                  </button>
+                  {/* Delete — only on non-current versions, hidden until hover */}
+                  {!isCurrent && (
+                    <button
+                      onClick={() => deleteVersion(v.id)}
+                      className="opacity-0 group-hover:opacity-100 text-primary-600 hover:text-red-400
+                                 text-[11px] leading-none transition-all px-0.5"
+                      title={`Delete V${i + 1}`}
+                    >×</button>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Add Version dropdown */}
+            <div className="relative">
               <button
-                key={v.id}
-                onClick={() => v.id !== quoteId && onEdit && onEdit(v.id)}
-                className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
-                  v.id === quoteId
-                    ? 'bg-white text-primary-800'
-                    : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
-                }`}
+                onClick={() => setAddVersionOpen(v => !v)}
+                disabled={saving}
+                className="text-[11px] text-primary-400 hover:text-white border border-primary-700
+                           hover:border-primary-500 px-2.5 py-1 rounded-full transition-colors disabled:opacity-40"
               >
-                V{i + 1}
+                + Add Version
               </button>
-            ))}
-            <div className="ml-auto flex items-center gap-2">
-              {versions.length >= 2 && (
-                <button
-                  onClick={() => setShowCompare(true)}
-                  className="text-[11px] text-primary-400 hover:text-white transition-colors"
-                >
-                  Compare
-                </button>
+              {addVersionOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setAddVersionOpen(false)} />
+                  <div className="absolute left-0 top-full mt-1.5 z-20 bg-white rounded-xl shadow-xl
+                                  border border-stone-100 py-1 w-48">
+                    <button
+                      onClick={() => { setAddVersionOpen(false); duplicateQuote() }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <p className="font-medium">Duplicate</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Copy all items & package</p>
+                    </button>
+                    <div className="border-t border-stone-100 mx-2" />
+                    <button
+                      onClick={() => { setAddVersionOpen(false); newVersion() }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <p className="font-medium">Start fresh</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Same contact, blank quote</p>
+                    </button>
+                  </div>
+                </>
               )}
-              <button
-                onClick={duplicateQuote}
-                disabled={saving}
-                className="text-[11px] text-primary-400 hover:text-white transition-colors"
-              >
-                Duplicate
-              </button>
-              <button
-                onClick={newVersion}
-                disabled={saving}
-                className="text-[11px] bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-full transition-colors"
-              >
-                + New Version
-              </button>
             </div>
+
+            {/* Compare — only with 2+ versions */}
+            {versions.length >= 2 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                className="text-[11px] text-primary-400 hover:text-white transition-colors ml-1"
+              >
+                Compare
+              </button>
+            )}
           </div>
         </div>
       )}
