@@ -28,7 +28,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
     async function load() {
       const { data: qs } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, total, subtotal, package_discount, discount_amount, tax_amount, arrangement_type, created_at, packages(name)')
+        .select('id, quote_number, status, total, subtotal, package_discount, discount_amount, tax_amount, arrangement_type, created_at, version_label, packages(name)')
         .eq('contact_id', contactId)
         .order('created_at', { ascending: true })
 
@@ -113,7 +113,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${selected.has(q.id) ? 'bg-primary-500' : 'bg-stone-300'}`} />
-                  V{i + 1}
+                  {q.version_label || `V${i + 1}`}
                   {q.id === currentQuoteId && <span className="text-[10px] opacity-60">current</span>}
                 </button>
               ))}
@@ -134,7 +134,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                       {shown.map((q, idx) => (
                         <th key={q.id} className="px-5 py-5 text-center min-w-[160px]">
                           <p className={`text-base font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-800'}`}>
-                            V{quotes.indexOf(q) + 1}
+                            {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
                           <p className="text-xs text-stone-400 font-normal mt-0.5">{q.packages?.name || 'No package'}</p>
                           <p className="text-[11px] text-stone-400 font-normal capitalize mt-0.5">{q.arrangement_type}</p>

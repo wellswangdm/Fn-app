@@ -32,7 +32,7 @@ export default function QuoteList({ onNew, onEdit }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('quotes')
-      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, funeral_homes(name)')
+      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, version_label, funeral_homes(name)')
       .order('created_at', { ascending: false })
     if (error) setError(error.message)
     else setQuotes(data)
@@ -164,14 +164,18 @@ export default function QuoteList({ onNew, onEdit }) {
                           <td className="px-4 py-3 text-sm font-medium text-stone-800">
                             <div className="flex items-center gap-2">
                               {primary.deceased_name || <span className="text-stone-300">—</span>}
-                              {rest.length > 0 && (
+                              {rest.length > 0 ? (
                                 <button
                                   onClick={e => toggleExpand(group.key, e)}
                                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-600 hover:bg-primary-200 transition-colors shrink-0"
                                 >
                                   {isOpen ? '▾' : '▸'} {group.quotes.length} versions
                                 </button>
-                              )}
+                              ) : primary.version_label ? (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500 shrink-0">
+                                  {primary.version_label}
+                                </span>
+                              ) : null}
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm text-stone-500">{primary.customer_name || <span className="text-stone-300">—</span>}</td>
@@ -193,7 +197,9 @@ export default function QuoteList({ onNew, onEdit }) {
                           return (
                             <tr key={q.id} className="bg-stone-50/40 hover:bg-stone-50 transition-colors cursor-pointer border-l-4 border-primary-200" onClick={() => onEdit(q.id)}>
                               <td className="px-4 py-2.5 text-sm text-stone-500 pl-8">
-                                <span className="text-[10px] font-bold text-primary-500 mr-2">V{i + 2}</span>
+                                <span className="text-[10px] font-bold text-primary-500 mr-2">
+                                  {q.version_label || `V${i + 2}`}
+                                </span>
                                 {q.deceased_name || <span className="text-stone-300">—</span>}
                               </td>
                               <td className="px-4 py-2.5 text-sm text-stone-400">{q.customer_name || '—'}</td>

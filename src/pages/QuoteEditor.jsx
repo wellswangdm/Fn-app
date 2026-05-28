@@ -327,6 +327,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
   const [versions,        setVersions]        = useState([])
   const [showCompare,     setShowCompare]     = useState(false)
   const [addVersionOpen,  setAddVersionOpen]  = useState(false)
+  const [editingLabel,    setEditingLabel]    = useState(null) // { id, value }
 
   useEffect(() => {
     supabase
@@ -537,10 +538,17 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
     if (!contactId || !quoteId) return
     const { data } = await supabase
       .from('quotes')
-      .select('id, quote_number, status, total, created_at')
+      .select('id, quote_number, status, total, created_at, version_label')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
     setVersions(data || [])
+  }
+
+  async function saveVersionLabel(id, label) {
+    const trimmed = label.trim() || null
+    await supabase.from('quotes').update({ version_label: trimmed }).eq('id', id)
+    setVersions(vs => vs.map(v => v.id === id ? { ...v, version_label: trimmed } : v))
+    setEditingLabel(null)
   }
 
   async function duplicateQuote() {
@@ -717,29 +725,50 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
 
             {/* Version pills */}
             {versions.map((v, i) => {
-              const isCurrent = v.id === quoteId
+              const isCurrent  = v.id === quoteId
+              const isEditing  = editingLabel?.id === v.id
+              const displayLabel = v.version_label || `V${i + 1}`
+              const statusMark = v.status === 'finalized' ? ' ✓' : v.status === 'accepted' ? ' ★' : ''
               return (
                 <div key={v.id} className="flex items-center gap-0.5 group">
-                  <button
-                    onClick={() => !isCurrent && onEdit && onEdit(v.id)}
-                    className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
-                      isCurrent
-                        ? 'bg-white text-primary-800 cursor-default'
-                        : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
-                    }`}
-                  >
-                    V{i + 1}
-                    <span className={`ml-1.5 text-[10px] ${isCurrent ? 'text-primary-500' : 'text-primary-600'}`}>
-                      {v.status === 'finalized' ? '✓' : v.status === 'accepted' ? '★' : ''}
-                    </span>
-                  </button>
+                  {isEditing ? (
+                    <input
+                      autoFocus
+                      value={editingLabel.value}
+                      onChange={e => setEditingLabel(l => ({ ...l, value: e.target.value }))}
+                      onBlur={() => saveVersionLabel(v.id, editingLabel.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveVersionLabel(v.id, editingLabel.value)
+                        if (e.key === 'Escape') setEditingLabel(null)
+                      }}
+                      className="text-xs px-2 py-0.5 rounded-full bg-white text-primary-800
+                                 border-2 border-primary-400 outline-none w-24 font-medium"
+                      maxLength={24}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => !isCurrent && onEdit && onEdit(v.id)}
+                      onDoubleClick={e => { e.stopPropagation(); setEditingLabel({ id: v.id, value: v.version_label || '' }) }}
+                      title="Double-click to rename"
+                      className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                        isCurrent
+                          ? 'bg-white text-primary-800 cursor-default'
+                          : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
+                      }`}
+                    >
+                      {displayLabel}
+                      <span className={`text-[10px] ${isCurrent ? 'text-primary-500' : 'text-primary-600'}`}>
+                        {statusMark}
+                      </span>
+                    </button>
+                  )}
                   {/* Delete — only on non-current versions, hidden until hover */}
-                  {!isCurrent && (
+                  {!isCurrent && !isEditing && (
                     <button
                       onClick={() => deleteVersion(v.id)}
                       className="opacity-0 group-hover:opacity-100 text-primary-600 hover:text-red-400
                                  text-[11px] leading-none transition-all px-0.5"
-                      title={`Delete V${i + 1}`}
+                      title={`Delete ${displayLabel}`}
                     >×</button>
                   )}
                 </div>
