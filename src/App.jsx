@@ -28,6 +28,7 @@ export default function App() {
 
   return (
     <QuoteEditor
+      key={editingQuoteId ?? 'new'}
       quoteId={editingQuoteId}
       onDone={backToList}
       onEdit={openEdit}
