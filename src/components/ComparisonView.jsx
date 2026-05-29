@@ -16,15 +16,17 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
   const cb = i => i < n - 1 ? 'border-right:1px solid #f5f5f7;' : ''
 
   const versionHeaders = shown.map((q, i) => `
-    <div style="text-align:center;padding:20px 16px 18px;${cb(i)}">
+    <div style="text-align:center;padding:20px 16px 24px;${cb(i)}">
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
       </p>
       ${q.packages?.name ? `<p style="margin:5px 0 0;font-size:12px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
       ${q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
+      <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
     </div>`).join('')
 
-  const categoryHTML = categoryData.map(({ catName, itemsByVersion }) => `
+  function catSectionHTML({ catName, itemsByVersion }) {
+    return `
     <div style="text-align:center;padding:22px 0 10px;border-top:1px solid #e5e5e5;">
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">${esc(catName)}</span>
     </div>
@@ -37,7 +39,11 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
               ${showPrices ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b">${fmt(item.amount)}</p>` : ''}
             </div>`).join('')}
         </div>`).join('')}
-    </div>`).join('')
+    </div>`
+  }
+
+  const pssCat = categoryData.find(c => c.catId === 'pss')
+  const caCat  = categoryData.find(c => c.catId === 'ca')
 
   const casketHTML = hasCaskets ? `
     <div style="text-align:center;padding:22px 0 10px;border-top:1px solid #e5e5e5;">
@@ -63,7 +69,7 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
   const anyDiscount = shown.some(q => q.discount_amount > 0)
 
   const summaryHTML = `
-    <div style="border-top:2px solid #1d1d1f;margin-top:8px;">
+    <div style="margin-top:8px;border-top:1px solid #e5e5e5;">
       <div style="${g}">
         ${shown.map((q,i) => `
           <div style="text-align:center;padding:28px 16px 20px;${cb(i)}">
@@ -92,8 +98,9 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
   return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;max-width:960px;margin:0 auto;color:#1d1d1f">
       <div style="${g}border-bottom:2px solid #e5e5e5;">${versionHeaders}</div>
-      ${categoryHTML}
+      ${pssCat ? catSectionHTML(pssCat) : ''}
       ${casketHTML}
+      ${caCat ? catSectionHTML(caCat) : ''}
       ${summaryHTML}
     </div>`
 }
@@ -110,7 +117,6 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const [itemsByQuote,     setItemsByQuote]      = useState({})
   const [categoryMap,      setCategoryMap]       = useState({})
   const [casketMap,        setCasketMap]         = useState({})
-  const [catOrder,         setCatOrder]          = useState([])
   const [selected,         setSelected]          = useState(new Set())
   const [showPrices,       setShowPrices]        = useState(true)
   const [showCasketImages, setShowCasketImages]  = useState(true)
@@ -135,17 +141,13 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
       ;(items || []).forEach(i => { grouped[i.quote_id]?.push(i) })
 
       const sids = [...new Set((items || []).filter(i => i.service_item_id).map(i => i.service_item_id))]
-      let catMap = {}; let orderedCats = []
+      let catMap = {}
       if (sids.length) {
         const { data: siData } = await supabase
           .from('service_items').select('id, category_id, service_categories(id, name, sort_order)').in('id', sids)
-        const catSeen = new Map()
         ;(siData || []).forEach(si => {
-          catMap[si.id] = { categoryId: si.category_id, categoryName: si.service_categories?.name || 'Other', sortOrder: si.service_categories?.sort_order ?? 999 }
-          if (si.category_id && !catSeen.has(si.category_id))
-            catSeen.set(si.category_id, { id: si.category_id, name: si.service_categories?.name || 'Other', sortOrder: si.service_categories?.sort_order ?? 999 })
+          catMap[si.id] = { categoryId: si.category_id, categoryName: si.service_categories?.name || '' }
         })
-        orderedCats = [...catSeen.values()].sort((a, b) => a.sortOrder - b.sortOrder)
       }
 
       const cids = [...new Set((items || []).filter(i => i.is_casket_item && i.casket_id).map(i => i.casket_id))]
@@ -156,7 +158,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
       }
 
       setQuotes(qs); setItemsByQuote(grouped); setCategoryMap(catMap)
-      setCasketMap(cskMap); setCatOrder(orderedCats)
+      setCasketMap(cskMap)
       setSelected(new Set(qs.map(q => q.id))); setLoading(false)
     }
     load()
@@ -170,27 +172,25 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const cols  = shown.length
 
   function buildCategoryData() {
-    const catDataMap = new Map()
-    const uncatItems = {}
+    const PSS = { catId: 'pss', catName: 'Professional Staff & Services', itemsByVersion: {} }
+    const CA  = { catId: 'ca',  catName: 'Cash Advanced Items',           itemsByVersion: {} }
+
     shown.forEach(q => {
       ;(itemsByQuote[q.id] || []).forEach(item => {
         if (item.is_casket_item) return
-        const catInfo = item.service_item_id ? categoryMap[item.service_item_id] : null
-        const catId   = catInfo?.categoryId || 'uncategorized'
+        const catName = item.service_item_id ? (categoryMap[item.service_item_id]?.categoryName || '') : ''
+        const n       = catName.toLowerCase()
+        const bucket  = (n.includes('cash') || n.includes('transport')) ? CA : PSS
         const entry   = { name: item.name, amount: item.price * item.quantity }
-        if (catId === 'uncategorized') {
-          if (!uncatItems[q.id]) uncatItems[q.id] = []
-          uncatItems[q.id].push(entry)
-        } else {
-          if (!catDataMap.has(catId)) catDataMap.set(catId, { catId, catName: catInfo.categoryName, itemsByVersion: {} })
-          const d = catDataMap.get(catId)
-          if (!d.itemsByVersion[q.id]) d.itemsByVersion[q.id] = []
-          d.itemsByVersion[q.id].push(entry)
-        }
+        if (!bucket.itemsByVersion[q.id]) bucket.itemsByVersion[q.id] = []
+        bucket.itemsByVersion[q.id].push(entry)
       })
     })
-    const result = catOrder.filter(c => catDataMap.has(c.id)).map(c => catDataMap.get(c.id))
-    if (shown.some(q => uncatItems[q.id]?.length)) result.push({ catId: 'uncategorized', catName: 'Other Items', itemsByVersion: uncatItems })
+
+    const result = []
+    if (shown.some(q => PSS.itemsByVersion[q.id]?.length)) result.push(PSS)
+    // Caskets render between PSS and CA via hasCaskets in JSX
+    if (shown.some(q => CA.itemsByVersion[q.id]?.length))  result.push(CA)
     return result
   }
 
@@ -280,7 +280,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   {/* Version headers */}
                   <div className="grid border-b-2 border-stone-100" style={gridStyle}>
                     {shown.map((q, idx) => (
-                      <div key={q.id} className={`px-8 py-6 text-center ${colBorder(idx)}`}>
+                      <div key={q.id} className={`px-8 py-6 pb-8 text-center ${colBorder(idx)}`}>
                         <p className={`text-xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                           {q.version_label || `V${quotes.indexOf(q) + 1}`}
                         </p>
@@ -289,12 +289,13 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                         {STATUS_CLS[q.status] && (
                           <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                         )}
+                        <p className="text-3xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
                       </div>
                     ))}
                   </div>
 
-                  {/* Category sections */}
-                  {categoryData.map(({ catId, catName, itemsByVersion }) => (
+                  {/* PSS — Professional Staff & Services */}
+                  {categoryData.filter(c => c.catId === 'pss').map(({ catId, catName, itemsByVersion }) => (
                     <div key={catId}>
                       <div className="py-5 text-center border-t border-stone-100">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
@@ -314,7 +315,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     </div>
                   ))}
 
-                  {/* Casket section */}
+                  {/* Caskets */}
                   {hasCaskets && (
                     <div>
                       <div className="py-5 text-center border-t border-stone-100">
@@ -344,8 +345,29 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     </div>
                   )}
 
+                  {/* Cash Advanced Items */}
+                  {categoryData.filter(c => c.catId === 'ca').map(({ catId, catName, itemsByVersion }) => (
+                    <div key={catId}>
+                      <div className="py-5 text-center border-t border-stone-100">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+                      </div>
+                      <div className="grid border-b border-stone-100" style={gridStyle}>
+                        {shown.map((q, idx) => (
+                          <div key={q.id} className={`px-8 pb-6 text-center ${colBorder(idx)}`}>
+                            {(itemsByVersion[q.id] || []).map((item, i) => (
+                              <div key={i} className="mt-4">
+                                <p className="text-sm font-semibold text-stone-800 leading-snug">{item.name}</p>
+                                {showPrices && <p className="text-[11px] text-stone-400 mt-1">{fmt(item.amount)}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
                   {/* Summary */}
-                  <div className="border-t-2 border-stone-800 mt-2">
+                  <div className="border-t border-stone-100 mt-2">
 
                     {/* Total — prominent, at top */}
                     <div className="grid" style={gridStyle}>
