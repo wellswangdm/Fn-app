@@ -17,7 +17,7 @@ const STATUS = {
   accepted:  { label: 'Accepted',  cls: 'bg-green-50 text-green-600 border-green-200'  },
 }
 
-export default function QuoteList({ onNew, onEdit, onSignOut }) {
+export default function QuoteList({ onNew, onEdit, onSignOut, userId }) {
   const [quotes,      setQuotes]      = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
@@ -82,6 +82,7 @@ export default function QuoteList({ onNew, onEdit, onSignOut }) {
       customer_name: q.purchaser_different ? q.customer_name : trimmedName,
       contact_id:    newContactId,
       status:        'draft',
+      user_id:       userId,
     }).select('id').single()
 
     if (items?.length) {

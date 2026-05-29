@@ -313,7 +313,7 @@ const INIT = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function QuoteEditor({ quoteId, onDone, onEdit }) {
+export default function QuoteEditor({ quoteId, onDone, onEdit, userId }) {
   const [state, dispatch] = useReducer(reducer, INIT)
   const [homes,          setHomes]          = useState([])
   const [saving,         setSaving]         = useState(false)
@@ -505,6 +505,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
       total:                state.total,
       notes:                state.notes,
       contact_id:           state.contactId,
+      user_id:              userId,
     }
   }
 
@@ -599,6 +600,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit }) {
         status:               'draft',
         notes:                state.notes,
         arrangement_type:     'burial',
+        user_id:              userId,
       }).select('id').single()
       if (onEdit) onEdit(newQ.id)
     } catch (e) { setSaveErr(e.message) }
