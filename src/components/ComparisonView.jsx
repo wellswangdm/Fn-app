@@ -5,39 +5,110 @@ function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
 
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+// ─── Self-contained print HTML (no Tailwind dependency) ──────────────────────
+function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages }) {
+  const n  = shown.length
+  const g  = `display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));`
+  const cb = i => i < n - 1 ? 'border-right:1px solid #f5f5f7;' : ''
+
+  const versionHeaders = shown.map((q, i) => `
+    <div style="text-align:center;padding:20px 16px 18px;${cb(i)}">
+      <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
+        ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
+      </p>
+      ${q.packages?.name ? `<p style="margin:5px 0 0;font-size:12px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
+      ${q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
+    </div>`).join('')
+
+  const categoryHTML = categoryData.map(({ catName, itemsByVersion }) => `
+    <div style="text-align:center;padding:22px 0 10px;border-top:1px solid #e5e5e5;">
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">${esc(catName)}</span>
+    </div>
+    <div style="${g}border-bottom:1px solid #f0f0f0;">
+      ${shown.map((q, i) => `
+        <div style="text-align:center;padding:8px 16px 22px;${cb(i)}">
+          ${(itemsByVersion[q.id] || []).map(item => `
+            <div style="margin-bottom:16px">
+              <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
+              ${showPrices ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b">${fmt(item.amount)}</p>` : ''}
+            </div>`).join('')}
+        </div>`).join('')}
+    </div>`).join('')
+
+  const casketHTML = hasCaskets ? `
+    <div style="text-align:center;padding:22px 0 10px;border-top:1px solid #e5e5e5;">
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Casket Selection</span>
+    </div>
+    <div style="${g}border-bottom:1px solid #f0f0f0;">
+      ${shown.map((q, i) => {
+        const e = casketByQuote[q.id]; const csk = e?.casket
+        return `
+          <div style="text-align:center;padding:14px 16px 22px;${cb(i)}">
+            ${e ? `
+              ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:130px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
+              <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
+              ${csk?.description ? `<p style="margin:4px 0 0;font-size:11px;color:#86868b;line-height:1.4">${esc(csk.description)}</p>` : ''}
+              ${showPrices ? `<p style="margin:5px 0 0;font-size:11px;color:#86868b">${fmt(e.price)}</p>` : ''}
+            ` : `<span style="font-size:12px;color:#d1d1d6">Not selected</span>`}
+          </div>`
+      }).join('')}
+    </div>` : ''
+
+  const sr = cells => `<div style="${g}border-bottom:1px solid #f5f5f7;">${cells}</div>`
+  const anyPkg  = shown.some(q => q.package_discount > 0)
+  const anyDisc = shown.some(q => (q.discount_amount - (q.package_discount || 0)) > 0)
+
+  const summaryHTML = `
+    <div style="border-top:2px solid #1d1d1f;margin-top:8px;">
+      ${sr(shown.map((q,i) => `
+        <div style="text-align:center;padding:11px 16px;${cb(i)}">
+          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Subtotal</p>
+          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.subtotal)}</p>
+        </div>`).join(''))}
+      ${anyPkg ? sr(shown.map((q,i) => `
+        <div style="text-align:center;padding:11px 16px;${cb(i)}">
+          ${q.package_discount > 0 ? `
+            <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Pkg Discount</p>
+            <p style="margin:3px 0 0;font-size:13px;color:#34c759">−${fmt(q.package_discount)}</p>` : ''}
+        </div>`).join('')) : ''}
+      ${anyDisc ? sr(shown.map((q,i) => { const d = q.discount_amount-(q.package_discount||0); return `
+        <div style="text-align:center;padding:11px 16px;${cb(i)}">
+          ${d > 0 ? `
+            <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Discount</p>
+            <p style="margin:3px 0 0;font-size:13px;color:#ff3b30">−${fmt(d)}</p>` : ''}
+        </div>`}).join('')) : ''}
+      ${sr(shown.map((q,i) => `
+        <div style="text-align:center;padding:11px 16px;${cb(i)}">
+          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Tax</p>
+          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.tax_amount)}</p>
+        </div>`).join(''))}
+      <div style="${g}">
+        ${shown.map((q,i) => `
+          <div style="text-align:center;padding:28px 16px;${cb(i)}">
+            <p style="margin:0 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#86868b">Total</p>
+            <p style="margin:0;font-size:28px;font-weight:700;color:#1d1d1f">${fmt(q.total)}</p>
+          </div>`).join('')}
+      </div>
+    </div>`
+
+  return `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;max-width:960px;margin:0 auto;color:#1d1d1f">
+      <div style="${g}border-bottom:2px solid #e5e5e5;">${versionHeaders}</div>
+      ${categoryHTML}
+      ${casketHTML}
+      ${summaryHTML}
+    </div>`
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const STATUS_CLS = {
   finalized: 'bg-blue-50 text-blue-600 border-blue-200',
   accepted:  'bg-green-50 text-green-600 border-green-200',
-}
-
-function openPrint() {
-  const zone = document.getElementById('compare-print-zone')
-  if (!zone) return
-  const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-    .map(l => `<link rel="stylesheet" href="${l.href}">`)
-    .join('\n')
-  const win = window.open('', '_blank')
-  if (!win) { alert('Allow popups for this site to print.'); return }
-  win.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  ${stylesheets}
-  <style>
-    body { margin: 0; padding: 20px; background: #fff; }
-    @media print {
-      body { padding: 0; }
-      * { overflow: visible !important; }
-    }
-  </style>
-</head>
-<body>
-  <div>${zone.innerHTML}</div>
-  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 600))<\/script>
-</body>
-</html>`)
-  win.document.close()
 }
 
 export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
@@ -69,27 +140,15 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
       ;(items || []).forEach(i => { grouped[i.quote_id]?.push(i) })
 
       const sids = [...new Set((items || []).filter(i => i.service_item_id).map(i => i.service_item_id))]
-      let catMap = {}
-      let orderedCats = []
+      let catMap = {}; let orderedCats = []
       if (sids.length) {
         const { data: siData } = await supabase
-          .from('service_items')
-          .select('id, category_id, service_categories(id, name, sort_order)')
-          .in('id', sids)
+          .from('service_items').select('id, category_id, service_categories(id, name, sort_order)').in('id', sids)
         const catSeen = new Map()
         ;(siData || []).forEach(si => {
-          catMap[si.id] = {
-            categoryId:   si.category_id,
-            categoryName: si.service_categories?.name || 'Other',
-            sortOrder:    si.service_categories?.sort_order ?? 999,
-          }
-          if (si.category_id && !catSeen.has(si.category_id)) {
-            catSeen.set(si.category_id, {
-              id:        si.category_id,
-              name:      si.service_categories?.name || 'Other',
-              sortOrder: si.service_categories?.sort_order ?? 999,
-            })
-          }
+          catMap[si.id] = { categoryId: si.category_id, categoryName: si.service_categories?.name || 'Other', sortOrder: si.service_categories?.sort_order ?? 999 }
+          if (si.category_id && !catSeen.has(si.category_id))
+            catSeen.set(si.category_id, { id: si.category_id, name: si.service_categories?.name || 'Other', sortOrder: si.service_categories?.sort_order ?? 999 })
         })
         orderedCats = [...catSeen.values()].sort((a, b) => a.sortOrder - b.sortOrder)
       }
@@ -97,103 +156,94 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
       const cids = [...new Set((items || []).filter(i => i.is_casket_item && i.casket_id).map(i => i.casket_id))]
       let cskMap = {}
       if (cids.length) {
-        const { data: cskData } = await supabase
-          .from('caskets').select('id, name, price, description, image_url').in('id', cids)
-        ;(cskData || []).forEach(c => {
-          cskMap[c.id] = { name: c.name, price: Number(c.price), description: c.description, imageUrl: c.image_url }
-        })
+        const { data: d } = await supabase.from('caskets').select('id, name, price, description, image_url').in('id', cids)
+        ;(d || []).forEach(c => { cskMap[c.id] = { name: c.name, price: Number(c.price), description: c.description, imageUrl: c.image_url } })
       }
 
-      setQuotes(qs)
-      setItemsByQuote(grouped)
-      setCategoryMap(catMap)
-      setCasketMap(cskMap)
-      setCatOrder(orderedCats)
-      setSelected(new Set(qs.map(q => q.id)))
-      setLoading(false)
+      setQuotes(qs); setItemsByQuote(grouped); setCategoryMap(catMap)
+      setCasketMap(cskMap); setCatOrder(orderedCats)
+      setSelected(new Set(qs.map(q => q.id))); setLoading(false)
     }
     load()
   }, [contactId])
 
   function toggle(id) {
-    setSelected(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
+    setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
   }
 
   const shown = quotes.filter(q => selected.has(q.id))
   const cols  = shown.length
 
-  // For each category, build a map: quoteId → [{name, amount}]
-  // One row per category; ALL items for that version stacked in one cell
   function buildCategoryData() {
-    const catDataMap = new Map() // catId → { catName, sortOrder, itemsByVersion: {qid: [{name,amount}]} }
-    const uncatItems = {}        // qid → [{name,amount}]
-
+    const catDataMap = new Map()
+    const uncatItems = {}
     shown.forEach(q => {
       ;(itemsByQuote[q.id] || []).forEach(item => {
         if (item.is_casket_item) return
         const catInfo = item.service_item_id ? categoryMap[item.service_item_id] : null
         const catId   = catInfo?.categoryId || 'uncategorized'
-        const catName = catInfo?.categoryName || 'Other Items'
         const entry   = { name: item.name, amount: item.price * item.quantity }
-
         if (catId === 'uncategorized') {
           if (!uncatItems[q.id]) uncatItems[q.id] = []
           uncatItems[q.id].push(entry)
         } else {
-          if (!catDataMap.has(catId)) catDataMap.set(catId, { catId, catName, sortOrder: catInfo.sortOrder, itemsByVersion: {} })
+          if (!catDataMap.has(catId)) catDataMap.set(catId, { catId, catName: catInfo.categoryName, itemsByVersion: {} })
           const d = catDataMap.get(catId)
           if (!d.itemsByVersion[q.id]) d.itemsByVersion[q.id] = []
           d.itemsByVersion[q.id].push(entry)
         }
       })
     })
-
-    const result = catOrder
-      .filter(cat => catDataMap.has(cat.id))
-      .map(cat => catDataMap.get(cat.id))
-
-    if (shown.some(q => uncatItems[q.id]?.length)) {
-      result.push({ catId: 'uncategorized', catName: 'Other Items', sortOrder: 9999, itemsByVersion: uncatItems })
-    }
+    const result = catOrder.filter(c => catDataMap.has(c.id)).map(c => catDataMap.get(c.id))
+    if (shown.some(q => uncatItems[q.id]?.length)) result.push({ catId: 'uncategorized', catName: 'Other Items', itemsByVersion: uncatItems })
     return result
   }
 
   function getCasketByQuote() {
-    const result = {}
+    const r = {}
     shown.forEach(q => {
       const item = (itemsByQuote[q.id] || []).find(i => i.is_casket_item)
-      if (item) result[q.id] = { name: item.name, price: item.price, casket: item.casket_id ? casketMap[item.casket_id] : null }
+      if (item) r[q.id] = { name: item.name, price: item.price, casket: item.casket_id ? casketMap[item.casket_id] : null }
     })
-    return result
+    return r
   }
 
   const hasCaskets    = shown.some(q => (itemsByQuote[q.id] || []).some(i => i.is_casket_item))
   const casketByQuote = hasCaskets ? getCasketByQuote() : {}
   const categoryData  = shown.length ? buildCategoryData() : []
 
-  // Column border helper
-  const colBorder = idx => idx < cols - 1 ? 'border-r border-stone-100' : ''
+  function handlePrint() {
+    const win = window.open('', '_blank')
+    if (!win) { alert('Allow popups for this site to print.'); return }
+    const html = buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages })
+    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Quote Comparison</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;padding:24px}@page{margin:1.5cm}@media print{body{padding:0}}</style>
+</head>
+<body>${html}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400))<\/script></body>
+</html>`)
+    win.document.close()
+  }
+
+  // grid column style helper
+  const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
+  const colBorder = i => i < cols - 1 ? 'border-r border-stone-100' : ''
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-4">
 
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+        {/* Header */}
         <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-stone-800">Compare Versions</h2>
             <p className="text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={openPrint}
-              className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200
-                         hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
+            <button onClick={handlePrint} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
               Print / Save PDF
             </button>
             <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-xl leading-none">×</button>
@@ -202,18 +252,11 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
         {loading ? <p className="text-sm text-stone-400 p-8 text-center">Loading…</p> : (
           <>
-            {/* ── Toolbar ─────────────────────────────────────────────────── */}
-            <div className="flex gap-2 px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/60">
+            {/* Toolbar */}
+            <div className="flex gap-2 px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/50">
               {quotes.map((q, i) => (
-                <button
-                  key={q.id}
-                  onClick={() => toggle(q.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors ${
-                    selected.has(q.id)
-                      ? 'border-primary-300 bg-primary-50 text-primary-700'
-                      : 'border-stone-200 bg-white text-stone-400'
-                  }`}
-                >
+                <button key={q.id} onClick={() => toggle(q.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors ${selected.has(q.id) ? 'border-primary-300 bg-primary-50 text-primary-700' : 'border-stone-200 bg-white text-stone-400'}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${selected.has(q.id) ? 'bg-primary-500' : 'bg-stone-300'}`} />
                   {q.version_label || `V${i + 1}`}
                   {q.id === currentQuoteId && <span className="text-[10px] opacity-60 ml-1">current</span>}
@@ -237,166 +280,135 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
               <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
             ) : (
               <div className="overflow-x-auto">
-                <div id="compare-print-zone">
-                <table className="w-full text-sm border-collapse">
+                <div style={{ minWidth: `${cols * 200}px` }}>
 
-                  {/* ── Version column headers ─────────────────────────── */}
-                  <thead>
-                    <tr className="border-b-2 border-stone-100">
-                      {shown.map((q, idx) => (
-                        <th key={q.id} className={`px-6 py-5 text-center ${colBorder(idx)}`} style={{ width: `${100 / cols}%` }}>
-                          <p className={`text-base font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-800'}`}>
-                            {q.version_label || `V${quotes.indexOf(q) + 1}`}
-                          </p>
-                          <p className="text-xs text-stone-400 font-normal mt-0.5">{q.packages?.name || 'No package'}</p>
-                          <p className="text-[11px] text-stone-400 font-normal capitalize mt-0.5">{q.arrangement_type}</p>
-                          {STATUS_CLS[q.status] && (
-                            <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>
-                              {q.status}
-                            </span>
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {/* ── One row per category ─────────────────────────── */}
-                    {categoryData.map(({ catId, catName, itemsByVersion }) => (
-                      <>
-                        {/* Category section header */}
-                        <tr key={`hd-${catId}`} className="bg-stone-50">
-                          <td colSpan={cols} className="px-6 py-3 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">{catName}</span>
-                          </td>
-                        </tr>
-
-                        {/* All items for each version stacked in one cell — no per-item row alignment */}
-                        <tr key={`body-${catId}`} className="border-b border-stone-100">
-                          {shown.map((q, idx) => (
-                            <td key={q.id} className={`px-6 py-4 align-top ${colBorder(idx)}`}>
-                              {(itemsByVersion[q.id] || []).map((item, i) => (
-                                <div key={i} className={i > 0 ? 'mt-3 pt-3 border-t border-stone-50' : ''}>
-                                  <p className="text-sm text-stone-700 leading-snug">{item.name}</p>
-                                  {showPrices && (
-                                    <p className="text-[11px] text-stone-400 mt-0.5">{fmt(item.amount)}</p>
-                                  )}
-                                </div>
-                              ))}
-                            </td>
-                          ))}
-                        </tr>
-                      </>
+                  {/* Version headers */}
+                  <div className="grid border-b-2 border-stone-100" style={gridStyle}>
+                    {shown.map((q, idx) => (
+                      <div key={q.id} className={`px-8 py-6 text-center ${colBorder(idx)}`}>
+                        <p className={`text-xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
+                          {q.version_label || `V${quotes.indexOf(q) + 1}`}
+                        </p>
+                        {q.packages?.name && <p className="text-xs text-stone-400 mt-1.5">{q.packages.name}</p>}
+                        {q.arrangement_type && <p className="text-[11px] text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
+                        {STATUS_CLS[q.status] && (
+                          <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
+                        )}
+                      </div>
                     ))}
+                  </div>
 
-                    {/* ── Casket section ───────────────────────────────── */}
-                    {hasCaskets && (
-                      <>
-                        <tr className="bg-stone-50">
-                          <td colSpan={cols} className="px-6 py-2.5">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
-                          </td>
-                        </tr>
-                        <tr className="border-b border-stone-100">
-                          {shown.map((q, idx) => {
-                            const entry = casketByQuote[q.id]
-                            const csk   = entry?.casket
-                            return (
-                              <td key={q.id} className={`px-6 py-4 align-top ${colBorder(idx)}`}>
-                                {entry ? (
-                                  <div className="flex flex-col gap-2">
-                                    {showCasketImages && (
-                                      csk?.imageUrl
-                                        ? <img src={csk.imageUrl} alt={entry.name} className="w-full max-w-[160px] object-contain rounded-xl bg-stone-50 border border-stone-100 max-h-28" />
-                                        : <div className="w-28 h-16 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
-                                    )}
-                                    <p className="text-sm font-semibold text-stone-700 leading-snug">{entry.name}</p>
-                                    {csk?.description && (
-                                      <p className="text-[10px] text-stone-400 leading-tight">{csk.description}</p>
-                                    )}
-                                    {showPrices && (
-                                      <p className="text-[11px] text-stone-400">{fmt(entry.price)}</p>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-stone-300">Not selected</p>
-                                )}
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      </>
-                    )}
+                  {/* Category sections */}
+                  {categoryData.map(({ catId, catName, itemsByVersion }) => (
+                    <div key={catId}>
+                      <div className="py-5 text-center border-t border-stone-100">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+                      </div>
+                      <div className="grid border-b border-stone-100" style={gridStyle}>
+                        {shown.map((q, idx) => (
+                          <div key={q.id} className={`px-8 pb-6 text-center ${colBorder(idx)}`}>
+                            {(itemsByVersion[q.id] || []).map((item, i) => (
+                              <div key={i} className="mt-4">
+                                <p className="text-sm font-semibold text-stone-800 leading-snug">{item.name}</p>
+                                {showPrices && <p className="text-[11px] text-stone-400 mt-1">{fmt(item.amount)}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
 
-                    {/* ── Summary — aligned rows are fine here (always numeric) ── */}
-                    <tr className="bg-stone-50">
-                      <td colSpan={cols} className="px-6 py-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Summary</span>
-                      </td>
-                    </tr>
+                  {/* Casket section */}
+                  {hasCaskets && (
+                    <div>
+                      <div className="py-5 text-center border-t border-stone-100">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
+                      </div>
+                      <div className="grid border-b border-stone-100" style={gridStyle}>
+                        {shown.map((q, idx) => {
+                          const entry = casketByQuote[q.id]; const csk = entry?.casket
+                          return (
+                            <div key={q.id} className={`px-8 pb-6 text-center ${colBorder(idx)}`}>
+                              {entry ? (
+                                <div className="flex flex-col items-center gap-2 mt-4">
+                                  {showCasketImages && (
+                                    csk?.imageUrl
+                                      ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[140px] w-full object-contain rounded-xl bg-stone-50 max-h-28" />
+                                      : <div className="w-28 h-16 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
+                                  )}
+                                  <p className="text-sm font-semibold text-stone-800">{entry.name}</p>
+                                  {csk?.description && <p className="text-[10px] text-stone-400 leading-tight max-w-[180px]">{csk.description}</p>}
+                                  {showPrices && <p className="text-[11px] text-stone-400">{fmt(entry.price)}</p>}
+                                </div>
+                              ) : <p className="text-xs text-stone-300 mt-4">Not selected</p>}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-                    <tr className="border-b border-stone-100">
+                  {/* Summary */}
+                  <div className="border-t-2 border-stone-800 mt-2">
+
+                    {/* Subtotal */}
+                    <div className="grid border-b border-stone-100" style={gridStyle}>
                       {shown.map((q, idx) => (
-                        <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
-                          <p className="text-[10px] text-stone-400 uppercase tracking-wider">Subtotal</p>
+                        <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                          <p className="text-[10px] uppercase tracking-wider text-stone-400">Subtotal</p>
                           <p className="text-sm text-stone-700 mt-0.5">{fmt(q.subtotal)}</p>
-                        </td>
+                        </div>
                       ))}
-                    </tr>
+                    </div>
 
                     {shown.some(q => q.package_discount > 0) && (
-                      <tr className="border-b border-stone-100">
+                      <div className="grid border-b border-stone-100" style={gridStyle}>
                         {shown.map((q, idx) => (
-                          <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
-                            {q.package_discount > 0 && (
-                              <>
-                                <p className="text-[10px] text-stone-400 uppercase tracking-wider">Pkg Discount</p>
-                                <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.package_discount)}</p>
-                              </>
-                            )}
-                          </td>
+                          <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                            {q.package_discount > 0 && <>
+                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Pkg Discount</p>
+                              <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.package_discount)}</p>
+                            </>}
+                          </div>
                         ))}
-                      </tr>
+                      </div>
                     )}
 
                     {shown.some(q => (q.discount_amount - (q.package_discount || 0)) > 0) && (
-                      <tr className="border-b border-stone-100">
-                        {shown.map((q, idx) => {
-                          const d = q.discount_amount - (q.package_discount || 0)
-                          return (
-                            <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
-                              {d > 0 && (
-                                <>
-                                  <p className="text-[10px] text-stone-400 uppercase tracking-wider">Discount</p>
-                                  <p className="text-sm text-red-500 mt-0.5">−{fmt(d)}</p>
-                                </>
-                              )}
-                            </td>
-                          )
-                        })}
-                      </tr>
+                      <div className="grid border-b border-stone-100" style={gridStyle}>
+                        {shown.map((q, idx) => { const d = q.discount_amount-(q.package_discount||0); return (
+                          <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                            {d > 0 && <>
+                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Discount</p>
+                              <p className="text-sm text-red-500 mt-0.5">−{fmt(d)}</p>
+                            </>}
+                          </div>
+                        )})}
+                      </div>
                     )}
 
-                    <tr className="border-b border-stone-100">
+                    <div className="grid border-b border-stone-100" style={gridStyle}>
                       {shown.map((q, idx) => (
-                        <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
-                          <p className="text-[10px] text-stone-400 uppercase tracking-wider">Tax</p>
+                        <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                          <p className="text-[10px] uppercase tracking-wider text-stone-400">Tax</p>
                           <p className="text-sm text-stone-600 mt-0.5">{fmt(q.tax_amount)}</p>
-                        </td>
+                        </div>
                       ))}
-                    </tr>
+                    </div>
 
-                    <tr className="border-t-2 border-stone-200">
+                    {/* Total */}
+                    <div className="grid" style={gridStyle}>
                       {shown.map((q, idx) => (
-                        <td key={q.id} className={`px-6 py-6 ${colBorder(idx)}`}>
-                          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Total</p>
-                          <p className="text-2xl font-bold text-primary-800">{fmt(q.total)}</p>
-                        </td>
+                        <div key={q.id} className={`px-8 py-8 text-center ${colBorder(idx)}`}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Total</p>
+                          <p className="text-3xl font-bold text-stone-900">{fmt(q.total)}</p>
+                        </div>
                       ))}
-                    </tr>
-                  </tbody>
-                </table>
-                </div>{/* /compare-print-zone */}
+                    </div>
+                  </div>
+
+                </div>
               </div>
             )}
           </>
