@@ -59,40 +59,34 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
     </div>` : ''
 
   const sr = cells => `<div style="${g}border-bottom:1px solid #f5f5f7;">${cells}</div>`
-  const anyPkg  = shown.some(q => q.package_discount > 0)
-  const anyDisc = shown.some(q => (q.discount_amount - (q.package_discount || 0)) > 0)
+
+  const anyDiscount = shown.some(q => q.discount_amount > 0)
 
   const summaryHTML = `
     <div style="border-top:2px solid #1d1d1f;margin-top:8px;">
-      ${sr(shown.map((q,i) => `
-        <div style="text-align:center;padding:11px 16px;${cb(i)}">
-          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Subtotal</p>
-          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.subtotal)}</p>
-        </div>`).join(''))}
-      ${anyPkg ? sr(shown.map((q,i) => `
-        <div style="text-align:center;padding:11px 16px;${cb(i)}">
-          ${q.package_discount > 0 ? `
-            <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Pkg Discount</p>
-            <p style="margin:3px 0 0;font-size:13px;color:#34c759">−${fmt(q.package_discount)}</p>` : ''}
-        </div>`).join('')) : ''}
-      ${anyDisc ? sr(shown.map((q,i) => { const d = q.discount_amount-(q.package_discount||0); return `
-        <div style="text-align:center;padding:11px 16px;${cb(i)}">
-          ${d > 0 ? `
-            <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Discount</p>
-            <p style="margin:3px 0 0;font-size:13px;color:#ff3b30">−${fmt(d)}</p>` : ''}
-        </div>`}).join('')) : ''}
-      ${sr(shown.map((q,i) => `
-        <div style="text-align:center;padding:11px 16px;${cb(i)}">
-          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Tax</p>
-          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.tax_amount)}</p>
-        </div>`).join(''))}
       <div style="${g}">
         ${shown.map((q,i) => `
-          <div style="text-align:center;padding:28px 16px;${cb(i)}">
+          <div style="text-align:center;padding:28px 16px 20px;${cb(i)}">
             <p style="margin:0 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#86868b">Total</p>
             <p style="margin:0;font-size:28px;font-weight:700;color:#1d1d1f">${fmt(q.total)}</p>
           </div>`).join('')}
       </div>
+      ${sr(shown.map((q,i) => `
+        <div style="text-align:center;padding:10px 16px;${cb(i)}">
+          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Subtotal</p>
+          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.subtotal)}</p>
+        </div>`).join(''))}
+      ${anyDiscount ? sr(shown.map((q,i) => `
+        <div style="text-align:center;padding:10px 16px;${cb(i)}">
+          ${q.discount_amount > 0 ? `
+            <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Discount</p>
+            <p style="margin:3px 0 0;font-size:13px;color:#34c759">−${fmt(q.discount_amount)}</p>` : ''}
+        </div>`).join('')) : ''}
+      ${sr(shown.map((q,i) => `
+        <div style="text-align:center;padding:10px 16px 22px;${cb(i)}">
+          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Tax</p>
+          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.tax_amount)}</p>
+        </div>`).join(''))}
     </div>`
 
   return `
@@ -120,6 +114,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const [selected,         setSelected]          = useState(new Set())
   const [showPrices,       setShowPrices]        = useState(true)
   const [showCasketImages, setShowCasketImages]  = useState(true)
+  const [showBreakdown,    setShowBreakdown]     = useState(false)
   const [loading,          setLoading]           = useState(true)
 
   useEffect(() => {
@@ -352,52 +347,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   {/* Summary */}
                   <div className="border-t-2 border-stone-800 mt-2">
 
-                    {/* Subtotal */}
-                    <div className="grid border-b border-stone-100" style={gridStyle}>
-                      {shown.map((q, idx) => (
-                        <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                          <p className="text-[10px] uppercase tracking-wider text-stone-400">Subtotal</p>
-                          <p className="text-sm text-stone-700 mt-0.5">{fmt(q.subtotal)}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {shown.some(q => q.package_discount > 0) && (
-                      <div className="grid border-b border-stone-100" style={gridStyle}>
-                        {shown.map((q, idx) => (
-                          <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                            {q.package_discount > 0 && <>
-                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Pkg Discount</p>
-                              <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.package_discount)}</p>
-                            </>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {shown.some(q => (q.discount_amount - (q.package_discount || 0)) > 0) && (
-                      <div className="grid border-b border-stone-100" style={gridStyle}>
-                        {shown.map((q, idx) => { const d = q.discount_amount-(q.package_discount||0); return (
-                          <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                            {d > 0 && <>
-                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Discount</p>
-                              <p className="text-sm text-red-500 mt-0.5">−{fmt(d)}</p>
-                            </>}
-                          </div>
-                        )})}
-                      </div>
-                    )}
-
-                    <div className="grid border-b border-stone-100" style={gridStyle}>
-                      {shown.map((q, idx) => (
-                        <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                          <p className="text-[10px] uppercase tracking-wider text-stone-400">Tax</p>
-                          <p className="text-sm text-stone-600 mt-0.5">{fmt(q.tax_amount)}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Total */}
+                    {/* Total — prominent, at top */}
                     <div className="grid" style={gridStyle}>
                       {shown.map((q, idx) => (
                         <div key={q.id} className={`px-8 py-8 text-center ${colBorder(idx)}`}>
@@ -406,6 +356,55 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                         </div>
                       ))}
                     </div>
+
+                    {/* Breakdown toggle */}
+                    <div className="text-center pb-4">
+                      <button
+                        onClick={() => setShowBreakdown(b => !b)}
+                        className="text-[11px] text-stone-400 hover:text-stone-600 transition-colors"
+                      >
+                        {showBreakdown ? '▲ Hide breakdown' : '▼ Show breakdown'}
+                      </button>
+                    </div>
+
+                    {/* Collapsible breakdown */}
+                    {showBreakdown && (
+                      <div className="border-t border-stone-100">
+                        {/* Subtotal */}
+                        <div className="grid border-b border-stone-100" style={gridStyle}>
+                          {shown.map((q, idx) => (
+                            <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Subtotal</p>
+                              <p className="text-sm text-stone-700 mt-0.5">{fmt(q.subtotal)}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Discounts — combined into one row */}
+                        {shown.some(q => q.discount_amount > 0) && (
+                          <div className="grid border-b border-stone-100" style={gridStyle}>
+                            {shown.map((q, idx) => (
+                              <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                                {q.discount_amount > 0 && <>
+                                  <p className="text-[10px] uppercase tracking-wider text-stone-400">Discount</p>
+                                  <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.discount_amount)}</p>
+                                </>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Tax */}
+                        <div className="grid border-b border-stone-100" style={gridStyle}>
+                          {shown.map((q, idx) => (
+                            <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
+                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Tax</p>
+                              <p className="text-sm text-stone-600 mt-0.5">{fmt(q.tax_amount)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                 </div>
