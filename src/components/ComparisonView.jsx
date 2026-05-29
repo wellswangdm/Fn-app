@@ -13,28 +13,35 @@ function esc(s) {
 function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages }) {
   const n  = shown.length
   const g  = `display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));`
-  const cb = i => i < n - 1 ? 'border-right:1px solid #f5f5f7;' : ''
+  const cb = i => i < n - 1 ? 'border-right:1px solid #f0f0f0;' : ''
 
-  const versionHeaders = shown.map((q, i) => `
-    <div style="text-align:center;padding:20px 16px 24px;${cb(i)}">
+  const versionHeaders = shown.map((q, i) => {
+    const ticker = [
+      q.discount_amount > 0 && `−${fmt(q.discount_amount)} discount`,
+      q.tax_amount > 0 && `+${fmt(q.tax_amount)} tax`,
+    ].filter(Boolean).join(' · ')
+    return `
+    <div style="text-align:center;padding:24px 16px 28px;${cb(i)}">
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
       </p>
       ${q.packages?.name ? `<p style="margin:5px 0 0;font-size:12px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
       ${q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
-    </div>`).join('')
+      ${ticker ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${ticker}</p>` : ''}
+    </div>`
+  }).join('')
 
   function catSectionHTML({ catName, itemsByVersion }) {
     return `
-    <div style="text-align:center;padding:22px 0 10px;border-top:1px solid #e5e5e5;">
+    <div style="text-align:center;padding:32px 0 10px;">
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">${esc(catName)}</span>
     </div>
-    <div style="${g}border-bottom:1px solid #f0f0f0;">
+    <div style="${g}">
       ${shown.map((q, i) => `
-        <div style="text-align:center;padding:8px 16px 22px;${cb(i)}">
+        <div style="text-align:center;padding:6px 16px 24px;${cb(i)}">
           ${(itemsByVersion[q.id] || []).map(item => `
-            <div style="margin-bottom:16px">
+            <div style="margin-bottom:14px">
               <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
               ${showPrices ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b">${fmt(item.amount)}</p>` : ''}
             </div>`).join('')}
@@ -42,18 +49,15 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
     </div>`
   }
 
-  const pssCat = categoryData.find(c => c.catId === 'pss')
-  const caCat  = categoryData.find(c => c.catId === 'ca')
-
   const casketHTML = hasCaskets ? `
-    <div style="text-align:center;padding:22px 0 10px;border-top:1px solid #e5e5e5;">
+    <div style="text-align:center;padding:32px 0 10px;">
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Casket Selection</span>
     </div>
-    <div style="${g}border-bottom:1px solid #f0f0f0;">
+    <div style="${g}">
       ${shown.map((q, i) => {
         const e = casketByQuote[q.id]; const csk = e?.casket
         return `
-          <div style="text-align:center;padding:14px 16px 22px;${cb(i)}">
+          <div style="text-align:center;padding:6px 16px 24px;${cb(i)}">
             ${e ? `
               ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:130px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
               <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
@@ -64,44 +68,17 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
       }).join('')}
     </div>` : ''
 
-  const sr = cells => `<div style="${g}border-bottom:1px solid #f5f5f7;">${cells}</div>`
-
-  const anyDiscount = shown.some(q => q.discount_amount > 0)
-
-  const summaryHTML = `
-    <div style="margin-top:8px;border-top:1px solid #e5e5e5;">
-      <div style="${g}">
-        ${shown.map((q,i) => `
-          <div style="text-align:center;padding:28px 16px 20px;${cb(i)}">
-            <p style="margin:0 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#86868b">Total</p>
-            <p style="margin:0;font-size:28px;font-weight:700;color:#1d1d1f">${fmt(q.total)}</p>
-          </div>`).join('')}
-      </div>
-      ${sr(shown.map((q,i) => `
-        <div style="text-align:center;padding:10px 16px;${cb(i)}">
-          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Subtotal</p>
-          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.subtotal)}</p>
-        </div>`).join(''))}
-      ${anyDiscount ? sr(shown.map((q,i) => `
-        <div style="text-align:center;padding:10px 16px;${cb(i)}">
-          ${q.discount_amount > 0 ? `
-            <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Discount</p>
-            <p style="margin:3px 0 0;font-size:13px;color:#34c759">−${fmt(q.discount_amount)}</p>` : ''}
-        </div>`).join('')) : ''}
-      ${sr(shown.map((q,i) => `
-        <div style="text-align:center;padding:10px 16px 22px;${cb(i)}">
-          <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#86868b">Tax</p>
-          <p style="margin:3px 0 0;font-size:13px;color:#1d1d1f">${fmt(q.tax_amount)}</p>
-        </div>`).join(''))}
-    </div>`
+  const pssCat   = categoryData.find(c => c.catId === 'pss')
+  const transCat = categoryData.find(c => c.catId === 'trans')
+  const caCat    = categoryData.find(c => c.catId === 'ca')
 
   return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;max-width:960px;margin:0 auto;color:#1d1d1f">
-      <div style="${g}border-bottom:2px solid #e5e5e5;">${versionHeaders}</div>
-      ${pssCat ? catSectionHTML(pssCat) : ''}
+      <div style="${g}border-bottom:1px solid #e5e5e5;">${versionHeaders}</div>
+      ${pssCat   ? catSectionHTML(pssCat)   : ''}
       ${casketHTML}
-      ${caCat ? catSectionHTML(caCat) : ''}
-      ${summaryHTML}
+      ${transCat ? catSectionHTML(transCat) : ''}
+      ${caCat    ? catSectionHTML(caCat)    : ''}
     </div>`
 }
 
@@ -120,7 +97,6 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const [selected,         setSelected]          = useState(new Set())
   const [showPrices,       setShowPrices]        = useState(true)
   const [showCasketImages, setShowCasketImages]  = useState(true)
-  const [showBreakdown,    setShowBreakdown]     = useState(false)
   const [loading,          setLoading]           = useState(true)
 
   useEffect(() => {
@@ -144,9 +120,9 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
       let catMap = {}
       if (sids.length) {
         const { data: siData } = await supabase
-          .from('service_items').select('id, category_id, service_categories(id, name, sort_order)').in('id', sids)
+          .from('service_items').select('id, category_id, service_categories(id, name)').in('id', sids)
         ;(siData || []).forEach(si => {
-          catMap[si.id] = { categoryId: si.category_id, categoryName: si.service_categories?.name || '' }
+          catMap[si.id] = { categoryName: si.service_categories?.name || '' }
         })
       }
 
@@ -172,25 +148,26 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const cols  = shown.length
 
   function buildCategoryData() {
-    const PSS = { catId: 'pss', catName: 'Professional Staff & Services', itemsByVersion: {} }
-    const CA  = { catId: 'ca',  catName: 'Cash Advanced Items',           itemsByVersion: {} }
+    const PSS   = { catId: 'pss',   catName: 'Professional Staff & Services', itemsByVersion: {} }
+    const TRANS = { catId: 'trans', catName: 'Transportation',                itemsByVersion: {} }
+    const CA    = { catId: 'ca',    catName: 'Cash Advanced Items',           itemsByVersion: {} }
 
     shown.forEach(q => {
       ;(itemsByQuote[q.id] || []).forEach(item => {
         if (item.is_casket_item) return
         const catName = item.service_item_id ? (categoryMap[item.service_item_id]?.categoryName || '') : ''
-        const n       = catName.toLowerCase()
-        const bucket  = (n.includes('cash') || n.includes('transport')) ? CA : PSS
-        const entry   = { name: item.name, amount: item.price * item.quantity }
+        const n = catName.toLowerCase()
+        const bucket = n.includes('cash') ? CA : n.includes('transport') ? TRANS : PSS
+        const entry  = { name: item.name, amount: item.price * item.quantity }
         if (!bucket.itemsByVersion[q.id]) bucket.itemsByVersion[q.id] = []
         bucket.itemsByVersion[q.id].push(entry)
       })
     })
 
     const result = []
-    if (shown.some(q => PSS.itemsByVersion[q.id]?.length)) result.push(PSS)
-    // Caskets render between PSS and CA via hasCaskets in JSX
-    if (shown.some(q => CA.itemsByVersion[q.id]?.length))  result.push(CA)
+    if (shown.some(q => PSS.itemsByVersion[q.id]?.length))   result.push(PSS)
+    if (shown.some(q => TRANS.itemsByVersion[q.id]?.length)) result.push(TRANS)
+    if (shown.some(q => CA.itemsByVersion[q.id]?.length))    result.push(CA)
     return result
   }
 
@@ -223,9 +200,34 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
     win.document.close()
   }
 
-  // grid column style helper
   const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
   const colBorder = i => i < cols - 1 ? 'border-r border-stone-100' : ''
+
+  function renderCatSection({ catId, catName, itemsByVersion }) {
+    return (
+      <div key={catId}>
+        <div className="pt-8 pb-2 text-center">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+        </div>
+        <div className="grid" style={gridStyle}>
+          {shown.map((q, idx) => (
+            <div key={q.id} className={`px-8 pb-8 text-center ${colBorder(idx)}`}>
+              {(itemsByVersion[q.id] || []).map((item, i) => (
+                <div key={i} className="mt-4">
+                  <p className="text-sm font-semibold text-stone-800 leading-snug">{item.name}</p>
+                  {showPrices && <p className="text-[11px] text-stone-400 mt-1">{fmt(item.amount)}</p>}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const pssCat   = categoryData.find(c => c.catId === 'pss')
+  const transCat = categoryData.find(c => c.catId === 'trans')
+  const caCat    = categoryData.find(c => c.catId === 'ca')
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
@@ -275,57 +277,46 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
               <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
             ) : (
               <div className="overflow-x-auto">
-                <div style={{ minWidth: `${cols * 200}px` }}>
+                <div style={{ minWidth: `${cols * 220}px` }}>
 
-                  {/* Version headers */}
-                  <div className="grid border-b-2 border-stone-100" style={gridStyle}>
-                    {shown.map((q, idx) => (
-                      <div key={q.id} className={`px-8 py-6 pb-8 text-center ${colBorder(idx)}`}>
-                        <p className={`text-xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
-                          {q.version_label || `V${quotes.indexOf(q) + 1}`}
-                        </p>
-                        {q.packages?.name && <p className="text-xs text-stone-400 mt-1.5">{q.packages.name}</p>}
-                        {q.arrangement_type && <p className="text-[11px] text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
-                        {STATUS_CLS[q.status] && (
-                          <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
-                        )}
-                        <p className="text-3xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
-                      </div>
-                    ))}
+                  {/* Version headers — price + ticker */}
+                  <div className="grid border-b border-stone-100" style={gridStyle}>
+                    {shown.map((q, idx) => {
+                      const ticker = [
+                        q.discount_amount > 0 && `−${fmt(q.discount_amount)} discount`,
+                        q.tax_amount > 0 && `+${fmt(q.tax_amount)} tax`,
+                      ].filter(Boolean).join(' · ')
+                      return (
+                        <div key={q.id} className={`px-8 py-7 pb-8 text-center ${colBorder(idx)}`}>
+                          <p className={`text-xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
+                            {q.version_label || `V${quotes.indexOf(q) + 1}`}
+                          </p>
+                          {q.packages?.name && <p className="text-xs text-stone-400 mt-1.5">{q.packages.name}</p>}
+                          {q.arrangement_type && <p className="text-[11px] text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
+                          {STATUS_CLS[q.status] && (
+                            <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
+                          )}
+                          <p className="text-3xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
+                          {ticker && <p className="text-[10px] text-stone-400 mt-1.5">{ticker}</p>}
+                        </div>
+                      )
+                    })}
                   </div>
 
-                  {/* PSS — Professional Staff & Services */}
-                  {categoryData.filter(c => c.catId === 'pss').map(({ catId, catName, itemsByVersion }) => (
-                    <div key={catId}>
-                      <div className="py-5 text-center border-t border-stone-100">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
-                      </div>
-                      <div className="grid border-b border-stone-100" style={gridStyle}>
-                        {shown.map((q, idx) => (
-                          <div key={q.id} className={`px-8 pb-6 text-center ${colBorder(idx)}`}>
-                            {(itemsByVersion[q.id] || []).map((item, i) => (
-                              <div key={i} className="mt-4">
-                                <p className="text-sm font-semibold text-stone-800 leading-snug">{item.name}</p>
-                                {showPrices && <p className="text-[11px] text-stone-400 mt-1">{fmt(item.amount)}</p>}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  {/* Professional Staff & Services */}
+                  {pssCat && renderCatSection(pssCat)}
 
                   {/* Caskets */}
                   {hasCaskets && (
                     <div>
-                      <div className="py-5 text-center border-t border-stone-100">
+                      <div className="pt-8 pb-2 text-center">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
-                      <div className="grid border-b border-stone-100" style={gridStyle}>
+                      <div className="grid" style={gridStyle}>
                         {shown.map((q, idx) => {
                           const entry = casketByQuote[q.id]; const csk = entry?.casket
                           return (
-                            <div key={q.id} className={`px-8 pb-6 text-center ${colBorder(idx)}`}>
+                            <div key={q.id} className={`px-8 pb-8 text-center ${colBorder(idx)}`}>
                               {entry ? (
                                 <div className="flex flex-col items-center gap-2 mt-4">
                                   {showCasketImages && (
@@ -345,89 +336,13 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     </div>
                   )}
 
-                  {/* Cash Advanced Items */}
-                  {categoryData.filter(c => c.catId === 'ca').map(({ catId, catName, itemsByVersion }) => (
-                    <div key={catId}>
-                      <div className="py-5 text-center border-t border-stone-100">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
-                      </div>
-                      <div className="grid border-b border-stone-100" style={gridStyle}>
-                        {shown.map((q, idx) => (
-                          <div key={q.id} className={`px-8 pb-6 text-center ${colBorder(idx)}`}>
-                            {(itemsByVersion[q.id] || []).map((item, i) => (
-                              <div key={i} className="mt-4">
-                                <p className="text-sm font-semibold text-stone-800 leading-snug">{item.name}</p>
-                                {showPrices && <p className="text-[11px] text-stone-400 mt-1">{fmt(item.amount)}</p>}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  {/* Transportation */}
+                  {transCat && renderCatSection(transCat)}
 
-                  {/* Summary */}
-                  <div className="border-t border-stone-100 mt-2">
+                  {/* Cash Advanced */}
+                  {caCat && renderCatSection(caCat)}
 
-                    {/* Total — prominent, at top */}
-                    <div className="grid" style={gridStyle}>
-                      {shown.map((q, idx) => (
-                        <div key={q.id} className={`px-8 py-8 text-center ${colBorder(idx)}`}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Total</p>
-                          <p className="text-3xl font-bold text-stone-900">{fmt(q.total)}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Breakdown toggle */}
-                    <div className="text-center pb-4">
-                      <button
-                        onClick={() => setShowBreakdown(b => !b)}
-                        className="text-[11px] text-stone-400 hover:text-stone-600 transition-colors"
-                      >
-                        {showBreakdown ? '▲ Hide breakdown' : '▼ Show breakdown'}
-                      </button>
-                    </div>
-
-                    {/* Collapsible breakdown */}
-                    {showBreakdown && (
-                      <div className="border-t border-stone-100">
-                        {/* Subtotal */}
-                        <div className="grid border-b border-stone-100" style={gridStyle}>
-                          {shown.map((q, idx) => (
-                            <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Subtotal</p>
-                              <p className="text-sm text-stone-700 mt-0.5">{fmt(q.subtotal)}</p>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Discounts — combined into one row */}
-                        {shown.some(q => q.discount_amount > 0) && (
-                          <div className="grid border-b border-stone-100" style={gridStyle}>
-                            {shown.map((q, idx) => (
-                              <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                                {q.discount_amount > 0 && <>
-                                  <p className="text-[10px] uppercase tracking-wider text-stone-400">Discount</p>
-                                  <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.discount_amount)}</p>
-                                </>}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Tax */}
-                        <div className="grid border-b border-stone-100" style={gridStyle}>
-                          {shown.map((q, idx) => (
-                            <div key={q.id} className={`px-8 py-3 text-center ${colBorder(idx)}`}>
-                              <p className="text-[10px] uppercase tracking-wider text-stone-400">Tax</p>
-                              <p className="text-sm text-stone-600 mt-0.5">{fmt(q.tax_amount)}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <div className="pb-8" />
 
                 </div>
               </div>
