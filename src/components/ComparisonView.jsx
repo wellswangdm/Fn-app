@@ -10,25 +10,23 @@ function esc(s) {
 }
 
 // ─── Self-contained print HTML (no Tailwind dependency) ──────────────────────
-function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages }) {
-  const n  = shown.length
-  const g  = `display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));`
-  const cb = i => i < n - 1 ? 'border-right:1px solid #f0f0f0;' : ''
+function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker }) {
+  const n = shown.length
+  const g = `display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));`
 
-  const versionHeaders = shown.map((q, i) => {
-    const ticker = [
-      q.discount_amount > 0 && `−${fmt(q.discount_amount)} discount`,
-      q.tax_amount > 0 && `+${fmt(q.tax_amount)} tax`,
-    ].filter(Boolean).join(' · ')
+  const versionHeaders = shown.map((q) => {
+    const parts = [
+      q.discount_amount > 0 && `${fmt(q.discount_amount)} off`,
+      q.tax_amount > 0      && `${fmt(q.tax_amount)} tax incl.`,
+    ].filter(Boolean)
     return `
-    <div style="text-align:center;padding:24px 16px 28px;${cb(i)}">
+    <div style="text-align:center;padding:24px 24px 28px;">
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
       </p>
-      ${q.packages?.name ? `<p style="margin:5px 0 0;font-size:12px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
-      ${q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
-      ${ticker ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${ticker}</p>` : ''}
+      ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
+      <div style="width:40px;height:2px;background:#e5e5e5;border-radius:2px;margin:20px auto 0;"></div>
     </div>`
   }).join('')
 
@@ -38,8 +36,8 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">${esc(catName)}</span>
     </div>
     <div style="${g}">
-      ${shown.map((q, i) => `
-        <div style="text-align:center;padding:6px 16px 24px;${cb(i)}">
+      ${shown.map((q) => `
+        <div style="text-align:center;padding:6px 24px 24px;">
           ${(itemsByVersion[q.id] || []).map(item => `
             <div style="margin-bottom:14px">
               <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
@@ -54,10 +52,10 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Casket Selection</span>
     </div>
     <div style="${g}">
-      ${shown.map((q, i) => {
+      ${shown.map((q) => {
         const e = casketByQuote[q.id]; const csk = e?.casket
         return `
-          <div style="text-align:center;padding:6px 16px 24px;${cb(i)}">
+          <div style="text-align:center;padding:6px 24px 24px;">
             ${e ? `
               ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:130px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
               <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
@@ -74,7 +72,7 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
 
   return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;max-width:960px;margin:0 auto;color:#1d1d1f">
-      <div style="${g}border-bottom:1px solid #e5e5e5;">${versionHeaders}</div>
+      <div style="${g}">${versionHeaders}</div>
       ${pssCat   ? catSectionHTML(pssCat)   : ''}
       ${casketHTML}
       ${transCat ? catSectionHTML(transCat) : ''}
@@ -97,13 +95,14 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const [selected,         setSelected]          = useState(new Set())
   const [showPrices,       setShowPrices]        = useState(true)
   const [showCasketImages, setShowCasketImages]  = useState(true)
+  const [showTicker,       setShowTicker]        = useState(true)
   const [loading,          setLoading]           = useState(true)
 
   useEffect(() => {
     async function load() {
       const { data: qs } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, total, subtotal, package_discount, discount_amount, tax_amount, arrangement_type, created_at, version_label, packages(name)')
+        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, packages(name)')
         .eq('contact_id', contactId)
         .order('created_at', { ascending: true })
 
@@ -187,7 +186,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   function handlePrint() {
     const win = window.open('', '_blank')
     if (!win) { alert('Allow popups for this site to print.'); return }
-    const html = buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages })
+    const html = buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker })
     win.document.write(`<!DOCTYPE html>
 <html>
 <head>
@@ -201,7 +200,6 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   }
 
   const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
-  const colBorder = i => i < cols - 1 ? 'border-r border-stone-100' : ''
 
   function renderCatSection({ catId, catName, itemsByVersion }) {
     return (
@@ -211,7 +209,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
         </div>
         <div className="grid" style={gridStyle}>
           {shown.map((q, idx) => (
-            <div key={q.id} className={`px-8 pb-8 text-center ${colBorder(idx)}`}>
+            <div key={q.id} className="px-8 pb-8 text-center">
               {(itemsByVersion[q.id] || []).map((item, i) => (
                 <div key={i} className="mt-4">
                   <p className="text-sm font-semibold text-stone-800 leading-snug">{item.name}</p>
@@ -228,6 +226,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const pssCat   = categoryData.find(c => c.catId === 'pss')
   const transCat = categoryData.find(c => c.catId === 'trans')
   const caCat    = categoryData.find(c => c.catId === 'ca')
+
+  const hasDiscountOrTax = shown.some(q => q.discount_amount > 0 || q.tax_amount > 0)
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
@@ -264,6 +264,12 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   <input type="checkbox" checked={showPrices} onChange={e => setShowPrices(e.target.checked)} className="rounded" />
                   Show prices
                 </label>
+                {hasDiscountOrTax && (
+                  <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                    <input type="checkbox" checked={showTicker} onChange={e => setShowTicker(e.target.checked)} className="rounded" />
+                    Show discount & tax
+                  </label>
+                )}
                 {hasCaskets && (
                   <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
                     <input type="checkbox" checked={showCasketImages} onChange={e => setShowCasketImages(e.target.checked)} className="rounded" />
@@ -279,25 +285,27 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
               <div className="overflow-x-auto">
                 <div style={{ minWidth: `${cols * 220}px` }}>
 
-                  {/* Version headers — price + ticker */}
-                  <div className="grid border-b border-stone-100" style={gridStyle}>
-                    {shown.map((q, idx) => {
-                      const ticker = [
-                        q.discount_amount > 0 && `−${fmt(q.discount_amount)} discount`,
-                        q.tax_amount > 0 && `+${fmt(q.tax_amount)} tax`,
-                      ].filter(Boolean).join(' · ')
+                  {/* Version headers */}
+                  <div className="grid" style={gridStyle}>
+                    {shown.map((q) => {
+                      const parts = [
+                        q.discount_amount > 0 && `${fmt(q.discount_amount)} off`,
+                        q.tax_amount > 0      && `${fmt(q.tax_amount)} tax incl.`,
+                      ].filter(Boolean)
                       return (
-                        <div key={q.id} className={`px-8 py-7 pb-8 text-center ${colBorder(idx)}`}>
+                        <div key={q.id} className="px-8 pt-7 pb-6 text-center">
                           <p className={`text-xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                             {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
-                          {q.packages?.name && <p className="text-xs text-stone-400 mt-1.5">{q.packages.name}</p>}
-                          {q.arrangement_type && <p className="text-[11px] text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                           )}
                           <p className="text-3xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
-                          {ticker && <p className="text-[10px] text-stone-400 mt-1.5">{ticker}</p>}
+                          {showTicker && parts.length > 0 && (
+                            <p className="text-[10px] text-stone-400 mt-1.5">{parts.join(' · ')}</p>
+                          )}
+                          {/* Short line below each version column */}
+                          <div className="w-10 h-px bg-stone-200 mx-auto mt-6" />
                         </div>
                       )
                     })}
@@ -313,10 +321,10 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
                       <div className="grid" style={gridStyle}>
-                        {shown.map((q, idx) => {
+                        {shown.map((q) => {
                           const entry = casketByQuote[q.id]; const csk = entry?.casket
                           return (
-                            <div key={q.id} className={`px-8 pb-8 text-center ${colBorder(idx)}`}>
+                            <div key={q.id} className="px-8 pb-8 text-center">
                               {entry ? (
                                 <div className="flex flex-col items-center gap-2 mt-4">
                                   {showCasketImages && (
