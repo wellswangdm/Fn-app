@@ -41,7 +41,7 @@ function CopyBtn({ onClick }) {
 }
 
 export default function CustomerForm({ values, onChange, onNotes }) {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
 
   function set(key, val) { onChange({ [key]: val }) }
 

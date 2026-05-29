@@ -26,7 +26,6 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
       ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
       ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
-      <div style="width:${lineWidth}px;height:2px;background:#e5e5e5;border-radius:2px;margin:20px auto 0;"></div>
     </div>`
   }).join('')
 }
@@ -374,7 +373,6 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                           {showTicker && parts.length > 0 && (
                             <p className="text-[10px] text-stone-400 mt-1.5">{parts.join(' · ')}</p>
                           )}
-                          <div className="w-16 h-px bg-stone-200 mx-auto mt-6" />
                         </div>
                       )
                     })}
