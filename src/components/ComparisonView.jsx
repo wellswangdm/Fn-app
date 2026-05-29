@@ -6,7 +6,6 @@ function fmt(n) {
 }
 
 const STATUS_CLS = {
-  draft:     'bg-amber-50 text-amber-600 border-amber-200',
   finalized: 'bg-blue-50 text-blue-600 border-blue-200',
   accepted:  'bg-green-50 text-green-600 border-green-200',
 }
@@ -25,11 +24,17 @@ function openPrint() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   ${stylesheets}
-  <style>body{margin:0;padding:20px;background:#fff}@media print{body{padding:0}}</style>
+  <style>
+    body { margin: 0; padding: 20px; background: #fff; }
+    @media print {
+      body { padding: 0; }
+      * { overflow: visible !important; }
+    }
+  </style>
 </head>
 <body>
-  ${zone.outerHTML}
-  <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400))<\/script>
+  <div>${zone.innerHTML}</div>
+  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 600))<\/script>
 </body>
 </html>`)
   win.document.close()
@@ -232,7 +237,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
               <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table id="compare-print-zone" className="w-full text-sm border-collapse">
+                <div id="compare-print-zone">
+                <table className="w-full text-sm border-collapse">
 
                   {/* ── Version column headers ─────────────────────────── */}
                   <thead>
@@ -244,9 +250,11 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                           </p>
                           <p className="text-xs text-stone-400 font-normal mt-0.5">{q.packages?.name || 'No package'}</p>
                           <p className="text-[11px] text-stone-400 font-normal capitalize mt-0.5">{q.arrangement_type}</p>
-                          <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status] || 'bg-stone-100 text-stone-500 border-stone-200'}`}>
-                            {q.status}
-                          </span>
+                          {STATUS_CLS[q.status] && (
+                            <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>
+                              {q.status}
+                            </span>
+                          )}
                         </th>
                       ))}
                     </tr>
@@ -258,8 +266,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                       <>
                         {/* Category section header */}
                         <tr key={`hd-${catId}`} className="bg-stone-50">
-                          <td colSpan={cols} className="px-6 py-2.5">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+                          <td colSpan={cols} className="px-6 py-3 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">{catName}</span>
                           </td>
                         </tr>
 
@@ -388,6 +396,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     </tr>
                   </tbody>
                 </table>
+                </div>{/* /compare-print-zone */}
               </div>
             )}
           </>
