@@ -25,8 +25,54 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
   const [deleting,    setDeleting]    = useState(null)
   const [expanded,    setExpanded]    = useState(new Set())
   const [duplicating, setDuplicating] = useState(null) // { quote, newName, sameContact }
+  const [editProfile, setEditProfile] = useState(false)
+  const [profile,     setProfile]     = useState({ name: '', phone: '', email: '' })
+  const [profSaving,  setProfSaving]  = useState(false)
+  const [profMsg,     setProfMsg]     = useState(null) // { ok, text }
 
   useEffect(() => { loadQuotes() }, [])
+
+  async function openProfile() {
+    const name  = user?.user_metadata?.full_name || user?.user_metadata?.name || ''
+    const email = user?.email || ''
+    let phone = ''
+    if (userId) {
+      const { data } = await supabase.from('profiles').select('phone').eq('id', userId).single()
+      phone = data?.phone || ''
+    }
+    setProfile({ name, phone, email })
+    setProfMsg(null)
+    setEditProfile(true)
+  }
+
+  async function saveProfile() {
+    setProfSaving(true)
+    setProfMsg(null)
+    const updates = []
+
+    // Update name + phone in profiles table
+    updates.push(
+      supabase.from('profiles').upsert({ id: userId, full_name: profile.name, phone: profile.phone, updated_at: new Date().toISOString() })
+    )
+    // Update name in auth metadata
+    updates.push(
+      supabase.auth.updateUser({ data: { full_name: profile.name } })
+    )
+    // Update email only if changed
+    if (profile.email !== user?.email) {
+      updates.push(supabase.auth.updateUser({ email: profile.email }))
+    }
+
+    const results = await Promise.all(updates)
+    const err = results.find(r => r.error)?.error
+    setProfSaving(false)
+    if (err) {
+      setProfMsg({ ok: false, text: err.message })
+    } else {
+      const emailChanged = profile.email !== user?.email
+      setProfMsg({ ok: true, text: emailChanged ? 'Saved! Check your new email for a confirmation link.' : 'Profile updated.' })
+    }
+  }
 
   async function loadQuotes() {
     setLoading(true)
@@ -124,7 +170,7 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
             const email   = user.email || ''
             const initial = (name || email).charAt(0).toUpperCase()
             return (
-              <div className="flex items-center gap-2.5 ml-auto">
+              <button onClick={openProfile} className="flex items-center gap-2.5 ml-auto hover:opacity-80 transition-opacity">
                 <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500 flex items-center justify-center text-sm font-bold shrink-0">
                   {initial}
                 </div>
@@ -132,7 +178,7 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                   {name && <p className="text-sm font-medium leading-tight">{name}</p>}
                   <p className="text-xs text-primary-300 leading-tight">{email}</p>
                 </div>
-              </div>
+              </button>
             )
           })()}
 
@@ -250,6 +296,51 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
           )
         )}
       </main>
+
+      {/* Profile dialog */}
+      {editProfile && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+            <h3 className="text-sm font-bold text-stone-800 mb-4">Edit Profile</h3>
+
+            <label className="text-xs font-medium text-stone-600 block mb-1">Full name</label>
+            <input
+              className="input w-full text-sm mb-3"
+              value={profile.name}
+              onChange={e => setProfile(p => ({ ...p, name: e.target.value }))}
+              autoFocus
+            />
+
+            <label className="text-xs font-medium text-stone-600 block mb-1">Phone</label>
+            <input
+              className="input w-full text-sm mb-3"
+              value={profile.phone}
+              onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
+              placeholder="e.g. 778-866-8863"
+            />
+
+            <label className="text-xs font-medium text-stone-600 block mb-1">Login email</label>
+            <input
+              className="input w-full text-sm mb-1"
+              type="email"
+              value={profile.email}
+              onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
+            />
+            <p className="text-[10px] text-stone-400 mb-4">Changing email sends a confirmation link to the new address.</p>
+
+            {profMsg && (
+              <p className={`text-xs mb-3 ${profMsg.ok ? 'text-green-600' : 'text-red-500'}`}>{profMsg.text}</p>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setEditProfile(false)} className="btn-secondary text-xs py-1.5 px-4">Close</button>
+              <button onClick={saveProfile} disabled={profSaving} className="btn-primary text-xs py-1.5 px-4">
+                {profSaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Duplicate dialog */}
       {duplicating && (
