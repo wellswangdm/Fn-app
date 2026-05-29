@@ -9,18 +9,16 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 }
 
-// ─── Self-contained print HTML (no Tailwind dependency) ──────────────────────
-function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement }) {
-  const n = shown.length
-  const g = `display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));`
+// ─── Shared HTML helpers (used by both print and web builders) ────────────────
 
-  const versionHeaders = shown.map((q) => {
+function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, lineWidth = 64, cellPadding = '24px 24px 28px' }) {
+  return shown.map((q) => {
     const parts = [
       q.discount_amount > 0 && `${fmt(q.discount_amount)} off`,
       q.tax_amount > 0      && `${fmt(q.tax_amount)} tax incl.`,
     ].filter(Boolean)
     return `
-    <div style="text-align:center;padding:24px 24px 28px;">
+    <div style="text-align:center;padding:${cellPadding};">
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
       </p>
@@ -28,9 +26,13 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
       ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
       ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
-      <div style="width:40px;height:2px;background:#e5e5e5;border-radius:2px;margin:20px auto 0;"></div>
+      <div style="width:${lineWidth}px;height:2px;background:#e5e5e5;border-radius:2px;margin:20px auto 0;"></div>
     </div>`
   }).join('')
+}
+
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, gridCols }) {
+  const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
     return `
@@ -73,13 +75,60 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
   const caCat    = categoryData.find(c => c.catId === 'ca')
 
   return `
+    ${pssCat   ? catSectionHTML(pssCat)   : ''}
+    ${casketHTML}
+    ${transCat ? catSectionHTML(transCat) : ''}
+    ${caCat    ? catSectionHTML(caCat)    : ''}`
+}
+
+// ─── Print HTML ───────────────────────────────────────────────────────────────
+function buildPrintHTML(props) {
+  const { shown } = props
+  const n       = shown.length
+  const gridCols = `repeat(${n},minmax(0,1fr))`
+
+  const headers = buildVersionHeaderCells({ ...props, gridCols })
+  const body    = buildCategoryBlocks({ ...props, gridCols })
+
+  return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;max-width:960px;margin:0 auto;color:#1d1d1f">
-      <div style="${g}">${versionHeaders}</div>
-      ${pssCat   ? catSectionHTML(pssCat)   : ''}
-      ${casketHTML}
-      ${transCat ? catSectionHTML(transCat) : ''}
-      ${caCat    ? catSectionHTML(caCat)    : ''}
+      <div style="display:grid;grid-template-columns:${gridCols};">${headers}</div>
+      ${body}
     </div>`
+}
+
+// ─── Web (sticky-header) HTML ─────────────────────────────────────────────────
+function buildWebHTML(props) {
+  const { shown } = props
+  const n        = shown.length
+  const gridCols = `repeat(${n},minmax(0,1fr))`
+
+  const headers = buildVersionHeaderCells({ ...props, gridCols, cellPadding: '24px 24px 24px' })
+  const body    = buildCategoryBlocks({ ...props, gridCols })
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quote Comparison</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;color:#1d1d1f;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:960px;margin:0 auto;padding-bottom:80px}
+    .sticky{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e5e5e5;}
+    .hgrid{display:grid;grid-template-columns:${gridCols};}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sticky">
+      <div class="hgrid">${headers}</div>
+    </div>
+    ${body}
+  </div>
+</body>
+</html>`
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -186,10 +235,12 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const casketByQuote = hasCaskets ? getCasketByQuote() : {}
   const categoryData  = shown.length ? buildCategoryData() : []
 
+  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement }
+
   function handlePrint() {
     const win = window.open('', '_blank')
     if (!win) { alert('Allow popups for this site to print.'); return }
-    const html = buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement })
+    const html = buildPrintHTML(sharedProps)
     win.document.write(`<!DOCTYPE html>
 <html>
 <head>
@@ -202,6 +253,13 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
     win.document.close()
   }
 
+  function handleOpenHTML() {
+    const win = window.open('', '_blank')
+    if (!win) { alert('Allow popups for this site to preview.'); return }
+    win.document.write(buildWebHTML(sharedProps))
+    win.document.close()
+  }
+
   const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
 
   function renderCatSection({ catId, catName, itemsByVersion }) {
@@ -211,7 +269,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
           <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
         </div>
         <div className="grid" style={gridStyle}>
-          {shown.map((q, idx) => (
+          {shown.map((q) => (
             <div key={q.id} className="px-8 pb-8 text-center">
               {(itemsByVersion[q.id] || []).map((item, i) => (
                 <div key={i} className="mt-4">
@@ -242,11 +300,14 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
             <h2 className="text-sm font-bold text-stone-800">Compare Versions</h2>
             <p className="text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button onClick={handleOpenHTML} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
+              Open HTML
+            </button>
             <button onClick={handlePrint} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
               Print / Save PDF
             </button>
-            <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-xl leading-none">×</button>
+            <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-xl leading-none ml-1">×</button>
           </div>
         </div>
 
@@ -313,8 +374,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                           {showTicker && parts.length > 0 && (
                             <p className="text-[10px] text-stone-400 mt-1.5">{parts.join(' · ')}</p>
                           )}
-                          {/* Short line below each version column */}
-                          <div className="w-10 h-px bg-stone-200 mx-auto mt-6" />
+                          <div className="w-16 h-px bg-stone-200 mx-auto mt-6" />
                         </div>
                       )
                     })}
