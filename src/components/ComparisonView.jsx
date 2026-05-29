@@ -10,7 +10,7 @@ function esc(s) {
 }
 
 // ─── Self-contained print HTML (no Tailwind dependency) ──────────────────────
-function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker }) {
+function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement }) {
   const n = shown.length
   const g = `display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));`
 
@@ -24,6 +24,8 @@ function buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
       </p>
+      ${showArrangement && q.packages?.name ? `<p style="margin:6px 0 0;font-size:12px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
+      ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
       ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
       <div style="width:40px;height:2px;background:#e5e5e5;border-radius:2px;margin:20px auto 0;"></div>
@@ -96,6 +98,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const [showPrices,       setShowPrices]        = useState(true)
   const [showCasketImages, setShowCasketImages]  = useState(true)
   const [showTicker,       setShowTicker]        = useState(true)
+  const [showArrangement,  setShowArrangement]   = useState(true)
   const [loading,          setLoading]           = useState(true)
 
   useEffect(() => {
@@ -186,7 +189,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   function handlePrint() {
     const win = window.open('', '_blank')
     if (!win) { alert('Allow popups for this site to print.'); return }
-    const html = buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker })
+    const html = buildPrintHTML({ shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement })
     win.document.write(`<!DOCTYPE html>
 <html>
 <head>
@@ -264,10 +267,14 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   <input type="checkbox" checked={showPrices} onChange={e => setShowPrices(e.target.checked)} className="rounded" />
                   Show prices
                 </label>
+                <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                  <input type="checkbox" checked={showArrangement} onChange={e => setShowArrangement(e.target.checked)} className="rounded" />
+                  Service type
+                </label>
                 {hasDiscountOrTax && (
                   <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
                     <input type="checkbox" checked={showTicker} onChange={e => setShowTicker(e.target.checked)} className="rounded" />
-                    Show discount & tax
+                    Discount & tax
                   </label>
                 )}
                 {hasCaskets && (
@@ -297,6 +304,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                           <p className={`text-xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                             {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
+                          {showArrangement && q.packages?.name && <p className="text-xs text-stone-400 mt-1.5">{q.packages.name}</p>}
+                          {showArrangement && q.arrangement_type && <p className="text-[11px] text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                           )}
