@@ -17,7 +17,7 @@ const STATUS = {
   accepted:  { label: 'Accepted',  cls: 'bg-green-50 text-green-600 border-green-200'  },
 }
 
-export default function QuoteList({ onNew, onEdit }) {
+export default function QuoteList({ onNew, onEdit, onSignOut }) {
   const [quotes,      setQuotes]      = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
@@ -116,9 +116,14 @@ export default function QuoteList({ onNew, onEdit }) {
             <h1 className="text-lg font-semibold tracking-tight">Funeral Quote</h1>
             <p className="text-primary-300 text-xs mt-0.5">Service quotation manager</p>
           </div>
-          <button onClick={onNew} className="text-sm font-medium bg-white text-primary-800 px-4 py-2 rounded-lg hover:bg-stone-100 transition-colors shadow-sm">
-            + New Quote
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onNew} className="text-sm font-medium bg-white text-primary-800 px-4 py-2 rounded-lg hover:bg-stone-100 transition-colors shadow-sm">
+              + New Quote
+            </button>
+            <button onClick={onSignOut} className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
