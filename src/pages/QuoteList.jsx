@@ -17,7 +17,7 @@ const STATUS = {
   accepted:  { label: 'Accepted',  cls: 'bg-green-50 text-green-600 border-green-200'  },
 }
 
-export default function QuoteList({ onNew, onEdit, onSignOut, userId }) {
+export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
   const [quotes,      setQuotes]      = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
@@ -112,12 +112,31 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId }) {
     <div className="min-h-screen bg-stone-50">
 
       <header className="bg-primary-800 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Funeral Quote</h1>
             <p className="text-primary-300 text-xs mt-0.5">Service quotation manager</p>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* User profile */}
+          {user && (() => {
+            const name    = user.user_metadata?.full_name || user.user_metadata?.name || ''
+            const email   = user.email || ''
+            const initial = (name || email).charAt(0).toUpperCase()
+            return (
+              <div className="flex items-center gap-2.5 ml-auto">
+                <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500 flex items-center justify-center text-sm font-bold shrink-0">
+                  {initial}
+                </div>
+                <div className="hidden sm:block text-right">
+                  {name && <p className="text-sm font-medium leading-tight">{name}</p>}
+                  <p className="text-xs text-primary-300 leading-tight">{email}</p>
+                </div>
+              </div>
+            )
+          })()}
+
+          <div className="flex items-center gap-2 shrink-0">
             <button onClick={onNew} className="text-sm font-medium bg-white text-primary-800 px-4 py-2 rounded-lg hover:bg-stone-100 transition-colors shadow-sm">
               + New Quote
             </button>

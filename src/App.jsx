@@ -36,7 +36,7 @@ export default function App() {
   if (needsPassword)  return <SetPasswordPage onDone={() => setNeedsPassword(false)} />
 
   if (view === 'list') {
-    return <QuoteList onNew={openNew} onEdit={openEdit} onSignOut={signOut} userId={session.user.id} />
+    return <QuoteList onNew={openNew} onEdit={openEdit} onSignOut={signOut} userId={session.user.id} user={session.user} />
   }
 
   return (
