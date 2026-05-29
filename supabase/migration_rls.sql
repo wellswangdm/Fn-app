@@ -1,9 +1,10 @@
 -- ─── Step 1: Add user_id to quotes ──────────────────────────────────────────
 ALTER TABLE quotes ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
 
--- ─── Step 2: Assign existing quotes to a user (run once, replace with real ID)
+-- ─── Step 2: Assign existing quotes to a user BEFORE enabling RLS ────────────
 -- Find your user ID in Supabase → Authentication → Users, then run:
 -- UPDATE quotes SET user_id = '<your-user-uuid>' WHERE user_id IS NULL;
+-- DO THIS NOW before continuing — existing quotes will disappear if you skip it.
 
 -- ─── Step 3: Enable RLS on quotes ────────────────────────────────────────────
 ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
