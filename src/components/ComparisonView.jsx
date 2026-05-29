@@ -38,10 +38,11 @@ function openPrint() {
 export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const [quotes,          setQuotes]          = useState([])
   const [itemsByQuote,    setItemsByQuote]     = useState({})
-  const [categoryMap,     setCategoryMap]      = useState({}) // serviceItemId -> { categoryId, categoryName, sortOrder }
-  const [casketMap,       setCasketMap]        = useState({}) // casketId -> { name, price, description, imageUrl }
-  const [catOrder,        setCatOrder]         = useState([]) // [{ id, name, sortOrder }] sorted
+  const [categoryMap,     setCategoryMap]      = useState({})
+  const [casketMap,       setCasketMap]        = useState({})
+  const [catOrder,        setCatOrder]         = useState([])
   const [selected,        setSelected]         = useState(new Set())
+  const [showPrices,      setShowPrices]       = useState(true)
   const [showCasketImages, setShowCasketImages] = useState(true)
   const [loading,         setLoading]          = useState(true)
 
@@ -56,15 +57,12 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
       if (!qs?.length) { setLoading(false); return }
 
       const { data: items } = await supabase
-        .from('quote_items')
-        .select('*')
-        .in('quote_id', qs.map(q => q.id))
+        .from('quote_items').select('*').in('quote_id', qs.map(q => q.id))
 
       const grouped = {}
       qs.forEach(q => { grouped[q.id] = [] })
       ;(items || []).forEach(i => { grouped[i.quote_id]?.push(i) })
 
-      // Fetch service item → category info
       const sids = [...new Set((items || []).filter(i => i.service_item_id).map(i => i.service_item_id))]
       let catMap = {}
       let orderedCats = []
@@ -82,8 +80,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
           }
           if (si.category_id && !catSeen.has(si.category_id)) {
             catSeen.set(si.category_id, {
-              id:        si.category_id,
-              name:      si.service_categories?.name || 'Other',
+              id: si.category_id,
+              name: si.service_categories?.name || 'Other',
               sortOrder: si.service_categories?.sort_order ?? 999,
             })
           }
@@ -91,14 +89,11 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
         orderedCats = [...catSeen.values()].sort((a, b) => a.sortOrder - b.sortOrder)
       }
 
-      // Fetch casket data
       const cids = [...new Set((items || []).filter(i => i.is_casket_item && i.casket_id).map(i => i.casket_id))]
       let cskMap = {}
       if (cids.length) {
         const { data: cskData } = await supabase
-          .from('caskets')
-          .select('id, name, price, description, image_url')
-          .in('id', cids)
+          .from('caskets').select('id, name, price, description, image_url').in('id', cids)
         ;(cskData || []).forEach(c => {
           cskMap[c.id] = { name: c.name, price: Number(c.price), description: c.description, imageUrl: c.image_url }
         })
@@ -124,9 +119,11 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   }
 
   const shown = quotes.filter(q => selected.has(q.id))
+  const cols  = shown.length
 
+  // Build category rows: categoryId → ordered list of { name, prices: {quoteId: amount} }
   function buildCategoryRows() {
-    const catRowsMap = new Map() // categoryId -> Map(key -> { name, prices })
+    const catRowsMap = new Map()
     const uncatRows  = new Map()
 
     shown.forEach(q => {
@@ -145,10 +142,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
     const result = catOrder
       .filter(cat => catRowsMap.has(cat.id))
       .map(cat => ({ catId: cat.id, catName: cat.name, rows: [...catRowsMap.get(cat.id).values()] }))
-
-    if (uncatRows.size > 0) {
+    if (uncatRows.size > 0)
       result.push({ catId: 'uncategorized', catName: 'Other Items', rows: [...uncatRows.values()] })
-    }
     return result
   }
 
@@ -169,7 +164,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-4">
 
-        {/* Header */}
+        {/* ── Modal header ───────────────────────────────────────────────── */}
         <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-stone-800">Compare Versions</h2>
@@ -189,7 +184,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
         {loading ? <p className="text-sm text-stone-400 p-8 text-center">Loading…</p> : (
           <>
-            {/* Toggle pills + casket images toggle */}
+            {/* ── Toolbar: version pills + display toggles ─────────────── */}
             <div className="flex gap-2 px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/60">
               {quotes.map((q, i) => (
                 <button
@@ -206,33 +201,32 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   {q.id === currentQuoteId && <span className="text-[10px] opacity-60 ml-1">current</span>}
                 </button>
               ))}
-              {hasCaskets && (
-                <label className="ml-auto flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showCasketImages}
-                    onChange={e => setShowCasketImages(e.target.checked)}
-                    className="rounded"
-                  />
-                  Show casket images
+
+              <div className="ml-auto flex items-center gap-4">
+                <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                  <input type="checkbox" checked={showPrices} onChange={e => setShowPrices(e.target.checked)} className="rounded" />
+                  Show prices
                 </label>
-              )}
+                {hasCaskets && (
+                  <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                    <input type="checkbox" checked={showCasketImages} onChange={e => setShowCasketImages(e.target.checked)} className="rounded" />
+                    Show casket images
+                  </label>
+                )}
+              </div>
             </div>
 
             {shown.length === 0 ? (
               <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table id="compare-print-zone" className="w-full text-sm">
+                <table id="compare-print-zone" className="w-full text-sm border-collapse">
 
-                  {/* Version header columns */}
+                  {/* ── Version column headers ──────────────────────────── */}
                   <thead>
                     <tr className="border-b-2 border-stone-100">
-                      <th className="text-left px-6 py-5 text-xs font-semibold uppercase tracking-wider text-stone-400 w-56 min-w-[14rem]">
-                        Item
-                      </th>
                       {shown.map(q => (
-                        <th key={q.id} className="px-5 py-5 text-center min-w-[160px]">
+                        <th key={q.id} className="px-6 py-5 text-center" style={{ width: `${100 / cols}%` }}>
                           <p className={`text-base font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-800'}`}>
                             {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
@@ -247,23 +241,29 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   </thead>
 
                   <tbody>
-                    {/* ── Category rows ───────────────────────────────────── */}
+                    {/* ── Service item categories ──────────────────────── */}
                     {categoryRows.map(({ catId, catName, rows }) => (
                       <>
+                        {/* Section header */}
                         <tr key={`hd-${catId}`} className="bg-stone-50">
-                          <td colSpan={shown.length + 1} className="px-6 py-2.5">
+                          <td colSpan={cols} className="px-6 py-2.5">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
                           </td>
                         </tr>
+
+                        {/* Item rows — item name lives inside each version cell */}
                         {rows.map(row => (
-                          <tr key={`${catId}-${row.name}`} className="border-b border-stone-50 hover:bg-stone-50/40 transition-colors">
-                            <td className="px-6 py-2.5 text-sm text-stone-600 leading-snug">{row.name}</td>
+                          <tr key={`${catId}-${row.name}`} className="border-b border-stone-50">
                             {shown.map(q => (
-                              <td key={q.id} className="px-5 py-2.5 text-center text-sm">
-                                {row.prices[q.id] != null
-                                  ? <span className="font-medium text-stone-700">{fmt(row.prices[q.id])}</span>
-                                  : <span className="text-stone-200">—</span>
-                                }
+                              <td key={q.id} className="px-6 py-3 text-center align-top">
+                                {row.prices[q.id] != null ? (
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <span className="text-sm text-stone-700 leading-snug">{row.name}</span>
+                                    {showPrices && (
+                                      <span className="text-[11px] text-stone-400">{fmt(row.prices[q.id])}</span>
+                                    )}
+                                  </div>
+                                ) : null}
                               </td>
                             ))}
                           </tr>
@@ -275,47 +275,32 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     {hasCaskets && (
                       <>
                         <tr className="bg-stone-50">
-                          <td colSpan={shown.length + 1} className="px-6 py-2.5">
+                          <td colSpan={cols} className="px-6 py-2.5">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                           </td>
                         </tr>
-
-                        {showCasketImages && (
-                          <tr className="border-b border-stone-50">
-                            <td className="px-6 py-3 text-xs text-stone-400 align-top">Model</td>
-                            {shown.map(q => {
-                              const entry = casketByQuote[q.id]
-                              const csk   = entry?.casket
-                              return (
-                                <td key={q.id} className="px-4 py-3 text-center align-top">
-                                  {entry ? (
-                                    <div className="inline-flex flex-col items-center gap-1.5 max-w-[140px]">
-                                      {csk?.imageUrl
-                                        ? <img src={csk.imageUrl} alt={entry.name} className="w-full object-contain rounded-xl bg-stone-50 border border-stone-100 max-h-28" />
-                                        : <div className="w-full h-16 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
-                                      }
-                                      <p className="text-xs font-semibold text-stone-700 text-center leading-tight">{entry.name}</p>
-                                      {csk?.description && (
-                                        <p className="text-[10px] text-stone-400 text-center leading-tight line-clamp-3">{csk.description}</p>
-                                      )}
-                                    </div>
-                                  ) : <span className="text-stone-200 text-sm">—</span>}
-                                </td>
-                              )
-                            })}
-                          </tr>
-                        )}
-
-                        <tr className="border-b border-stone-50 hover:bg-stone-50/40 transition-colors">
-                          <td className="px-6 py-2.5 text-sm text-stone-600">Casket Price</td>
+                        <tr className="border-b border-stone-50">
                           {shown.map(q => {
                             const entry = casketByQuote[q.id]
+                            const csk   = entry?.casket
                             return (
-                              <td key={q.id} className="px-5 py-2.5 text-center text-sm">
-                                {entry
-                                  ? <span className="font-medium text-stone-700">{fmt(entry.price)}</span>
-                                  : <span className="text-stone-200">—</span>
-                                }
+                              <td key={q.id} className="px-6 py-4 text-center align-top">
+                                {entry ? (
+                                  <div className="flex flex-col items-center gap-2">
+                                    {showCasketImages && (
+                                      csk?.imageUrl
+                                        ? <img src={csk.imageUrl} alt={entry.name} className="w-full max-w-[140px] object-contain rounded-xl bg-stone-50 border border-stone-100 max-h-28" />
+                                        : <div className="w-28 h-16 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
+                                    )}
+                                    <span className="text-sm font-semibold text-stone-700 leading-snug">{entry.name}</span>
+                                    {csk?.description && (
+                                      <span className="text-[10px] text-stone-400 leading-tight max-w-[160px] text-center line-clamp-3">{csk.description}</span>
+                                    )}
+                                    {showPrices && (
+                                      <span className="text-[11px] text-stone-400">{fmt(entry.price)}</span>
+                                    )}
+                                  </div>
+                                ) : null}
                               </td>
                             )
                           })}
@@ -325,50 +310,67 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
                     {/* ── Summary ─────────────────────────────────────────── */}
                     <tr className="bg-stone-50">
-                      <td colSpan={shown.length + 1} className="px-6 py-2.5">
+                      <td colSpan={cols} className="px-6 py-2.5">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Summary</span>
                       </td>
                     </tr>
+
                     <tr className="border-b border-stone-100">
-                      <td className="px-6 py-2.5 text-sm text-stone-500">Subtotal</td>
                       {shown.map(q => (
-                        <td key={q.id} className="px-5 py-2.5 text-center text-sm text-stone-700">{fmt(q.subtotal)}</td>
+                        <td key={q.id} className="px-6 py-2.5 text-center">
+                          <p className="text-[10px] text-stone-400 uppercase tracking-wider">Subtotal</p>
+                          <p className="text-sm text-stone-700 mt-0.5">{fmt(q.subtotal)}</p>
+                        </td>
                       ))}
                     </tr>
+
                     {shown.some(q => q.package_discount > 0) && (
                       <tr className="border-b border-stone-100">
-                        <td className="px-6 py-2.5 text-sm text-stone-500">Package Discount</td>
                         {shown.map(q => (
-                          <td key={q.id} className="px-5 py-2.5 text-center text-sm text-emerald-600">
-                            {q.package_discount > 0 ? `−${fmt(q.package_discount)}` : <span className="text-stone-200">—</span>}
+                          <td key={q.id} className="px-6 py-2.5 text-center">
+                            {q.package_discount > 0 ? (
+                              <>
+                                <p className="text-[10px] text-stone-400 uppercase tracking-wider">Pkg Discount</p>
+                                <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.package_discount)}</p>
+                              </>
+                            ) : null}
                           </td>
                         ))}
                       </tr>
                     )}
+
                     {shown.some(q => (q.discount_amount - (q.package_discount || 0)) > 0) && (
                       <tr className="border-b border-stone-100">
-                        <td className="px-6 py-2.5 text-sm text-stone-500">Additional Discount</td>
                         {shown.map(q => {
                           const d = q.discount_amount - (q.package_discount || 0)
                           return (
-                            <td key={q.id} className="px-5 py-2.5 text-center text-sm text-red-500">
-                              {d > 0 ? `−${fmt(d)}` : <span className="text-stone-200">—</span>}
+                            <td key={q.id} className="px-6 py-2.5 text-center">
+                              {d > 0 ? (
+                                <>
+                                  <p className="text-[10px] text-stone-400 uppercase tracking-wider">Discount</p>
+                                  <p className="text-sm text-red-500 mt-0.5">−{fmt(d)}</p>
+                                </>
+                              ) : null}
                             </td>
                           )
                         })}
                       </tr>
                     )}
+
                     <tr className="border-b border-stone-100">
-                      <td className="px-6 py-2.5 text-sm text-stone-500">Tax</td>
                       {shown.map(q => (
-                        <td key={q.id} className="px-5 py-2.5 text-center text-sm text-stone-600">{fmt(q.tax_amount)}</td>
+                        <td key={q.id} className="px-6 py-2.5 text-center">
+                          <p className="text-[10px] text-stone-400 uppercase tracking-wider">Tax</p>
+                          <p className="text-sm text-stone-600 mt-0.5">{fmt(q.tax_amount)}</p>
+                        </td>
                       ))}
                     </tr>
+
                     <tr className="border-t-2 border-stone-200">
-                      <td className="px-6 py-5 text-sm font-bold text-stone-800">Total</td>
                       {shown.map(q => (
-                        <td key={q.id} className="px-5 py-5 text-center">
-                          <span className="text-xl font-bold text-primary-800">{fmt(q.total)}</span>
+                        <td key={q.id} className="px-6 py-6 text-center">
+                          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Total</p>
+                          <p className="text-2xl font-bold text-primary-800">{fmt(q.total)}</p>
                         </td>
                       ))}
                     </tr>
