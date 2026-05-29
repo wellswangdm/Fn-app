@@ -287,9 +287,9 @@ const INIT = {
   purchaserEmail:      '',
   purchaserBirthdate:  '',
   purchaserAddress:    '',
-  advisorName:     'Wells Wang',
-  advisorEmail:    'wells.wang@dignitymemorial.com',
-  advisorPhone:    '778-866-8863',
+  advisorName:     '',
+  advisorEmail:    '',
+  advisorPhone:    '',
   items:           [],
   sections:        INIT_SECTIONS,
   selectedCasket:  null,
@@ -313,7 +313,7 @@ const INIT = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function QuoteEditor({ quoteId, onDone, onEdit, userId }) {
+export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   const [state, dispatch] = useReducer(reducer, INIT)
   const [homes,          setHomes]          = useState([])
   const [saving,         setSaving]         = useState(false)
@@ -345,7 +345,23 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId }) {
   }, [])
 
   useEffect(() => {
-    if (!quoteId) { dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber(), contactId: crypto.randomUUID() } }); return }
+    if (!quoteId) {
+      async function initAdvisor() {
+        let advisorName  = user?.user_metadata?.full_name || user?.user_metadata?.name || ''
+        let advisorEmail = user?.email || ''
+        let advisorPhone = ''
+        if (userId) {
+          const { data: profile } = await supabase.from('profiles').select('full_name, phone').eq('id', userId).single()
+          if (profile) {
+            if (profile.full_name) advisorName  = profile.full_name
+            if (profile.phone)     advisorPhone = profile.phone
+          }
+        }
+        dispatch({ type: 'SET_CUSTOMER', payload: { advisorName, advisorEmail, advisorPhone } })
+      }
+      initAdvisor()
+      return
+    }
     async function load() {
       const [{ data: q }, { data: qi }] = await Promise.all([
         supabase.from('quotes').select('*').eq('id', quoteId).single(),

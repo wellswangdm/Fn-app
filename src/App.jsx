@@ -46,6 +46,7 @@ export default function App() {
       onDone={backToList}
       onEdit={openEdit}
       userId={session.user.id}
+      user={session.user}
     />
   )
 }
