@@ -3,10 +3,16 @@ import { supabase } from './lib/supabase.js'
 import QuoteList from './pages/QuoteList.jsx'
 import QuoteEditor from './pages/QuoteEditor.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import SetPasswordPage from './pages/SetPasswordPage.jsx'
+
+// Capture invite/recovery flag before Supabase strips the URL hash
+const hashParams    = new URLSearchParams(window.location.hash.replace('#', ''))
+const NEEDS_PW_FLAG = ['invite', 'recovery'].includes(hashParams.get('type'))
 
 export default function App() {
-  const [session,        setSession]        = useState(undefined) // undefined = still loading
-  const [view,           setView]           = useState('list')
+  const [session,        setSession]       = useState(undefined) // undefined = still loading
+  const [needsPassword,  setNeedsPassword] = useState(NEEDS_PW_FLAG)
+  const [view,           setView]          = useState('list')
   const [editingQuoteId, setEditingQuoteId] = useState(null)
 
   useEffect(() => {
@@ -26,7 +32,8 @@ export default function App() {
     </div>
   )
 
-  if (!session) return <LoginPage />
+  if (!session)       return <LoginPage />
+  if (needsPassword)  return <SetPasswordPage onDone={() => setNeedsPassword(false)} />
 
   if (view === 'list') {
     return <QuoteList onNew={openNew} onEdit={openEdit} onSignOut={signOut} />
