@@ -36,15 +36,15 @@ function openPrint() {
 }
 
 export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
-  const [quotes,          setQuotes]          = useState([])
-  const [itemsByQuote,    setItemsByQuote]     = useState({})
-  const [categoryMap,     setCategoryMap]      = useState({})
-  const [casketMap,       setCasketMap]        = useState({})
-  const [catOrder,        setCatOrder]         = useState([])
-  const [selected,        setSelected]         = useState(new Set())
-  const [showPrices,      setShowPrices]       = useState(true)
-  const [showCasketImages, setShowCasketImages] = useState(true)
-  const [loading,         setLoading]          = useState(true)
+  const [quotes,           setQuotes]           = useState([])
+  const [itemsByQuote,     setItemsByQuote]      = useState({})
+  const [categoryMap,      setCategoryMap]       = useState({})
+  const [casketMap,        setCasketMap]         = useState({})
+  const [catOrder,         setCatOrder]          = useState([])
+  const [selected,         setSelected]          = useState(new Set())
+  const [showPrices,       setShowPrices]        = useState(true)
+  const [showCasketImages, setShowCasketImages]  = useState(true)
+  const [loading,          setLoading]           = useState(true)
 
   useEffect(() => {
     async function load() {
@@ -80,8 +80,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
           }
           if (si.category_id && !catSeen.has(si.category_id)) {
             catSeen.set(si.category_id, {
-              id: si.category_id,
-              name: si.service_categories?.name || 'Other',
+              id:        si.category_id,
+              name:      si.service_categories?.name || 'Other',
               sortOrder: si.service_categories?.sort_order ?? 999,
             })
           }
@@ -121,29 +121,39 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
   const shown = quotes.filter(q => selected.has(q.id))
   const cols  = shown.length
 
-  // Build category rows: categoryId → ordered list of { name, prices: {quoteId: amount} }
-  function buildCategoryRows() {
-    const catRowsMap = new Map()
-    const uncatRows  = new Map()
+  // For each category, build a map: quoteId → [{name, amount}]
+  // One row per category; ALL items for that version stacked in one cell
+  function buildCategoryData() {
+    const catDataMap = new Map() // catId → { catName, sortOrder, itemsByVersion: {qid: [{name,amount}]} }
+    const uncatItems = {}        // qid → [{name,amount}]
 
     shown.forEach(q => {
       ;(itemsByQuote[q.id] || []).forEach(item => {
         if (item.is_casket_item) return
-        const key     = item.service_item_id || item.name
         const catInfo = item.service_item_id ? categoryMap[item.service_item_id] : null
         const catId   = catInfo?.categoryId || 'uncategorized'
-        const bucket  = catId === 'uncategorized' ? uncatRows : (catRowsMap.get(catId) || new Map())
-        if (catId !== 'uncategorized') catRowsMap.set(catId, bucket)
-        if (!bucket.has(key)) bucket.set(key, { name: item.name, prices: {} })
-        bucket.get(key).prices[q.id] = item.price * item.quantity
+        const catName = catInfo?.categoryName || 'Other Items'
+        const entry   = { name: item.name, amount: item.price * item.quantity }
+
+        if (catId === 'uncategorized') {
+          if (!uncatItems[q.id]) uncatItems[q.id] = []
+          uncatItems[q.id].push(entry)
+        } else {
+          if (!catDataMap.has(catId)) catDataMap.set(catId, { catId, catName, sortOrder: catInfo.sortOrder, itemsByVersion: {} })
+          const d = catDataMap.get(catId)
+          if (!d.itemsByVersion[q.id]) d.itemsByVersion[q.id] = []
+          d.itemsByVersion[q.id].push(entry)
+        }
       })
     })
 
     const result = catOrder
-      .filter(cat => catRowsMap.has(cat.id))
-      .map(cat => ({ catId: cat.id, catName: cat.name, rows: [...catRowsMap.get(cat.id).values()] }))
-    if (uncatRows.size > 0)
-      result.push({ catId: 'uncategorized', catName: 'Other Items', rows: [...uncatRows.values()] })
+      .filter(cat => catDataMap.has(cat.id))
+      .map(cat => catDataMap.get(cat.id))
+
+    if (shown.some(q => uncatItems[q.id]?.length)) {
+      result.push({ catId: 'uncategorized', catName: 'Other Items', sortOrder: 9999, itemsByVersion: uncatItems })
+    }
     return result
   }
 
@@ -158,17 +168,20 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
   const hasCaskets    = shown.some(q => (itemsByQuote[q.id] || []).some(i => i.is_casket_item))
   const casketByQuote = hasCaskets ? getCasketByQuote() : {}
-  const categoryRows  = shown.length ? buildCategoryRows() : []
+  const categoryData  = shown.length ? buildCategoryData() : []
+
+  // Column border helper
+  const colBorder = idx => idx < cols - 1 ? 'border-r border-stone-100' : ''
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-4">
 
-        {/* ── Modal header ───────────────────────────────────────────────── */}
+        {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-stone-800">Compare Versions</h2>
-            <p className="text-xs text-stone-400 mt-0.5">Toggle versions to include or exclude them</p>
+            <p className="text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -184,7 +197,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
         {loading ? <p className="text-sm text-stone-400 p-8 text-center">Loading…</p> : (
           <>
-            {/* ── Toolbar: version pills + display toggles ─────────────── */}
+            {/* ── Toolbar ─────────────────────────────────────────────────── */}
             <div className="flex gap-2 px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/60">
               {quotes.map((q, i) => (
                 <button
@@ -201,7 +214,6 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   {q.id === currentQuoteId && <span className="text-[10px] opacity-60 ml-1">current</span>}
                 </button>
               ))}
-
               <div className="ml-auto flex items-center gap-4">
                 <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
                   <input type="checkbox" checked={showPrices} onChange={e => setShowPrices(e.target.checked)} className="rounded" />
@@ -210,7 +222,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                 {hasCaskets && (
                   <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
                     <input type="checkbox" checked={showCasketImages} onChange={e => setShowCasketImages(e.target.checked)} className="rounded" />
-                    Show casket images
+                    Casket images
                   </label>
                 )}
               </div>
@@ -222,11 +234,11 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
               <div className="overflow-x-auto">
                 <table id="compare-print-zone" className="w-full text-sm border-collapse">
 
-                  {/* ── Version column headers ──────────────────────────── */}
+                  {/* ── Version column headers ─────────────────────────── */}
                   <thead>
                     <tr className="border-b-2 border-stone-100">
-                      {shown.map(q => (
-                        <th key={q.id} className="px-6 py-5 text-center" style={{ width: `${100 / cols}%` }}>
+                      {shown.map((q, idx) => (
+                        <th key={q.id} className={`px-6 py-5 text-center ${colBorder(idx)}`} style={{ width: `${100 / cols}%` }}>
                           <p className={`text-base font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-800'}`}>
                             {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
@@ -241,37 +253,35 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                   </thead>
 
                   <tbody>
-                    {/* ── Service item categories ──────────────────────── */}
-                    {categoryRows.map(({ catId, catName, rows }) => (
+                    {/* ── One row per category ─────────────────────────── */}
+                    {categoryData.map(({ catId, catName, itemsByVersion }) => (
                       <>
-                        {/* Section header */}
+                        {/* Category section header */}
                         <tr key={`hd-${catId}`} className="bg-stone-50">
                           <td colSpan={cols} className="px-6 py-2.5">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{catName}</span>
                           </td>
                         </tr>
 
-                        {/* Item rows — item name lives inside each version cell */}
-                        {rows.map(row => (
-                          <tr key={`${catId}-${row.name}`} className="border-b border-stone-50">
-                            {shown.map(q => (
-                              <td key={q.id} className="px-6 py-3 text-center align-top">
-                                {row.prices[q.id] != null ? (
-                                  <div className="flex flex-col items-center gap-0.5">
-                                    <span className="text-sm text-stone-700 leading-snug">{row.name}</span>
-                                    {showPrices && (
-                                      <span className="text-[11px] text-stone-400">{fmt(row.prices[q.id])}</span>
-                                    )}
-                                  </div>
-                                ) : null}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
+                        {/* All items for each version stacked in one cell — no per-item row alignment */}
+                        <tr key={`body-${catId}`} className="border-b border-stone-100">
+                          {shown.map((q, idx) => (
+                            <td key={q.id} className={`px-6 py-4 align-top ${colBorder(idx)}`}>
+                              {(itemsByVersion[q.id] || []).map((item, i) => (
+                                <div key={i} className={i > 0 ? 'mt-3 pt-3 border-t border-stone-50' : ''}>
+                                  <p className="text-sm text-stone-700 leading-snug">{item.name}</p>
+                                  {showPrices && (
+                                    <p className="text-[11px] text-stone-400 mt-0.5">{fmt(item.amount)}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </td>
+                          ))}
+                        </tr>
                       </>
                     ))}
 
-                    {/* ── Casket section ──────────────────────────────────── */}
+                    {/* ── Casket section ───────────────────────────────── */}
                     {hasCaskets && (
                       <>
                         <tr className="bg-stone-50">
@@ -279,28 +289,30 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                           </td>
                         </tr>
-                        <tr className="border-b border-stone-50">
-                          {shown.map(q => {
+                        <tr className="border-b border-stone-100">
+                          {shown.map((q, idx) => {
                             const entry = casketByQuote[q.id]
                             const csk   = entry?.casket
                             return (
-                              <td key={q.id} className="px-6 py-4 text-center align-top">
+                              <td key={q.id} className={`px-6 py-4 align-top ${colBorder(idx)}`}>
                                 {entry ? (
-                                  <div className="flex flex-col items-center gap-2">
+                                  <div className="flex flex-col gap-2">
                                     {showCasketImages && (
                                       csk?.imageUrl
-                                        ? <img src={csk.imageUrl} alt={entry.name} className="w-full max-w-[140px] object-contain rounded-xl bg-stone-50 border border-stone-100 max-h-28" />
+                                        ? <img src={csk.imageUrl} alt={entry.name} className="w-full max-w-[160px] object-contain rounded-xl bg-stone-50 border border-stone-100 max-h-28" />
                                         : <div className="w-28 h-16 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
                                     )}
-                                    <span className="text-sm font-semibold text-stone-700 leading-snug">{entry.name}</span>
+                                    <p className="text-sm font-semibold text-stone-700 leading-snug">{entry.name}</p>
                                     {csk?.description && (
-                                      <span className="text-[10px] text-stone-400 leading-tight max-w-[160px] text-center line-clamp-3">{csk.description}</span>
+                                      <p className="text-[10px] text-stone-400 leading-tight">{csk.description}</p>
                                     )}
                                     {showPrices && (
-                                      <span className="text-[11px] text-stone-400">{fmt(entry.price)}</span>
+                                      <p className="text-[11px] text-stone-400">{fmt(entry.price)}</p>
                                     )}
                                   </div>
-                                ) : null}
+                                ) : (
+                                  <p className="text-xs text-stone-300">Not selected</p>
+                                )}
                               </td>
                             )
                           })}
@@ -308,7 +320,7 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                       </>
                     )}
 
-                    {/* ── Summary ─────────────────────────────────────────── */}
+                    {/* ── Summary — aligned rows are fine here (always numeric) ── */}
                     <tr className="bg-stone-50">
                       <td colSpan={cols} className="px-6 py-2.5">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Summary</span>
@@ -316,8 +328,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     </tr>
 
                     <tr className="border-b border-stone-100">
-                      {shown.map(q => (
-                        <td key={q.id} className="px-6 py-2.5 text-center">
+                      {shown.map((q, idx) => (
+                        <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
                           <p className="text-[10px] text-stone-400 uppercase tracking-wider">Subtotal</p>
                           <p className="text-sm text-stone-700 mt-0.5">{fmt(q.subtotal)}</p>
                         </td>
@@ -326,14 +338,14 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
                     {shown.some(q => q.package_discount > 0) && (
                       <tr className="border-b border-stone-100">
-                        {shown.map(q => (
-                          <td key={q.id} className="px-6 py-2.5 text-center">
-                            {q.package_discount > 0 ? (
+                        {shown.map((q, idx) => (
+                          <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
+                            {q.package_discount > 0 && (
                               <>
                                 <p className="text-[10px] text-stone-400 uppercase tracking-wider">Pkg Discount</p>
                                 <p className="text-sm text-emerald-600 mt-0.5">−{fmt(q.package_discount)}</p>
                               </>
-                            ) : null}
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -341,16 +353,16 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
                     {shown.some(q => (q.discount_amount - (q.package_discount || 0)) > 0) && (
                       <tr className="border-b border-stone-100">
-                        {shown.map(q => {
+                        {shown.map((q, idx) => {
                           const d = q.discount_amount - (q.package_discount || 0)
                           return (
-                            <td key={q.id} className="px-6 py-2.5 text-center">
-                              {d > 0 ? (
+                            <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
+                              {d > 0 && (
                                 <>
                                   <p className="text-[10px] text-stone-400 uppercase tracking-wider">Discount</p>
                                   <p className="text-sm text-red-500 mt-0.5">−{fmt(d)}</p>
                                 </>
-                              ) : null}
+                              )}
                             </td>
                           )
                         })}
@@ -358,8 +370,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     )}
 
                     <tr className="border-b border-stone-100">
-                      {shown.map(q => (
-                        <td key={q.id} className="px-6 py-2.5 text-center">
+                      {shown.map((q, idx) => (
+                        <td key={q.id} className={`px-6 py-2.5 ${colBorder(idx)}`}>
                           <p className="text-[10px] text-stone-400 uppercase tracking-wider">Tax</p>
                           <p className="text-sm text-stone-600 mt-0.5">{fmt(q.tax_amount)}</p>
                         </td>
@@ -367,8 +379,8 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
                     </tr>
 
                     <tr className="border-t-2 border-stone-200">
-                      {shown.map(q => (
-                        <td key={q.id} className="px-6 py-6 text-center">
+                      {shown.map((q, idx) => (
+                        <td key={q.id} className={`px-6 py-6 ${colBorder(idx)}`}>
                           <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Total</p>
                           <p className="text-2xl font-bold text-primary-800">{fmt(q.total)}</p>
                         </td>
