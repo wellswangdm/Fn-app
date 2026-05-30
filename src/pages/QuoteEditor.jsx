@@ -354,11 +354,13 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
         let advisorEmail = user?.email || ''
         let advisorPhone = ''
         if (userId) {
-          const { data: profile } = await supabase.from('profiles').select('full_name, phone').eq('id', userId).single()
-          if (profile) {
-            if (profile.full_name) advisorName  = profile.full_name
-            if (profile.phone)     advisorPhone = profile.phone
-          }
+          try {
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(), 4000))
+            const fetch   = supabase.from('profiles').select('full_name, phone').eq('id', userId).single()
+            const { data: profile } = await Promise.race([fetch, timeout])
+            if (profile?.full_name) advisorName  = profile.full_name
+            if (profile?.phone)     advisorPhone = profile.phone
+          } catch {}
         }
         dispatch({ type: 'SET_CUSTOMER', payload: { advisorName, advisorEmail, advisorPhone } })
       }
