@@ -272,15 +272,15 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     return (
       <div key={catId}>
         <div className="pt-8 pb-2 text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+          <span className="text-sm font-bold uppercase tracking-widest text-stone-400">{catName}</span>
         </div>
         <div className="grid" style={gridStyle}>
           {shown.map((q) => (
             <div key={q.id} className="px-8 pb-8 text-center">
               {(itemsByVersion[q.id] || []).map((item, i) => (
                 <div key={i} className="mt-4">
-                  <p className="text-base font-semibold text-stone-800 leading-snug">{item.name}</p>
-                  {showPrices && <p className="text-sm text-stone-400 mt-1">{fmt(item.amount)}</p>}
+                  <p className="text-lg font-semibold text-stone-800 leading-snug">{item.name}</p>
+                  {showPrices && <p className="text-base text-stone-400 mt-1">{fmt(item.amount)}</p>}
                 </div>
               ))}
             </div>
@@ -330,22 +330,22 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                 </button>
               ))}
               <div className="ml-auto flex items-center gap-4">
-                <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
                   <input type="checkbox" checked={showPrices} onChange={e => setShowPrices(e.target.checked)} className="rounded" />
                   Show prices
                 </label>
-                <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
                   <input type="checkbox" checked={showArrangement} onChange={e => setShowArrangement(e.target.checked)} className="rounded" />
                   Service type
                 </label>
                 {hasDiscountOrTax && (
-                  <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                  <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
                     <input type="checkbox" checked={showTicker} onChange={e => setShowTicker(e.target.checked)} className="rounded" />
                     Discount & tax
                   </label>
                 )}
                 {hasCaskets && (
-                  <label className="flex items-center gap-1.5 text-xs text-stone-500 cursor-pointer select-none">
+                  <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
                     <input type="checkbox" checked={showCasketImages} onChange={e => setShowCasketImages(e.target.checked)} className="rounded" />
                     Casket images
                   </label>
@@ -371,14 +371,14 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                           <p className={`text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                             {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
-                          {showArrangement && q.packages?.name && <p className="text-sm text-stone-400 mt-1.5">{q.packages.name}</p>}
-                          {showArrangement && q.arrangement_type && <p className="text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
+                          {showArrangement && q.packages?.name && <p className="text-base text-stone-400 mt-1.5">{q.packages.name}</p>}
+                          {showArrangement && q.arrangement_type && <p className="text-sm text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                           )}
                           <p className="text-4xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
                           {showTicker && parts.length > 0 && (
-                            <p className="text-xs text-stone-400 mt-1.5">{parts.join(' · ')}</p>
+                            <p className="text-sm text-stone-400 mt-1.5">{parts.join(' · ')}</p>
                           )}
                         </div>
                       )
@@ -392,7 +392,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {hasCaskets && (
                     <div>
                       <div className="pt-8 pb-2 text-center">
-                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
+                        <span className="text-sm font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
@@ -406,9 +406,9 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                                       ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[220px] w-full object-contain rounded-xl bg-stone-50 max-h-48" />
                                       : <div className="w-44 h-28 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
                                   )}
-                                  <p className="text-base font-semibold text-stone-800">{entry.name}</p>
-                                  {csk?.description && <p className="text-xs text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
-                                  {showPrices && <p className="text-sm text-stone-400">{fmt(entry.price)}</p>}
+                                  <p className="text-lg font-semibold text-stone-800">{entry.name}</p>
+                                  {csk?.description && <p className="text-sm text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
+                                  {showPrices && <p className="text-base text-stone-400">{fmt(entry.price)}</p>}
                                 </div>
                               ) : <p className="text-sm text-stone-300 mt-4">Not selected</p>}
                             </div>
