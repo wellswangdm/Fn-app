@@ -29,8 +29,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
   const [profile,     setProfile]     = useState({ name: '', phone: '', advisorEmail: '' })
   const [profSaving,  setProfSaving]  = useState(false)
   const [profMsg,     setProfMsg]     = useState(null)
-  const [dragging,    setDragging]    = useState(null) // { groupKey, idx }
-  const [dragOver,    setDragOver]    = useState(null) // { groupKey, idx }
 
   useEffect(() => { loadQuotes() }, [])
 
@@ -128,8 +126,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
     onEdit(newQ.id)
   }
 
-  // ─── Derived: filtered + grouped + sorted ─────────────────────────────────
-
   const filtered = quotes.filter(q => {
     const s = search.toLowerCase()
     return !s || q.deceased_name?.toLowerCase().includes(s) || q.customer_name?.toLowerCase().includes(s)
@@ -142,7 +138,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
     if (!groupMap.has(key)) { groupMap.set(key, groups.length); groups.push({ key, quotes: [] }) }
     groups[groupMap.get(key)].quotes.push(q)
   })
-  // Sort versions within each group by sort_order, then by created_at
   groups.forEach(g => {
     g.quotes.sort((a, b) => {
       const ao = a.sort_order ?? 999999
@@ -150,85 +145,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
       return ao !== bo ? ao - bo : new Date(a.created_at) - new Date(b.created_at)
     })
   })
-
-  // ─── Drag handlers ────────────────────────────────────────────────────────
-
-  function onDragStart(groupKey, idx, e) {
-    e.stopPropagation()
-    setDragging({ groupKey, idx })
-  }
-
-  function onDragOver(groupKey, idx, e) {
-    e.preventDefault()
-    e.stopPropagation()
-    if (dragging?.groupKey === groupKey) setDragOver({ groupKey, idx })
-  }
-
-  function onDrop(groupKey, toIdx, e) {
-    e.preventDefault()
-    e.stopPropagation()
-    const from = dragging
-    setDragging(null)
-    setDragOver(null)
-    if (!from || from.groupKey !== groupKey || from.idx === toIdx) return
-
-    const group     = groups.find(g => g.key === groupKey)
-    const reordered = [...group.quotes]
-    const [moved]   = reordered.splice(from.idx, 1)
-    reordered.splice(toIdx, 0, moved)
-
-    // Optimistic: replace group's quotes in-place within the flat quotes array
-    setQuotes(prev => {
-      const groupIds = new Set(group.quotes.map(q => q.id))
-      const result   = []
-      let injected   = false
-      for (const q of prev) {
-        if (groupIds.has(q.id)) {
-          if (!injected) { result.push(...reordered); injected = true }
-        } else {
-          result.push(q)
-        }
-      }
-      return result
-    })
-
-    // Persist sort_order
-    reordered.forEach((q, i) =>
-      supabase.from('quotes').update({ sort_order: i }).eq('id', q.id)
-    )
-  }
-
-  function onDragEnd() { setDragging(null); setDragOver(null) }
-
-  // ─── Row helpers ─────────────────────────────────────────────────────────
-
-  function dragHandle(groupKey, idx) {
-    return (
-      <span
-        draggable
-        onDragStart={e => onDragStart(groupKey, idx, e)}
-        onDragEnd={onDragEnd}
-        onClick={e => e.stopPropagation()}
-        className="cursor-grab active:cursor-grabbing shrink-0 text-stone-400 hover:text-stone-600 rounded hover:bg-stone-200 transition-colors p-0.5"
-        title="Drag to reorder"
-      >
-        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
-          <circle cx="3" cy="2.5"  r="1.3"/>
-          <circle cx="7" cy="2.5"  r="1.3"/>
-          <circle cx="3" cy="7"    r="1.3"/>
-          <circle cx="7" cy="7"    r="1.3"/>
-          <circle cx="3" cy="11.5" r="1.3"/>
-          <circle cx="7" cy="11.5" r="1.3"/>
-        </svg>
-      </span>
-    )
-  }
-
-  function dropRowCls(groupKey, idx, base) {
-    const isTarget  = dragOver?.groupKey  === groupKey && dragOver?.idx  === idx
-    const isDragged = dragging?.groupKey === groupKey && dragging?.idx === idx
-    return `${base} ${isTarget ? 'bg-primary-50' : ''} ${isDragged ? 'opacity-40' : ''}`
-  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -299,24 +215,16 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                 </thead>
                 <tbody className="divide-y divide-stone-50">
                   {groups.map(group => {
-                    const primary    = group.quotes[0]
-                    const rest       = group.quotes.slice(1)
-                    const isOpen     = expanded.has(group.key)
-                    const isMulti    = group.quotes.length > 1
-                    const s          = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
+                    const primary = group.quotes[0]
+                    const rest    = group.quotes.slice(1)
+                    const isOpen  = expanded.has(group.key)
+                    const s       = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
 
                     return (
                       <>
-                        <tr
-                          key={primary.id}
-                          className={dropRowCls(group.key, 0, 'hover:bg-stone-50/60 transition-colors cursor-pointer')}
-                          onClick={() => onEdit(primary.id)}
-                          onDragOver={isOpen && isMulti ? e => onDragOver(group.key, 0, e) : undefined}
-                          onDrop={isOpen && isMulti ? e => onDrop(group.key, 0, e) : undefined}
-                        >
+                        <tr key={primary.id} className="hover:bg-stone-50/60 transition-colors cursor-pointer" onClick={() => onEdit(primary.id)}>
                           <td className="px-4 py-3 text-sm font-medium text-stone-800">
                             <div className="flex items-center gap-2">
-                              {isMulti && dragHandle(group.key, 0)}
                               {primary.deceased_name || <span className="text-stone-300">—</span>}
                               {rest.length > 0 ? (
                                 <button
@@ -345,26 +253,13 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                           </td>
                         </tr>
 
-                        {/* Version sub-rows */}
                         {isOpen && rest.map((q, i) => {
-                          const vs  = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
-                          const idx = i + 1
+                          const vs = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
                           return (
-                            <tr
-                              key={q.id}
-                              className={dropRowCls(group.key, idx, 'bg-stone-50/40 hover:bg-stone-50 transition-colors cursor-pointer border-l-4 border-primary-200')}
-                              onClick={() => onEdit(q.id)}
-                              onDragOver={e => onDragOver(group.key, idx, e)}
-                              onDrop={e => onDrop(group.key, idx, e)}
-                            >
-                              <td className="px-4 py-2.5 text-sm text-stone-500 pl-6">
-                                <div className="flex items-center gap-2">
-                                  {dragHandle(group.key, idx)}
-                                  <span className="text-[10px] font-bold text-primary-500">
-                                    {q.version_label || `V${idx + 1}`}
-                                  </span>
-                                  {q.deceased_name || <span className="text-stone-300">—</span>}
-                                </div>
+                            <tr key={q.id} className="bg-stone-50/40 hover:bg-stone-50 transition-colors cursor-pointer border-l-4 border-primary-200" onClick={() => onEdit(q.id)}>
+                              <td className="px-4 py-2.5 text-sm text-stone-500 pl-8">
+                                <span className="text-[10px] font-bold text-primary-500 mr-2">{q.version_label || `V${i + 2}`}</span>
+                                {q.deceased_name || <span className="text-stone-300">—</span>}
                               </td>
                               <td className="px-4 py-2.5 text-sm text-stone-400">{q.customer_name || '—'}</td>
                               <td className="px-4 py-2.5 text-xs text-stone-300">{q.funeral_homes?.name || '—'}</td>
@@ -397,42 +292,22 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
             <h3 className="text-sm font-bold text-stone-800 mb-4">Edit Profile</h3>
 
             <label className="text-xs font-medium text-stone-600 block mb-1">Full name</label>
-            <input
-              className="input w-full text-sm mb-3"
-              value={profile.name}
-              onChange={e => setProfile(p => ({ ...p, name: e.target.value }))}
-              autoFocus
-            />
+            <input className="input w-full text-sm mb-3" value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} autoFocus />
 
             <label className="text-xs font-medium text-stone-600 block mb-1">Phone</label>
-            <input
-              className="input w-full text-sm mb-3"
-              value={profile.phone}
-              onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
-              placeholder="e.g. 778-866-8863"
-            />
+            <input className="input w-full text-sm mb-3" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="e.g. 778-866-8863" />
 
             <label className="text-xs font-medium text-stone-600 block mb-1">Advisor email</label>
-            <input
-              className="input w-full text-sm mb-3"
-              type="email"
-              value={profile.advisorEmail}
-              onChange={e => setProfile(p => ({ ...p, advisorEmail: e.target.value }))}
-              placeholder="shown on quotes"
-            />
+            <input className="input w-full text-sm mb-3" type="email" value={profile.advisorEmail} onChange={e => setProfile(p => ({ ...p, advisorEmail: e.target.value }))} placeholder="shown on quotes" />
 
             <label className="text-xs font-medium text-stone-500 block mb-1">Login email</label>
             <p className="text-sm text-stone-400 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 mb-4">{user?.email}</p>
 
-            {profMsg && (
-              <p className={`text-xs mb-3 ${profMsg.ok ? 'text-green-600' : 'text-red-500'}`}>{profMsg.text}</p>
-            )}
+            {profMsg && <p className={`text-xs mb-3 ${profMsg.ok ? 'text-green-600' : 'text-red-500'}`}>{profMsg.text}</p>}
 
             <div className="flex gap-2 justify-end">
               <button onClick={() => setEditProfile(false)} className="btn-secondary text-xs py-1.5 px-4">Close</button>
-              <button onClick={saveProfile} disabled={profSaving} className="btn-primary text-xs py-1.5 px-4">
-                {profSaving ? 'Saving…' : 'Save'}
-              </button>
+              <button onClick={saveProfile} disabled={profSaving} className="btn-primary text-xs py-1.5 px-4">{profSaving ? 'Saving…' : 'Save'}</button>
             </div>
           </div>
         </div>
@@ -443,34 +318,17 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
             <h3 className="text-sm font-bold text-stone-800 mb-1">Duplicate Quote</h3>
-            <p className="text-xs text-stone-400 mb-4">
-              Keep the same name to add as a new version, or change the name to create a separate contact.
-            </p>
+            <p className="text-xs text-stone-400 mb-4">Keep the same name to add as a new version, or change the name to create a separate contact.</p>
 
             <label className="text-xs font-medium text-stone-600 block mb-1.5">Beneficiary name</label>
-            <input
-              className="input w-full text-sm mb-4"
-              value={duplicating.newName}
-              onChange={e => setDuplicating(d => ({ ...d, newName: e.target.value }))}
-              autoFocus
-            />
+            <input className="input w-full text-sm mb-4" value={duplicating.newName} onChange={e => setDuplicating(d => ({ ...d, newName: e.target.value }))} autoFocus />
 
             <div className="grid grid-cols-2 gap-2 mb-5">
-              <button
-                onClick={() => setDuplicating(d => ({ ...d, sameContact: true }))}
-                className={`text-xs py-2.5 px-3 rounded-xl border font-medium transition-colors text-left ${
-                  duplicating.sameContact ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-stone-200 text-stone-500 hover:border-stone-300'
-                }`}
-              >
+              <button onClick={() => setDuplicating(d => ({ ...d, sameContact: true }))} className={`text-xs py-2.5 px-3 rounded-xl border font-medium transition-colors text-left ${duplicating.sameContact ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-stone-200 text-stone-500 hover:border-stone-300'}`}>
                 <p>New version</p>
                 <p className="text-[10px] font-normal opacity-60 mt-0.5">Same contact</p>
               </button>
-              <button
-                onClick={() => setDuplicating(d => ({ ...d, sameContact: false }))}
-                className={`text-xs py-2.5 px-3 rounded-xl border font-medium transition-colors text-left ${
-                  !duplicating.sameContact ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-stone-200 text-stone-500 hover:border-stone-300'
-                }`}
-              >
+              <button onClick={() => setDuplicating(d => ({ ...d, sameContact: false }))} className={`text-xs py-2.5 px-3 rounded-xl border font-medium transition-colors text-left ${!duplicating.sameContact ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-stone-200 text-stone-500 hover:border-stone-300'}`}>
                 <p>New contact</p>
                 <p className="text-[10px] font-normal opacity-60 mt-0.5">Separate entry</p>
               </button>

@@ -328,6 +328,8 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   const [showCompare,     setShowCompare]     = useState(false)
   const [addVersionOpen,  setAddVersionOpen]  = useState(false)
   const [editingLabel,    setEditingLabel]    = useState(null) // { id, value }
+  const [dragV,           setDragV]           = useState(null) // id being dragged
+  const [dragOverV,       setDragOverV]       = useState(null) // id being hovered
   const [savedFlash,      setSavedFlash]      = useState(false)
 
   useEffect(() => {
@@ -567,10 +569,29 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     if (!contactId || !quoteId) return
     const { data } = await supabase
       .from('quotes')
-      .select('id, quote_number, status, total, created_at, version_label')
+      .select('id, quote_number, status, total, created_at, version_label, sort_order')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
-    setVersions(data || [])
+    if (!data) return
+    setVersions(data.slice().sort((a, b) => {
+      const ao = a.sort_order ?? 999999
+      const bo = b.sort_order ?? 999999
+      return ao !== bo ? ao - bo : new Date(a.created_at) - new Date(b.created_at)
+    }))
+  }
+
+  function handleVersionDrop(toId) {
+    if (!dragV || dragV === toId) return
+    const from = versions.findIndex(v => v.id === dragV)
+    const to   = versions.findIndex(v => v.id === toId)
+    if (from === -1 || to === -1) return
+    const reordered = [...versions]
+    const [moved]   = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
+    setVersions(reordered)
+    setDragV(null)
+    setDragOverV(null)
+    reordered.forEach((v, i) => supabase.from('quotes').update({ sort_order: i }).eq('id', v.id))
   }
 
   async function saveVersionLabel(id, label) {
@@ -758,14 +779,26 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
           <div className="max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
             <span className="text-primary-500 text-[11px] font-semibold uppercase tracking-widest shrink-0">Versions</span>
 
-            {/* Version pills */}
+            {/* Version pills — draggable to reorder */}
             {versions.map((v, i) => {
-              const isCurrent  = v.id === quoteId
-              const isEditing  = editingLabel?.id === v.id
+              const isCurrent    = v.id === quoteId
+              const isEditing    = editingLabel?.id === v.id
+              const isDragging   = dragV    === v.id
+              const isDragTarget = dragOverV === v.id && dragV !== v.id
               const displayLabel = v.version_label || `V${i + 1}`
-              const statusMark = v.status === 'finalized' ? ' ✓' : v.status === 'accepted' ? ' ★' : ''
+              const statusMark   = v.status === 'finalized' ? ' ✓' : v.status === 'accepted' ? ' ★' : ''
               return (
-                <div key={v.id} className="flex items-center gap-0.5 group">
+                <div
+                  key={v.id}
+                  draggable={!isEditing}
+                  onDragStart={() => setDragV(v.id)}
+                  onDragEnd={() => { setDragV(null); setDragOverV(null) }}
+                  onDragOver={e => { e.preventDefault(); setDragOverV(v.id) }}
+                  onDrop={e => { e.preventDefault(); handleVersionDrop(v.id) }}
+                  className={`flex items-center gap-0.5 group cursor-grab active:cursor-grabbing transition-opacity
+                    ${isDragging ? 'opacity-30' : ''}
+                    ${isDragTarget ? 'ring-2 ring-white/60 rounded-full' : ''}`}
+                >
                   {isEditing ? (
                     <input
                       autoFocus
@@ -784,10 +817,10 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                     <button
                       onClick={() => !isCurrent && onEdit && onEdit(v.id)}
                       onDoubleClick={e => { e.stopPropagation(); setEditingLabel({ id: v.id, value: v.version_label || '' }) }}
-                      title="Double-click to rename"
+                      title="Drag to reorder · Double-click to rename"
                       className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
                         isCurrent
-                          ? 'bg-white text-primary-800 cursor-default'
+                          ? 'bg-white text-primary-800 cursor-grab'
                           : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
                       }`}
                     >
@@ -797,7 +830,6 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                       </span>
                     </button>
                   )}
-                  {/* Delete — only on non-current versions, hidden until hover */}
                   {!isCurrent && !isEditing && (
                     <button
                       onClick={() => deleteVersion(v.id)}
