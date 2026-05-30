@@ -60,7 +60,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
         return `
           <div style="text-align:center;padding:6px 24px 24px;">
             ${e ? `
-              ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:130px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
+              ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:220px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
               <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
               ${csk?.description ? `<p style="margin:4px 0 0;font-size:11px;color:#86868b;line-height:1.4">${esc(csk.description)}</p>` : ''}
               ${showPrices ? `<p style="margin:5px 0 0;font-size:11px;color:#86868b">${fmt(e.price)}</p>` : ''}
@@ -403,8 +403,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                                 <div className="flex flex-col items-center gap-2 mt-4">
                                   {showCasketImages && (
                                     csk?.imageUrl
-                                      ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[140px] w-full object-contain rounded-xl bg-stone-50 max-h-28" />
-                                      : <div className="w-28 h-16 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
+                                      ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[220px] w-full object-contain rounded-xl bg-stone-50 max-h-48" />
+                                      : <div className="w-44 h-28 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
                                   )}
                                   <p className="text-sm font-semibold text-stone-800">{entry.name}</p>
                                   {csk?.description && <p className="text-[10px] text-stone-400 leading-tight max-w-[180px]">{csk.description}</p>}
