@@ -351,15 +351,16 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
       // Then fetch profile and fill advisor fields asynchronously
       async function initAdvisor() {
         let advisorName  = user?.user_metadata?.full_name || user?.user_metadata?.name || ''
-        let advisorEmail = user?.email || ''
+        let advisorEmail = ''
         let advisorPhone = ''
         if (userId) {
           try {
             const timeout = new Promise((_, rej) => setTimeout(() => rej(), 4000))
-            const fetch   = supabase.from('profiles').select('full_name, phone').eq('id', userId).single()
+            const fetch   = supabase.from('profiles').select('full_name, phone, advisor_email').eq('id', userId).single()
             const { data: profile } = await Promise.race([fetch, timeout])
-            if (profile?.full_name) advisorName  = profile.full_name
-            if (profile?.phone)     advisorPhone = profile.phone
+            if (profile?.full_name)    advisorName  = profile.full_name
+            if (profile?.phone)        advisorPhone = profile.phone
+            if (profile?.advisor_email) advisorEmail = profile.advisor_email
           } catch {}
         }
         dispatch({ type: 'SET_CUSTOMER', payload: { advisorName, advisorEmail, advisorPhone } })

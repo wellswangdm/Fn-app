@@ -26,21 +26,21 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
   const [expanded,    setExpanded]    = useState(new Set())
   const [duplicating, setDuplicating] = useState(null) // { quote, newName, sameContact }
   const [editProfile, setEditProfile] = useState(false)
-  const [profile,     setProfile]     = useState({ name: '', phone: '', email: '' })
+  const [profile,     setProfile]     = useState({ name: '', phone: '', advisorEmail: '' })
   const [profSaving,  setProfSaving]  = useState(false)
   const [profMsg,     setProfMsg]     = useState(null) // { ok, text }
 
   useEffect(() => { loadQuotes() }, [])
 
   async function openProfile() {
-    const name  = user?.user_metadata?.full_name || user?.user_metadata?.name || ''
-    const email = user?.email || ''
-    let phone = ''
+    const name = user?.user_metadata?.full_name || user?.user_metadata?.name || ''
+    let phone = '', advisorEmail = ''
     if (userId) {
-      const { data } = await supabase.from('profiles').select('phone').eq('id', userId).single()
-      phone = data?.phone || ''
+      const { data } = await supabase.from('profiles').select('phone, advisor_email').eq('id', userId).single()
+      phone        = data?.phone         || ''
+      advisorEmail = data?.advisor_email || ''
     }
-    setProfile({ name, phone, email })
+    setProfile({ name, phone, advisorEmail })
     setProfMsg(null)
     setEditProfile(true)
   }
@@ -48,30 +48,16 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
   async function saveProfile() {
     setProfSaving(true)
     setProfMsg(null)
-    const updates = []
-
-    // Update name + phone in profiles table
-    updates.push(
-      supabase.from('profiles').upsert({ id: userId, full_name: profile.name, phone: profile.phone, updated_at: new Date().toISOString() })
-    )
-    // Update name in auth metadata
-    updates.push(
-      supabase.auth.updateUser({ data: { full_name: profile.name } })
-    )
-    // Update email only if changed
-    if (profile.email !== user?.email) {
-      updates.push(supabase.auth.updateUser({ email: profile.email }))
-    }
-
-    const results = await Promise.all(updates)
-    const err = results.find(r => r.error)?.error
+    const [profResult, authResult] = await Promise.all([
+      supabase.from('profiles').upsert({
+        id: userId, full_name: profile.name, phone: profile.phone,
+        advisor_email: profile.advisorEmail, updated_at: new Date().toISOString(),
+      }),
+      supabase.auth.updateUser({ data: { full_name: profile.name } }),
+    ])
     setProfSaving(false)
-    if (err) {
-      setProfMsg({ ok: false, text: err.message })
-    } else {
-      const emailChanged = profile.email !== user?.email
-      setProfMsg({ ok: true, text: emailChanged ? 'Saved! Check your new email for a confirmation link.' : 'Profile updated.' })
-    }
+    const err = profResult.error || authResult.error
+    setProfMsg(err ? { ok: false, text: err.message } : { ok: true, text: 'Profile updated.' })
   }
 
   async function loadQuotes() {
@@ -319,14 +305,17 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
               placeholder="e.g. 778-866-8863"
             />
 
-            <label className="text-xs font-medium text-stone-600 block mb-1">Login email</label>
+            <label className="text-xs font-medium text-stone-600 block mb-1">Advisor email</label>
             <input
-              className="input w-full text-sm mb-1"
+              className="input w-full text-sm mb-3"
               type="email"
-              value={profile.email}
-              onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
+              value={profile.advisorEmail}
+              onChange={e => setProfile(p => ({ ...p, advisorEmail: e.target.value }))}
+              placeholder="shown on quotes"
             />
-            <p className="text-[10px] text-stone-400 mb-4">Changing email sends a confirmation link to the new address.</p>
+
+            <label className="text-xs font-medium text-stone-500 block mb-1">Login email</label>
+            <p className="text-sm text-stone-400 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 mb-4">{user?.email}</p>
 
             {profMsg && (
               <p className={`text-xs mb-3 ${profMsg.ok ? 'text-green-600' : 'text-red-500'}`}>{profMsg.text}</p>

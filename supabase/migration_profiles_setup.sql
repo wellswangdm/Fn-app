@@ -1,13 +1,15 @@
 -- ─── Profiles table (run this once in Supabase SQL Editor) ──────────────────
 CREATE TABLE IF NOT EXISTS profiles (
-  id         uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name  text,
-  phone      text,
-  updated_at timestamptz DEFAULT now()
+  id             uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name      text,
+  phone          text,
+  advisor_email  text,
+  updated_at     timestamptz DEFAULT now()
 );
 
--- Add phone column if table already existed without it
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone text;
+-- Safe to re-run: add columns if table already existed without them
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone          text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS advisor_email  text;
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
