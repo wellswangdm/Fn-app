@@ -137,7 +137,7 @@ const STATUS_CLS = {
   accepted:  'bg-green-50 text-green-600 border-green-200',
 }
 
-export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
+export default function ComparisonView({ contactId, currentQuoteId, versionOrder = [], onClose }) {
   const [quotes,           setQuotes]           = useState([])
   const [itemsByQuote,     setItemsByQuote]      = useState({})
   const [categoryMap,      setCategoryMap]       = useState({})
@@ -151,13 +151,20 @@ export default function ComparisonView({ contactId, currentQuoteId, onClose }) {
 
   useEffect(() => {
     async function load() {
-      const { data: qs } = await supabase
+      const { data: raw } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, packages(name)')
+        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, packages(name)')
         .eq('contact_id', contactId)
-        .order('created_at', { ascending: true })
 
-      if (!qs?.length) { setLoading(false); return }
+      if (!raw?.length) { setLoading(false); return }
+
+      // Sort by the user-defined order when available, fall back to created_at
+      const orderMap = Object.fromEntries(versionOrder.map((id, i) => [id, i]))
+      const qs = raw.slice().sort((a, b) => {
+        const ai = orderMap[a.id] ?? (a.sort_order ?? 999999)
+        const bi = orderMap[b.id] ?? (b.sort_order ?? 999999)
+        return ai !== bi ? ai - bi : new Date(a.created_at) - new Date(b.created_at)
+      })
 
       const { data: items } = await supabase
         .from('quote_items').select('*').in('quote_id', qs.map(q => q.id))

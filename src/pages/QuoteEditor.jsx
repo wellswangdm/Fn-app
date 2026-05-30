@@ -1029,6 +1029,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
         <ComparisonView
           contactId={state.contactId}
           currentQuoteId={quoteId}
+          versionOrder={versions.map(v => v.id)}
           onClose={() => setShowCompare(false)}
         />
       )}
