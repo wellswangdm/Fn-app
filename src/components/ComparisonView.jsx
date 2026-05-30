@@ -22,10 +22,10 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
       </p>
-      ${showArrangement && q.packages?.name ? `<p style="margin:6px 0 0;font-size:12px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
-      ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
+      ${showArrangement && q.packages?.name ? `<p style="margin:6px 0 0;font-size:13px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
+      ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:12px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
-      ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:10px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
+      ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:12px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
     </div>`
   }).join('')
 }
@@ -36,15 +36,15 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
   function catSectionHTML({ catName, itemsByVersion }) {
     return `
     <div style="text-align:center;padding:32px 0 10px;">
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">${esc(catName)}</span>
+      <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">${esc(catName)}</span>
     </div>
     <div style="${g}">
       ${shown.map((q) => `
         <div style="text-align:center;padding:6px 24px 24px;">
           ${(itemsByVersion[q.id] || []).map(item => `
             <div style="margin-bottom:14px">
-              <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
-              ${showPrices ? `<p style="margin:3px 0 0;font-size:11px;color:#86868b">${fmt(item.amount)}</p>` : ''}
+              <p style="margin:0;font-size:16px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
+              ${showPrices ? `<p style="margin:3px 0 0;font-size:13px;color:#86868b">${fmt(item.amount)}</p>` : ''}
             </div>`).join('')}
         </div>`).join('')}
     </div>`
@@ -52,7 +52,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
 
   const casketHTML = hasCaskets ? `
     <div style="text-align:center;padding:32px 0 10px;">
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Casket Selection</span>
+      <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Casket Selection</span>
     </div>
     <div style="${g}">
       ${shown.map((q) => {
@@ -61,10 +61,10 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
           <div style="text-align:center;padding:6px 24px 24px;">
             ${e ? `
               ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:220px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
-              <p style="margin:0;font-size:14px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
-              ${csk?.description ? `<p style="margin:4px 0 0;font-size:11px;color:#86868b;line-height:1.4">${esc(csk.description)}</p>` : ''}
-              ${showPrices ? `<p style="margin:5px 0 0;font-size:11px;color:#86868b">${fmt(e.price)}</p>` : ''}
-            ` : `<span style="font-size:12px;color:#d1d1d6">Not selected</span>`}
+              <p style="margin:0;font-size:16px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
+              ${csk?.description ? `<p style="margin:4px 0 0;font-size:13px;color:#86868b;line-height:1.4">${esc(csk.description)}</p>` : ''}
+              ${showPrices ? `<p style="margin:5px 0 0;font-size:13px;color:#86868b">${fmt(e.price)}</p>` : ''}
+            ` : `<span style="font-size:13px;color:#d1d1d6">Not selected</span>`}
           </div>`
       }).join('')}
     </div>` : ''
@@ -272,15 +272,15 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     return (
       <div key={catId}>
         <div className="pt-8 pb-2 text-center">
-          <span className="text-sm font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
         </div>
         <div className="grid" style={gridStyle}>
           {shown.map((q) => (
             <div key={q.id} className="px-8 pb-8 text-center">
               {(itemsByVersion[q.id] || []).map((item, i) => (
                 <div key={i} className="mt-4">
-                  <p className="text-lg font-semibold text-stone-800 leading-snug">{item.name}</p>
-                  {showPrices && <p className="text-base text-stone-400 mt-1">{fmt(item.amount)}</p>}
+                  <p className="text-base font-semibold text-stone-800 leading-snug">{item.name}</p>
+                  {showPrices && <p className="text-sm text-stone-400 mt-1">{fmt(item.amount)}</p>}
                 </div>
               ))}
             </div>
@@ -371,14 +371,14 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                           <p className={`text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                             {q.version_label || `V${quotes.indexOf(q) + 1}`}
                           </p>
-                          {showArrangement && q.packages?.name && <p className="text-base text-stone-400 mt-1.5">{q.packages.name}</p>}
-                          {showArrangement && q.arrangement_type && <p className="text-sm text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
+                          {showArrangement && q.packages?.name && <p className="text-sm text-stone-400 mt-1.5">{q.packages.name}</p>}
+                          {showArrangement && q.arrangement_type && <p className="text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                           )}
                           <p className="text-4xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
                           {showTicker && parts.length > 0 && (
-                            <p className="text-sm text-stone-400 mt-1.5">{parts.join(' · ')}</p>
+                            <p className="text-xs text-stone-400 mt-1.5">{parts.join(' · ')}</p>
                           )}
                         </div>
                       )
@@ -392,7 +392,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {hasCaskets && (
                     <div>
                       <div className="pt-8 pb-2 text-center">
-                        <span className="text-sm font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
@@ -406,9 +406,9 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                                       ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[220px] w-full object-contain rounded-xl bg-stone-50 max-h-48" />
                                       : <div className="w-44 h-28 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
                                   )}
-                                  <p className="text-lg font-semibold text-stone-800">{entry.name}</p>
-                                  {csk?.description && <p className="text-sm text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
-                                  {showPrices && <p className="text-base text-stone-400">{fmt(entry.price)}</p>}
+                                  <p className="text-base font-semibold text-stone-800">{entry.name}</p>
+                                  {csk?.description && <p className="text-xs text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
+                                  {showPrices && <p className="text-sm text-stone-400">{fmt(entry.price)}</p>}
                                 </div>
                               ) : <p className="text-sm text-stone-300 mt-4">Not selected</p>}
                             </div>
