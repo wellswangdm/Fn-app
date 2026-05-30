@@ -24,11 +24,13 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
   const [search,      setSearch]      = useState('')
   const [deleting,    setDeleting]    = useState(null)
   const [expanded,    setExpanded]    = useState(new Set())
-  const [duplicating, setDuplicating] = useState(null) // { quote, newName, sameContact }
+  const [duplicating, setDuplicating] = useState(null)
   const [editProfile, setEditProfile] = useState(false)
   const [profile,     setProfile]     = useState({ name: '', phone: '', advisorEmail: '' })
   const [profSaving,  setProfSaving]  = useState(false)
-  const [profMsg,     setProfMsg]     = useState(null) // { ok, text }
+  const [profMsg,     setProfMsg]     = useState(null)
+  const [dragging,    setDragging]    = useState(null) // { groupKey, idx }
+  const [dragOver,    setDragOver]    = useState(null) // { groupKey, idx }
 
   useEffect(() => { loadQuotes() }, [])
 
@@ -64,7 +66,7 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('quotes')
-      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, version_label, funeral_homes(name)')
+      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, version_label, sort_order, funeral_homes(name)')
       .order('created_at', { ascending: false })
     if (error) setError(error.message)
     else setQuotes(data)
@@ -126,12 +128,13 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
     onEdit(newQ.id)
   }
 
+  // ─── Derived: filtered + grouped + sorted ─────────────────────────────────
+
   const filtered = quotes.filter(q => {
     const s = search.toLowerCase()
     return !s || q.deceased_name?.toLowerCase().includes(s) || q.customer_name?.toLowerCase().includes(s)
   })
 
-  // Group by contact_id; quotes missing contact_id each get their own group
   const groups = []
   const groupMap = new Map()
   filtered.forEach(q => {
@@ -139,6 +142,84 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
     if (!groupMap.has(key)) { groupMap.set(key, groups.length); groups.push({ key, quotes: [] }) }
     groups[groupMap.get(key)].quotes.push(q)
   })
+  // Sort versions within each group by sort_order, then by created_at
+  groups.forEach(g => {
+    g.quotes.sort((a, b) => {
+      const ao = a.sort_order ?? 999999
+      const bo = b.sort_order ?? 999999
+      return ao !== bo ? ao - bo : new Date(a.created_at) - new Date(b.created_at)
+    })
+  })
+
+  // ─── Drag handlers ────────────────────────────────────────────────────────
+
+  function onDragStart(groupKey, idx, e) {
+    e.stopPropagation()
+    setDragging({ groupKey, idx })
+  }
+
+  function onDragOver(groupKey, idx, e) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (dragging?.groupKey === groupKey) setDragOver({ groupKey, idx })
+  }
+
+  function onDrop(groupKey, toIdx, e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const from = dragging
+    setDragging(null)
+    setDragOver(null)
+    if (!from || from.groupKey !== groupKey || from.idx === toIdx) return
+
+    const group     = groups.find(g => g.key === groupKey)
+    const reordered = [...group.quotes]
+    const [moved]   = reordered.splice(from.idx, 1)
+    reordered.splice(toIdx, 0, moved)
+
+    // Optimistic: replace group's quotes in-place within the flat quotes array
+    setQuotes(prev => {
+      const groupIds = new Set(group.quotes.map(q => q.id))
+      const result   = []
+      let injected   = false
+      for (const q of prev) {
+        if (groupIds.has(q.id)) {
+          if (!injected) { result.push(...reordered); injected = true }
+        } else {
+          result.push(q)
+        }
+      }
+      return result
+    })
+
+    // Persist sort_order
+    reordered.forEach((q, i) =>
+      supabase.from('quotes').update({ sort_order: i }).eq('id', q.id)
+    )
+  }
+
+  function onDragEnd() { setDragging(null); setDragOver(null) }
+
+  // ─── Row helpers ─────────────────────────────────────────────────────────
+
+  function dragHandle(groupKey, idx) {
+    return (
+      <span
+        draggable
+        onDragStart={e => onDragStart(groupKey, idx, e)}
+        onDragEnd={onDragEnd}
+        onClick={e => e.stopPropagation()}
+        className="text-stone-300 hover:text-stone-500 cursor-grab active:cursor-grabbing select-none shrink-0 text-sm leading-none"
+        title="Drag to reorder"
+      >⠿</span>
+    )
+  }
+
+  function dropRowCls(groupKey, idx, base) {
+    const isTarget  = dragOver?.groupKey  === groupKey && dragOver?.idx  === idx
+    const isDragged = dragging?.groupKey === groupKey && dragging?.idx === idx
+    return `${base} ${isTarget ? 'bg-primary-50' : ''} ${isDragged ? 'opacity-40' : ''}`
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -150,7 +231,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
             <p className="text-primary-300 text-xs mt-0.5">Service quotation manager</p>
           </div>
 
-          {/* User profile */}
           {user && (() => {
             const name    = user.user_metadata?.full_name || user.user_metadata?.name || ''
             const email   = user.email || ''
@@ -210,16 +290,24 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                 </thead>
                 <tbody className="divide-y divide-stone-50">
                   {groups.map(group => {
-                    const primary = group.quotes[0]
-                    const rest    = group.quotes.slice(1)
-                    const isOpen  = expanded.has(group.key)
-                    const s       = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
+                    const primary    = group.quotes[0]
+                    const rest       = group.quotes.slice(1)
+                    const isOpen     = expanded.has(group.key)
+                    const isMulti    = group.quotes.length > 1
+                    const s          = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
 
                     return (
                       <>
-                        <tr key={primary.id} className="hover:bg-stone-50/60 transition-colors cursor-pointer" onClick={() => onEdit(primary.id)}>
+                        <tr
+                          key={primary.id}
+                          className={dropRowCls(group.key, 0, 'hover:bg-stone-50/60 transition-colors cursor-pointer')}
+                          onClick={() => onEdit(primary.id)}
+                          onDragOver={isOpen && isMulti ? e => onDragOver(group.key, 0, e) : undefined}
+                          onDrop={isOpen && isMulti ? e => onDrop(group.key, 0, e) : undefined}
+                        >
                           <td className="px-4 py-3 text-sm font-medium text-stone-800">
                             <div className="flex items-center gap-2">
+                              {isOpen && isMulti && dragHandle(group.key, 0)}
                               {primary.deceased_name || <span className="text-stone-300">—</span>}
                               {rest.length > 0 ? (
                                 <button
@@ -250,14 +338,24 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
 
                         {/* Version sub-rows */}
                         {isOpen && rest.map((q, i) => {
-                          const vs = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
+                          const vs  = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
+                          const idx = i + 1
                           return (
-                            <tr key={q.id} className="bg-stone-50/40 hover:bg-stone-50 transition-colors cursor-pointer border-l-4 border-primary-200" onClick={() => onEdit(q.id)}>
-                              <td className="px-4 py-2.5 text-sm text-stone-500 pl-8">
-                                <span className="text-[10px] font-bold text-primary-500 mr-2">
-                                  {q.version_label || `V${i + 2}`}
-                                </span>
-                                {q.deceased_name || <span className="text-stone-300">—</span>}
+                            <tr
+                              key={q.id}
+                              className={dropRowCls(group.key, idx, 'bg-stone-50/40 hover:bg-stone-50 transition-colors cursor-pointer border-l-4 border-primary-200')}
+                              onClick={() => onEdit(q.id)}
+                              onDragOver={e => onDragOver(group.key, idx, e)}
+                              onDrop={e => onDrop(group.key, idx, e)}
+                            >
+                              <td className="px-4 py-2.5 text-sm text-stone-500 pl-6">
+                                <div className="flex items-center gap-2">
+                                  {dragHandle(group.key, idx)}
+                                  <span className="text-[10px] font-bold text-primary-500">
+                                    {q.version_label || `V${idx + 1}`}
+                                  </span>
+                                  {q.deceased_name || <span className="text-stone-300">—</span>}
+                                </div>
                               </td>
                               <td className="px-4 py-2.5 text-sm text-stone-400">{q.customer_name || '—'}</td>
                               <td className="px-4 py-2.5 text-xs text-stone-300">{q.funeral_homes?.name || '—'}</td>
