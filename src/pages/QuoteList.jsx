@@ -209,9 +209,18 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
         onDragStart={e => onDragStart(groupKey, idx, e)}
         onDragEnd={onDragEnd}
         onClick={e => e.stopPropagation()}
-        className="text-stone-300 hover:text-stone-500 cursor-grab active:cursor-grabbing select-none shrink-0 text-sm leading-none"
+        className="cursor-grab active:cursor-grabbing shrink-0 text-stone-400 hover:text-stone-600 rounded hover:bg-stone-200 transition-colors p-0.5"
         title="Drag to reorder"
-      >⠿</span>
+      >
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+          <circle cx="3" cy="2.5"  r="1.3"/>
+          <circle cx="7" cy="2.5"  r="1.3"/>
+          <circle cx="3" cy="7"    r="1.3"/>
+          <circle cx="7" cy="7"    r="1.3"/>
+          <circle cx="3" cy="11.5" r="1.3"/>
+          <circle cx="7" cy="11.5" r="1.3"/>
+        </svg>
+      </span>
     )
   }
 
@@ -307,7 +316,7 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                         >
                           <td className="px-4 py-3 text-sm font-medium text-stone-800">
                             <div className="flex items-center gap-2">
-                              {isOpen && isMulti && dragHandle(group.key, 0)}
+                              {isMulti && dragHandle(group.key, 0)}
                               {primary.deceased_name || <span className="text-stone-300">—</span>}
                               {rest.length > 0 ? (
                                 <button
