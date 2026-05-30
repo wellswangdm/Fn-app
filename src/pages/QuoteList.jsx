@@ -218,15 +218,21 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                     const primary = group.quotes[0]
                     const rest    = group.quotes.slice(1)
                     const isOpen  = expanded.has(group.key)
+                    const isMulti = group.quotes.length > 1
                     const s       = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
+
+                    // Pick the best name to show for the group (first non-empty across all versions)
+                    const groupName     = group.quotes.find(q => q.deceased_name)?.deceased_name || null
+                    const groupPurchaser = group.quotes.find(q => q.customer_name)?.customer_name || null
+                    const groupHome     = group.quotes.find(q => q.funeral_homes?.name)?.funeral_homes?.name || '—'
 
                     return (
                       <>
                         <tr key={primary.id} className="hover:bg-stone-50/60 transition-colors cursor-pointer" onClick={() => onEdit(primary.id)}>
                           <td className="px-4 py-3 text-sm font-medium text-stone-800">
                             <div className="flex items-center gap-2">
-                              {primary.deceased_name || <span className="text-stone-300">—</span>}
-                              {rest.length > 0 ? (
+                              {groupName || <span className="text-stone-300">—</span>}
+                              {isMulti ? (
                                 <button
                                   onClick={e => toggleExpand(group.key, e)}
                                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-600 hover:bg-primary-200 transition-colors shrink-0"
@@ -240,36 +246,40 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                               ) : null}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-stone-500">{primary.customer_name || <span className="text-stone-300">—</span>}</td>
-                          <td className="px-4 py-3 text-xs text-stone-400">{primary.funeral_homes?.name || '—'}</td>
-                          <td className="px-4 py-3"><span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span></td>
-                          <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">{fmt(primary.total)}</td>
+                          <td className="px-4 py-3 text-sm text-stone-500">{groupPurchaser || <span className="text-stone-300">—</span>}</td>
+                          <td className="px-4 py-3 text-xs text-stone-400">{groupHome}</td>
+                          {/* For multi-version groups, status/total shown per-version in sub-rows */}
+                          <td className="px-4 py-3">{!isMulti && <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>}</td>
+                          <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">{!isMulti && fmt(primary.total)}</td>
                           <td className="px-4 py-3 text-xs text-stone-400">{new Date(primary.created_at).toLocaleDateString('en-CA')}</td>
                           <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-3">
-                              <button onClick={e => openDuplicate(primary, e)} className="text-xs text-stone-400 hover:text-primary-600 transition-colors">Duplicate</button>
-                              <button onClick={e => deleteQuote(primary.id, e)} disabled={deleting === primary.id} className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors">Delete</button>
-                            </div>
+                            {!isMulti && (
+                              <div className="flex items-center justify-end gap-3">
+                                <button onClick={e => openDuplicate(primary, e)} className="text-xs text-stone-400 hover:text-primary-600 transition-colors">Duplicate</button>
+                                <button onClick={e => deleteQuote(primary.id, e)} disabled={deleting === primary.id} className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors">Delete</button>
+                              </div>
+                            )}
                           </td>
                         </tr>
 
-                        {isOpen && rest.map((q, i) => {
+                        {/* All versions shown as sub-rows when expanded */}
+                        {isOpen && group.quotes.map((q, i) => {
                           const vs = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
                           return (
-                            <tr key={q.id} className="bg-stone-50/50 hover:bg-stone-100/60 transition-colors cursor-pointer" onClick={() => onEdit(q.id)}>
-                              <td className="py-2 text-sm text-stone-500" style={{ paddingLeft: '2rem' }}>
+                            <tr key={q.id} className="bg-stone-50/60 hover:bg-stone-100/70 transition-colors cursor-pointer" onClick={() => onEdit(q.id)}>
+                              <td className="py-2.5 pl-10 pr-4 text-sm font-medium text-stone-700">
                                 <div className="flex items-center gap-2">
-                                  <span className="w-px h-4 bg-stone-200 shrink-0" />
-                                  <span className="text-[10px] font-bold text-primary-400 shrink-0">{q.version_label || `V${i + 2}`}</span>
-                                  <span className="truncate">{q.deceased_name || <span className="text-stone-300">—</span>}</span>
+                                  <span className="w-px h-4 bg-stone-300 shrink-0" />
+                                  {q.version_label || `V${i + 1}`}
                                 </div>
                               </td>
-                              <td className="px-4 py-2 text-sm text-stone-400">{q.customer_name || '—'}</td>
-                              <td className="px-4 py-2 text-xs text-stone-300">{q.funeral_homes?.name || '—'}</td>
-                              <td className="px-4 py-2"><span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${vs.cls}`}>{vs.label}</span></td>
-                              <td className="px-4 py-2 text-right text-sm font-semibold text-stone-400">{fmt(q.total)}</td>
-                              <td className="px-4 py-2 text-xs text-stone-300">{new Date(q.created_at).toLocaleDateString('en-CA')}</td>
-                              <td className="px-4 py-2 text-right" onClick={e => e.stopPropagation()}>
+                              <td /><td />
+                              <td className="px-4 py-2.5">
+                                <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${vs.cls}`}>{vs.label}</span>
+                              </td>
+                              <td className="px-4 py-2.5 text-right text-sm font-semibold text-stone-600">{fmt(q.total)}</td>
+                              <td />
+                              <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-end gap-3">
                                   <button onClick={e => openDuplicate(q, e)} className="text-xs text-stone-400 hover:text-primary-600 transition-colors">Duplicate</button>
                                   <button onClick={e => deleteQuote(q.id, e)} disabled={deleting === q.id} className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors">Delete</button>
