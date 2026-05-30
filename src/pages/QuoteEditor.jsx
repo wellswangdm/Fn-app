@@ -346,6 +346,9 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
 
   useEffect(() => {
     if (!quoteId) {
+      // Mark loaded immediately so the form renders
+      dispatch({ type: 'LOAD', payload: { loaded: true, quoteNumber: generateQuoteNumber(), contactId: crypto.randomUUID() } })
+      // Then fetch profile and fill advisor fields asynchronously
       async function initAdvisor() {
         let advisorName  = user?.user_metadata?.full_name || user?.user_metadata?.name || ''
         let advisorEmail = user?.email || ''
