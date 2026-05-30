@@ -580,7 +580,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     }))
   }
 
-  function handleVersionDrop(toId) {
+  async function handleVersionDrop(toId) {
     if (!dragV || dragV === toId) return
     const from = versions.findIndex(v => v.id === dragV)
     const to   = versions.findIndex(v => v.id === toId)
@@ -591,7 +591,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     setVersions(reordered)
     setDragV(null)
     setDragOverV(null)
-    reordered.forEach((v, i) => supabase.from('quotes').update({ sort_order: i }).eq('id', v.id))
+    await Promise.all(reordered.map((v, i) => supabase.from('quotes').update({ sort_order: i }).eq('id', v.id)))
   }
 
   async function saveVersionLabel(id, label) {

@@ -256,17 +256,20 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
                         {isOpen && rest.map((q, i) => {
                           const vs = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
                           return (
-                            <tr key={q.id} className="bg-stone-50/40 hover:bg-stone-50 transition-colors cursor-pointer border-l-4 border-primary-200" onClick={() => onEdit(q.id)}>
-                              <td className="px-4 py-2.5 text-sm text-stone-500 pl-8">
-                                <span className="text-[10px] font-bold text-primary-500 mr-2">{q.version_label || `V${i + 2}`}</span>
-                                {q.deceased_name || <span className="text-stone-300">—</span>}
+                            <tr key={q.id} className="bg-stone-50/50 hover:bg-stone-100/60 transition-colors cursor-pointer" onClick={() => onEdit(q.id)}>
+                              <td className="py-2 text-sm text-stone-500" style={{ paddingLeft: '2rem' }}>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-px h-4 bg-stone-200 shrink-0" />
+                                  <span className="text-[10px] font-bold text-primary-400 shrink-0">{q.version_label || `V${i + 2}`}</span>
+                                  <span className="truncate">{q.deceased_name || <span className="text-stone-300">—</span>}</span>
+                                </div>
                               </td>
-                              <td className="px-4 py-2.5 text-sm text-stone-400">{q.customer_name || '—'}</td>
-                              <td className="px-4 py-2.5 text-xs text-stone-300">{q.funeral_homes?.name || '—'}</td>
-                              <td className="px-4 py-2.5"><span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${vs.cls}`}>{vs.label}</span></td>
-                              <td className="px-4 py-2.5 text-right text-sm font-semibold text-stone-500">{fmt(q.total)}</td>
-                              <td className="px-4 py-2.5 text-xs text-stone-300">{new Date(q.created_at).toLocaleDateString('en-CA')}</td>
-                              <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
+                              <td className="px-4 py-2 text-sm text-stone-400">{q.customer_name || '—'}</td>
+                              <td className="px-4 py-2 text-xs text-stone-300">{q.funeral_homes?.name || '—'}</td>
+                              <td className="px-4 py-2"><span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${vs.cls}`}>{vs.label}</span></td>
+                              <td className="px-4 py-2 text-right text-sm font-semibold text-stone-400">{fmt(q.total)}</td>
+                              <td className="px-4 py-2 text-xs text-stone-300">{new Date(q.created_at).toLocaleDateString('en-CA')}</td>
+                              <td className="px-4 py-2 text-right" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-end gap-3">
                                   <button onClick={e => openDuplicate(q, e)} className="text-xs text-stone-400 hover:text-primary-600 transition-colors">Duplicate</button>
                                   <button onClick={e => deleteQuote(q.id, e)} disabled={deleting === q.id} className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors">Delete</button>
