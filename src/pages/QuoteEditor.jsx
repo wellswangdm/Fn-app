@@ -1005,6 +1005,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             pstAmount={state.pstAmount}
             total={state.total}
             status={state.status}
+            beneficiaryBirthdate={state.beneficiaryBirthdate}
             onRemove={id => dispatch({ type: 'REMOVE_ITEM', id })}
             onChangeQty={(id, qty) => dispatch({ type: 'CHANGE_QTY', id, qty })}
             onDiscount={(t, v) => dispatch({ type: 'SET_DISCOUNT', discountType: t, discountValue: v })}

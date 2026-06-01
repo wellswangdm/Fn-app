@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -12,7 +13,7 @@ export default function QuoteSummary({
   subtotal, packageDiscount, pkgDiscAmount, userDiscAmount,
   discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
-  status,
+  status, beneficiaryBirthdate,
   onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder,
   onRenameSection, onAddSection, onRemoveSection, onMoveItem,
   onChangeCasket, onPrint,
@@ -20,6 +21,7 @@ export default function QuoteSummary({
   const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
   const [localDiscValue, setLocalDiscValue] = useState(discountValue || '')
   const [dragId,         setDragId]         = useState(null)
+  const [showPayment,    setShowPayment]    = useState(false)
 
   const statusStyle = {
     finalized: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -202,6 +204,22 @@ export default function QuoteSummary({
           <span className="text-base font-bold text-primary-700">{fmt(total)}</span>
         </div>
 
+        {/* Payment Options toggle */}
+        {items.length > 0 && (
+          <div className="pt-2 border-t border-stone-100">
+            <button
+              onClick={() => setShowPayment(v => !v)}
+              className="flex items-center gap-1.5 text-xs font-medium text-stone-500 hover:text-stone-700 w-full"
+            >
+              <span className={`text-[9px] transition-transform inline-block ${showPayment ? 'rotate-90' : ''}`}>▶</span>
+              Payment options
+            </button>
+            {showPayment && (
+              <PaymentTable birthdate={beneficiaryBirthdate} total={total} />
+            )}
+          </div>
+        )}
+
         {items.length > 0 && (
           <button
             onClick={onPrint}
@@ -211,6 +229,48 @@ export default function QuoteSummary({
           </button>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Payment Table ────────────────────────────────────────────────────────────
+
+function PaymentTable({ birthdate, total }) {
+  const age   = calcAge(birthdate)
+  const plans = getPaymentPlans(age, total)
+
+  if (!birthdate) return (
+    <p className="text-[10px] text-stone-400 mt-2 px-1 leading-relaxed">
+      Enter beneficiary birthdate to see available payment plans.
+    </p>
+  )
+
+  if (plans.length === 0) return (
+    <p className="text-[10px] text-stone-400 mt-2 px-1">No payment plans available for this age.</p>
+  )
+
+  return (
+    <div className="mt-2 -mx-1">
+      <table className="w-full text-[11px] border-collapse">
+        <thead>
+          <tr className="text-stone-400 border-b border-stone-100">
+            <th className="text-left py-1 px-1 font-semibold">Plan</th>
+            <th className="text-right py-1 px-1 font-semibold">Monthly</th>
+            <th className="text-right py-1 px-1 font-semibold">Total</th>
+            <th className="text-right py-1 px-1 font-semibold">+/day</th>
+          </tr>
+        </thead>
+        <tbody>
+          {plans.map(p => (
+            <tr key={p.years} className="border-b border-stone-50 hover:bg-stone-50">
+              <td className="py-1.5 px-1 text-stone-600 font-semibold">{p.label}</td>
+              <td className="py-1.5 px-1 text-right font-bold text-stone-800">{fmt(p.monthly)}</td>
+              <td className="py-1.5 px-1 text-right text-stone-400">{fmt(p.totalInvestment)}</td>
+              <td className="py-1.5 px-1 text-right text-stone-400">{fmt(p.perDay)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

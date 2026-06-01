@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
+
 const GST_RATE = 0.05
 const PST_RATE = 0.07
 
@@ -47,9 +50,11 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
     subtotal, discountType, discountValue,
     pkgDiscAmount, userDiscAmount, discountAmount,
     gstAmount, pstAmount, notes,
+    beneficiaryBirthdate,
   } = state
 
   const total = subtotal - discountAmount + gstAmount + pstAmount
+  const [showPayment, setShowPayment] = useState(false)
 
   const today = new Date().toLocaleDateString('en-CA', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -71,13 +76,19 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
           <button onClick={onClose} className="text-white/80 hover:text-white text-sm transition-colors">
             ← Back
           </button>
-          <button
-            onClick={openPrintWindow}
-            className="bg-white text-primary-800 text-sm font-semibold px-5 py-2
-                       rounded-lg hover:bg-stone-100 transition-colors shadow"
-          >
-            Print / Save as PDF
-          </button>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none">
+              <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
+              Payment options
+            </label>
+            <button
+              onClick={openPrintWindow}
+              className="bg-white text-primary-800 text-sm font-semibold px-5 py-2
+                         rounded-lg hover:bg-stone-100 transition-colors shadow"
+            >
+              Print / Save as PDF
+            </button>
+          </div>
         </div>
 
         {/* Quote preview + what gets printed */}
@@ -178,6 +189,45 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
                 <p className="text-[10px] text-stone-400 mt-1.5 text-right">All prices in Canadian dollars</p>
               </div>
             </div>
+
+          {/* Payment Options Table */}
+          {showPayment && (() => {
+            const age   = calcAge(beneficiaryBirthdate)
+            const plans = getPaymentPlans(age, total)
+            if (!beneficiaryBirthdate) return (
+              <div className="pt-2 pb-4">
+                <p className="text-[10px] text-stone-400">Enter beneficiary birthdate to include payment plans.</p>
+              </div>
+            )
+            if (plans.length === 0) return null
+            return (
+              <div className="pb-6 pt-4 border-t border-stone-100">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3">Payment Options</h3>
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-stone-200">
+                      <th className="text-left pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Plan</th>
+                      <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Monthly</th>
+                      <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Months</th>
+                      <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Total Investment</th>
+                      <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">+/day</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plans.map(p => (
+                      <tr key={p.years} className="border-b border-stone-100">
+                        <td className="py-2 font-semibold text-stone-700">{p.label}</td>
+                        <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
+                        <td className="py-2 text-right text-stone-500">{p.years * 12}</td>
+                        <td className="py-2 text-right text-stone-500">{fmt(p.totalInvestment)}</td>
+                        <td className="py-2 text-right text-stone-500">{fmt(p.perDay)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          })()}
 
           </div>
 

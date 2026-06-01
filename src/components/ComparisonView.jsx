@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -30,7 +31,45 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
   }).join('')
 }
 
-function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, gridCols }) {
+function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
+  const g = `display:grid;grid-template-columns:${gridCols};`
+  return `
+    <div style="text-align:center;padding:32px 0 10px;">
+      <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Payment Options</span>
+    </div>
+    <div style="${g}">
+      ${shown.map((q) => {
+        const plans = paymentPlansByQuote[q.id] || []
+        if (plans.length === 0) {
+          return `<div style="text-align:center;padding:6px 24px 24px;"><p style="font-size:13px;color:#d1d1d6;margin:0">No plans available</p></div>`
+        }
+        return `
+          <div style="padding:6px 24px 24px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="border-bottom:1px solid #e5e5e5;">
+                  <th style="text-align:left;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Plan</th>
+                  <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Monthly</th>
+                  <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Total</th>
+                  <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">+/day</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${plans.map(p => `
+                  <tr style="border-bottom:1px solid #f5f5f7;">
+                    <td style="padding:6px 6px;color:#3a3a3c;font-weight:600;font-size:13px">${esc(p.label)}</td>
+                    <td style="padding:6px 6px;text-align:right;font-weight:700;color:#1d1d1f;font-size:14px">${fmt(p.monthly)}</td>
+                    <td style="padding:6px 6px;text-align:right;color:#86868b;font-size:12px">${fmt(p.totalInvestment)}</td>
+                    <td style="padding:6px 6px;text-align:right;color:#86868b;font-size:12px">${fmt(p.perDay)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`
+      }).join('')}
+    </div>`
+}
+
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, gridCols }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
@@ -73,11 +112,16 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
   const transCat = categoryData.find(c => c.catId === 'trans')
   const caCat    = categoryData.find(c => c.catId === 'ca')
 
+  const paymentHTML = showPayment && paymentPlansByQuote
+    ? buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols })
+    : ''
+
   return `
     ${pssCat   ? catSectionHTML(pssCat)   : ''}
     ${casketHTML}
     ${transCat ? catSectionHTML(transCat) : ''}
-    ${caCat    ? catSectionHTML(caCat)    : ''}`
+    ${caCat    ? catSectionHTML(caCat)    : ''}
+    ${paymentHTML}`
 }
 
 // ─── Print HTML ───────────────────────────────────────────────────────────────
@@ -147,13 +191,14 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [showCasketImages, setShowCasketImages]  = useState(true)
   const [showTicker,       setShowTicker]        = useState(true)
   const [showArrangement,  setShowArrangement]   = useState(true)
+  const [showPayment,      setShowPayment]       = useState(false)
   const [loading,          setLoading]           = useState(true)
 
   useEffect(() => {
     async function load() {
       const { data: raw } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, packages(name)')
+        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, beneficiary_birthdate, packages(name)')
         .eq('contact_id', contactId)
 
       if (!raw?.length) { setLoading(false); return }
@@ -241,7 +286,15 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const casketByQuote = hasCaskets ? getCasketByQuote() : {}
   const categoryData  = shown.length ? buildCategoryData() : []
 
-  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement }
+  const paymentPlansByQuote = {}
+  if (showPayment) {
+    shown.forEach(q => {
+      const age = calcAge(q.beneficiary_birthdate)
+      paymentPlansByQuote[q.id] = getPaymentPlans(age, q.total)
+    })
+  }
+
+  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote }
 
   function handlePrint() {
     const win = window.open('', '_blank')
@@ -350,6 +403,10 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                     Casket images
                   </label>
                 )}
+                <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
+                  <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
+                  Payment options
+                </label>
               </div>
             </div>
 
@@ -423,6 +480,48 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
 
                   {/* Cash Advanced */}
                   {caCat && renderCatSection(caCat)}
+
+                  {/* Payment Options */}
+                  {showPayment && (
+                    <div>
+                      <div className="pt-8 pb-2 text-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Payment Options</span>
+                      </div>
+                      <div className="grid" style={gridStyle}>
+                        {shown.map((q) => {
+                          const plans = paymentPlansByQuote[q.id] || []
+                          return (
+                            <div key={q.id} className="px-6 pb-8">
+                              {plans.length === 0 ? (
+                                <p className="text-sm text-stone-300 text-center mt-4">No plans available</p>
+                              ) : (
+                                <table className="w-full text-sm border-collapse mt-3">
+                                  <thead>
+                                    <tr className="border-b border-stone-100">
+                                      <th className="text-left py-1.5 text-xs font-semibold text-stone-400">Plan</th>
+                                      <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Monthly</th>
+                                      <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Total</th>
+                                      <th className="text-right py-1.5 text-xs font-semibold text-stone-400">+/day</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {plans.map(p => (
+                                      <tr key={p.years} className="border-b border-stone-50">
+                                        <td className="py-2 text-stone-700 font-semibold">{p.label}</td>
+                                        <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
+                                        <td className="py-2 text-right text-stone-400 text-xs">{fmt(p.totalInvestment)}</td>
+                                        <td className="py-2 text-right text-stone-400 text-xs">{fmt(p.perDay)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pb-8" />
 
