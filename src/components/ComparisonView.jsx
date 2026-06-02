@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
+import { calcTotals } from '../lib/calcTotals.js'
 
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -199,7 +200,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     async function load() {
       const { data: raw } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, beneficiary_birthdate, packages(name)')
+        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, beneficiary_birthdate, package_discount, discount_type, discount_value, packages(name)')
         .eq('contact_id', contactId)
 
       if (!raw?.length) { setLoading(false); return }
@@ -236,7 +237,20 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
         ;(d || []).forEach(c => { cskMap[c.id] = { name: c.name, price: Number(c.price), description: c.description, imageUrl: c.image_url } })
       }
 
-      setQuotes(qs); setItemsByQuote(grouped); setCategoryMap(catMap)
+      // Recalculate totals fresh from items using the current rounding logic
+      const recalcQs = qs.map(q => {
+        const qItems = (grouped[q.id] || []).map(i => ({
+          price:    Number(i.price),
+          quantity: Number(i.quantity),
+          gst:      i.is_gst  ?? true,
+          pst:      i.is_pst  ?? false,
+          noDisc:   i.no_disc ?? false,
+        }))
+        const t = calcTotals(qItems, Number(q.package_discount) || 0, q.discount_type || 'percentage', Number(q.discount_value) || 0)
+        return { ...q, total: t.total, subtotal: t.subtotal, discount_amount: t.discountAmount, tax_amount: t.taxAmount }
+      })
+
+      setQuotes(recalcQs); setItemsByQuote(grouped); setCategoryMap(catMap)
       setCasketMap(cskMap)
       setSelected(new Set(qs.map(q => q.id))); setLoading(false)
     }

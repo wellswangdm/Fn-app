@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
-
-const GST_RATE = 0.05
-const PST_RATE = 0.07
+import { GST_RATE, PST_RATE } from '../lib/calcTotals.js'
 
 function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
