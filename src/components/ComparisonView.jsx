@@ -324,10 +324,6 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     if (shareStatus === 'uploading') return
     setShareStatus('uploading')
     try {
-      // Ensure bucket exists (no-op if already created)
-      const { error: bktErr } = await supabase.storage.createBucket('comparisons', { public: true })
-      if (bktErr && !bktErr.message?.toLowerCase().includes('already exist')) throw bktErr
-
       const html     = buildWebHTML(sharedProps)
       const blob     = new Blob([html], { type: 'text/html' })
       const filename = `comp-${crypto.randomUUID()}.html`
@@ -341,7 +337,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
       setShareStatus('done')
       setTimeout(() => setShareStatus(null), 4000)
     } catch (e) {
-      console.error('Share failed:', e)
+      console.error('Share failed:', e?.message ?? e)
       setShareStatus('error')
       setTimeout(() => setShareStatus(null), 3000)
     }
