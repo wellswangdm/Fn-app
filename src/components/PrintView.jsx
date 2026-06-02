@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 
 const GST_RATE = 0.05
@@ -54,7 +55,43 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
   } = state
 
   const total = subtotal - discountAmount + gstAmount + pstAmount
-  const [showPayment, setShowPayment] = useState(false)
+  const [showPayment,  setShowPayment]  = useState(false)
+  const [shareStatus,  setShareStatus]  = useState(null) // null | 'uploading' | 'done' | 'error'
+
+  async function handleShare() {
+    if (shareStatus === 'uploading') return
+    const zone = document.getElementById('print-zone')
+    if (!zone) return
+    setShareStatus('uploading')
+    try {
+      const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+        .map(l => `<link rel="stylesheet" href="${l.href}">`)
+        .join('\n')
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  ${stylesheets}
+  <style>body{margin:0;padding:24px;background:#fff}</style>
+</head>
+<body>${zone.outerHTML}</body>
+</html>`
+      const { data, error } = await supabase
+        .from('comparison_shares')
+        .insert({ html })
+        .select('id')
+        .single()
+      if (error) throw error
+      await navigator.clipboard.writeText(`${window.location.origin}/share/${data.id}`)
+      setShareStatus('done')
+      setTimeout(() => setShareStatus(null), 4000)
+    } catch (e) {
+      console.error('Share failed:', e?.message ?? e)
+      setShareStatus('error')
+      setTimeout(() => setShareStatus(null), 3000)
+    }
+  }
 
   const today = new Date().toLocaleDateString('en-CA', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -81,6 +118,19 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
               <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
               Payment options
             </label>
+            <button
+              onClick={handleShare}
+              disabled={shareStatus === 'uploading'}
+              className={`text-sm font-semibold px-5 py-2 rounded-lg transition-colors shadow disabled:opacity-50
+                ${shareStatus === 'done'  ? 'bg-emerald-500 text-white' :
+                  shareStatus === 'error' ? 'bg-red-500 text-white' :
+                  'bg-white/20 text-white hover:bg-white/30'}`}
+            >
+              {shareStatus === 'uploading' ? 'Uploading…' :
+               shareStatus === 'done'      ? 'Link copied!' :
+               shareStatus === 'error'     ? 'Error — retry?' :
+               'Share link'}
+            </button>
             <button
               onClick={openPrintWindow}
               className="bg-white text-primary-800 text-sm font-semibold px-5 py-2
