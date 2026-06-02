@@ -49,7 +49,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
     subtotal, discountType, discountValue,
     pkgDiscAmount, userDiscAmount, discountAmount,
     gstAmount, pstAmount, notes,
-    beneficiaryBirthdate,
+    beneficiaryName, beneficiaryBirthdate,
   } = state
 
   const total = subtotal - discountAmount + gstAmount + pstAmount
@@ -244,13 +244,16 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
             const plans = getPaymentPlans(age, total)
             if (!beneficiaryBirthdate) return (
               <div className="pt-2 pb-4">
-                <p className="text-[10px] text-stone-400">Enter beneficiary birthdate to include payment plans.</p>
+                <p className="text-[10px] text-stone-400">Calculation not available without birthdate.</p>
               </div>
             )
             if (plans.length === 0) return null
             return (
               <div className="pb-6 pt-4 border-t border-stone-100">
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3">Payment Options</h3>
+                <p className="text-sm font-semibold text-stone-700 mb-3">
+                  {beneficiaryName || 'Beneficiary'} · Age {age}
+                </p>
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="border-b-2 border-stone-200">

@@ -41,11 +41,16 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
     <div style="${g}">
       ${shown.map((q) => {
         const plans = paymentPlansByQuote[q.id] || []
-        if (plans.length === 0) {
-          return `<div style="text-align:center;padding:6px 24px 24px;"><p style="font-size:13px;color:#d1d1d6;margin:0">No plans available</p></div>`
+        const age   = calcAge(q.beneficiary_birthdate)
+        const nameHeader = q.beneficiary_birthdate
+          ? `<p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#3a3a3c">${esc(q.deceased_name || 'Beneficiary')} · Age ${age}</p>`
+          : `<p style="margin:0 0 10px;font-size:12px;color:#d1d1d6">Calculation not available without birthdate.</p>`
+        if (!q.beneficiary_birthdate || plans.length === 0) {
+          return `<div style="padding:6px 24px 24px;">${nameHeader}</div>`
         }
         return `
           <div style="padding:6px 24px 24px;">
+            ${nameHeader}
             <table style="width:100%;border-collapse:collapse;">
               <thead>
                 <tr style="border-bottom:1px solid #e5e5e5;">
@@ -200,7 +205,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     async function load() {
       const { data: raw } = await supabase
         .from('quotes')
-        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, beneficiary_birthdate, package_discount, discount_type, discount_value, packages(name)')
+        .select('id, quote_number, status, total, subtotal, discount_amount, tax_amount, arrangement_type, created_at, version_label, sort_order, beneficiary_birthdate, deceased_name, package_discount, discount_type, discount_value, packages(name)')
         .eq('contact_id', contactId)
 
       if (!raw?.length) { setLoading(false); return }
@@ -540,11 +545,17 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
                           const plans = paymentPlansByQuote[q.id] || []
+                          const age   = calcAge(q.beneficiary_birthdate)
                           return (
-                            <div key={q.id} className="px-6 pb-8">
-                              {plans.length === 0 ? (
-                                <p className="text-sm text-stone-300 text-center mt-4">No plans available</p>
+                            <div key={q.id} className="px-6 pb-8 pt-3">
+                              {q.beneficiary_birthdate ? (
+                                <p className="text-sm font-semibold text-stone-700 mb-3">
+                                  {q.deceased_name || 'Beneficiary'} · Age {age}
+                                </p>
                               ) : (
+                                <p className="text-xs text-stone-300 mb-3">Calculation not available without birthdate.</p>
+                              )}
+                              {q.beneficiary_birthdate && plans.length > 0 && (
                                 <table className="w-full text-sm border-collapse mt-3">
                                   <thead>
                                     <tr className="border-b border-stone-100">

@@ -13,7 +13,7 @@ export default function QuoteSummary({
   subtotal, packageDiscount, pkgDiscAmount, userDiscAmount,
   discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
-  status, beneficiaryBirthdate,
+  status, beneficiaryName, beneficiaryBirthdate,
   onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder,
   onRenameSection, onAddSection, onRemoveSection, onMoveItem,
   onChangeCasket, onPrint,
@@ -215,7 +215,7 @@ export default function QuoteSummary({
               Payment options
             </button>
             {showPayment && (
-              <PaymentTable birthdate={beneficiaryBirthdate} total={total} />
+              <PaymentTable name={beneficiaryName} birthdate={beneficiaryBirthdate} total={total} />
             )}
           </div>
         )}
@@ -235,13 +235,13 @@ export default function QuoteSummary({
 
 // ─── Payment Table ────────────────────────────────────────────────────────────
 
-function PaymentTable({ birthdate, total }) {
+function PaymentTable({ name, birthdate, total }) {
   const age   = calcAge(birthdate)
   const plans = getPaymentPlans(age, total)
 
   if (!birthdate) return (
     <p className="text-[10px] text-stone-400 mt-2 px-1 leading-relaxed">
-      Enter beneficiary birthdate to see available payment plans.
+      Calculation not available without birthdate.
     </p>
   )
 
@@ -251,6 +251,9 @@ function PaymentTable({ birthdate, total }) {
 
   return (
     <div className="mt-2 -mx-1">
+      <p className="text-[11px] font-semibold text-stone-600 px-1 mb-1.5">
+        {name || 'Beneficiary'} · Age {age}
+      </p>
       <table className="w-full text-[11px] border-collapse">
         <thead>
           <tr className="text-stone-400 border-b border-stone-100">
