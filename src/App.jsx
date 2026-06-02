@@ -4,12 +4,16 @@ import QuoteList from './pages/QuoteList.jsx'
 import QuoteEditor from './pages/QuoteEditor.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import SetPasswordPage from './pages/SetPasswordPage.jsx'
+import ShareView from './pages/ShareView.jsx'
 
 // Capture invite/recovery flag before Supabase strips the URL hash
 const hashParams    = new URLSearchParams(window.location.hash.replace('#', ''))
 const NEEDS_PW_FLAG = ['invite', 'recovery'].includes(hashParams.get('type'))
 
+const SHARE_ID = window.location.pathname.match(/^\/share\/([a-f0-9-]{36})$/)?.[1] ?? null
+
 export default function App() {
+  if (SHARE_ID) return <ShareView id={SHARE_ID} />
   const [session,        setSession]       = useState(undefined) // undefined = still loading
   const [needsPassword,  setNeedsPassword] = useState(NEEDS_PW_FLAG)
   const [view,           setView]          = useState('list')

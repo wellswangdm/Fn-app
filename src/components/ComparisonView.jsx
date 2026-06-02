@@ -324,16 +324,15 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     if (shareStatus === 'uploading') return
     setShareStatus('uploading')
     try {
-      const html     = buildWebHTML(sharedProps)
-      const blob     = new Blob([html], { type: 'text/html' })
-      const filename = `comp-${crypto.randomUUID()}.html`
-      const { error: upErr } = await supabase.storage
-        .from('comparisons')
-        .upload(filename, blob, { contentType: 'text/html' })
-      if (upErr) throw upErr
-
-      const { data } = supabase.storage.from('comparisons').getPublicUrl(filename)
-      await navigator.clipboard.writeText(data.publicUrl)
+      const html = buildWebHTML(sharedProps)
+      const { data, error } = await supabase
+        .from('comparison_shares')
+        .insert({ html })
+        .select('id')
+        .single()
+      if (error) throw error
+      const url = `${window.location.origin}/share/${data.id}`
+      await navigator.clipboard.writeText(url)
       setShareStatus('done')
       setTimeout(() => setShareStatus(null), 4000)
     } catch (e) {
