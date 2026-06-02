@@ -193,6 +193,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [showArrangement,  setShowArrangement]   = useState(true)
   const [showPayment,      setShowPayment]       = useState(false)
   const [loading,          setLoading]           = useState(true)
+  const [shareStatus,      setShareStatus]       = useState(null) // null | 'uploading' | 'done' | 'error'
 
   useEffect(() => {
     async function load() {
@@ -319,6 +320,33 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     win.document.close()
   }
 
+  async function handleShare() {
+    if (shareStatus === 'uploading') return
+    setShareStatus('uploading')
+    try {
+      // Ensure bucket exists (no-op if already created)
+      const { error: bktErr } = await supabase.storage.createBucket('comparisons', { public: true })
+      if (bktErr && !bktErr.message?.toLowerCase().includes('already exist')) throw bktErr
+
+      const html     = buildWebHTML(sharedProps)
+      const blob     = new Blob([html], { type: 'text/html' })
+      const filename = `comp-${crypto.randomUUID()}.html`
+      const { error: upErr } = await supabase.storage
+        .from('comparisons')
+        .upload(filename, blob, { contentType: 'text/html' })
+      if (upErr) throw upErr
+
+      const { data } = supabase.storage.from('comparisons').getPublicUrl(filename)
+      await navigator.clipboard.writeText(data.publicUrl)
+      setShareStatus('done')
+      setTimeout(() => setShareStatus(null), 4000)
+    } catch (e) {
+      console.error('Share failed:', e)
+      setShareStatus('error')
+      setTimeout(() => setShareStatus(null), 3000)
+    }
+  }
+
   const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
 
   function renderCatSection({ catId, catName, itemsByVersion }) {
@@ -360,6 +388,19 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
             <p className="text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              disabled={shareStatus === 'uploading'}
+              className={`text-xs font-medium border px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50
+                ${shareStatus === 'done'  ? 'border-emerald-300 text-emerald-600 bg-emerald-50' :
+                  shareStatus === 'error' ? 'border-red-300 text-red-500' :
+                  'border-stone-200 text-stone-500 hover:text-primary-700 hover:border-primary-300'}`}
+            >
+              {shareStatus === 'uploading' ? 'Uploading…' :
+               shareStatus === 'done'      ? 'Link copied!' :
+               shareStatus === 'error'     ? 'Error — retry?' :
+               'Share link'}
+            </button>
             <button onClick={handleOpenHTML} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
               Open HTML
             </button>
