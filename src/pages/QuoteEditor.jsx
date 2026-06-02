@@ -59,13 +59,13 @@ function calcTotals(items, packageDiscount, discountType, discountValue) {
   const afterAll       = subtotal - discountAmount
   const discFactor     = discBase > 0 ? (discBase - discountAmount) / discBase : 1
 
-  const gstBase = items.filter(i => i.gst !== false)
-                       .reduce((s, i) => s + i.price * i.quantity * (i.noDisc ? 1 : discFactor), 0)
-  const pstBase = items.filter(i => i.pst === true)
-                       .reduce((s, i) => s + i.price * i.quantity * (i.noDisc ? 1 : discFactor), 0)
   const r2 = n => Math.round(n * 100) / 100
-  const gstAmount = r2(gstBase * GST_RATE)
-  const pstAmount = r2(pstBase * PST_RATE)
+  const gstAmount = r2(items
+    .filter(i => i.gst !== false)
+    .reduce((s, i) => s + r2(i.price * i.quantity * (i.noDisc ? 1 : discFactor) * GST_RATE), 0))
+  const pstAmount = r2(items
+    .filter(i => i.pst === true)
+    .reduce((s, i) => s + r2(i.price * i.quantity * (i.noDisc ? 1 : discFactor) * PST_RATE), 0))
   const taxAmount = r2(gstAmount + pstAmount)
   const total     = r2(afterAll + taxAmount)
 
