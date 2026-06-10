@@ -151,7 +151,16 @@ function buildWebHTML(props) {
   const { shown } = props
   const n       = shown.length
   const colMin  = 260
-  const gridCols = `repeat(${n},minmax(${colMin}px,1fr))`
+  const compact = n <= 2
+
+  // ≤2 columns: fluid grid that fills the viewport — no horizontal scroll needed
+  // 3+ columns: each column gets a 260px floor so content stays readable
+  const gridCols  = compact
+    ? `repeat(${n},minmax(0,1fr))`
+    : `repeat(${n},minmax(${colMin}px,1fr))`
+  const wrapStyle = compact
+    ? 'width:100%;padding-bottom:80px'
+    : `min-width:${n * colMin}px;margin:0 auto;padding-bottom:80px`
 
   const headers = buildVersionHeaderCells({ ...props, gridCols, cellPadding: '20px 16px 20px' })
   const body    = buildCategoryBlocks({ ...props, gridCols })
@@ -165,7 +174,7 @@ function buildWebHTML(props) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;color:#1d1d1f;-webkit-font-smoothing:antialiased}
-    .wrap{min-width:${n * colMin}px;margin:0 auto;padding-bottom:80px}
+    .wrap{${wrapStyle}}
     .sticky{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e5e5e5;}
     .hgrid{display:grid;grid-template-columns:${gridCols};}
   </style>
