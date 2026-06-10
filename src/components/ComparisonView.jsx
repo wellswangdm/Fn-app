@@ -149,10 +149,11 @@ function buildPrintHTML(props) {
 // ─── Web (sticky-header) HTML ─────────────────────────────────────────────────
 function buildWebHTML(props) {
   const { shown } = props
-  const n        = shown.length
-  const gridCols = `repeat(${n},minmax(0,1fr))`
+  const n       = shown.length
+  const colMin  = 260
+  const gridCols = `repeat(${n},minmax(${colMin}px,1fr))`
 
-  const headers = buildVersionHeaderCells({ ...props, gridCols, cellPadding: '24px 24px 24px' })
+  const headers = buildVersionHeaderCells({ ...props, gridCols, cellPadding: '20px 16px 20px' })
   const body    = buildCategoryBlocks({ ...props, gridCols })
 
   return `<!DOCTYPE html>
@@ -164,7 +165,7 @@ function buildWebHTML(props) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif;color:#1d1d1f;-webkit-font-smoothing:antialiased}
-    .wrap{max-width:960px;margin:0 auto;padding-bottom:80px}
+    .wrap{min-width:${n * colMin}px;margin:0 auto;padding-bottom:80px}
     .sticky{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e5e5e5;}
     .hgrid{display:grid;grid-template-columns:${gridCols};}
   </style>
