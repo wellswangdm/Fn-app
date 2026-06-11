@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 import { GST_RATE, PST_RATE } from '../lib/calcTotals.js'
+import { useTranslations } from '../lib/useTranslations.js'
 
 function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -55,6 +56,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
   const total = subtotal - discountAmount + gstAmount + pstAmount
   const [showPayment,  setShowPayment]  = useState(false)
   const [shareStatus,  setShareStatus]  = useState(null) // null | 'uploading' | 'done' | 'error'
+  const translations = useTranslations()
 
   async function handleShare() {
     if (shareStatus === 'uploading') return
@@ -188,9 +190,9 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
               <tbody>
                 {activeSections.map(sec => {
                   const secItems = items.filter(i => (i.sectionId || 'sec-extra') === sec.id)
-                  return <SectionRows key={sec.id} title={sec.name} items={secItems} />
+                  return <SectionRows key={sec.id} title={sec.name} items={secItems} translations={translations} />
                 })}
-                {unsectioned.length > 0 && <SectionRows title="Items" items={unsectioned} />}
+                {unsectioned.length > 0 && <SectionRows title="Items" items={unsectioned} translations={translations} />}
               </tbody>
             </table>
 
@@ -300,7 +302,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
   )
 }
 
-function SectionRows({ title, items }) {
+function SectionRows({ title, items, translations = {} }) {
   if (!items.length) return null
   return (
     <>
@@ -309,15 +311,18 @@ function SectionRows({ title, items }) {
           <span className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">{title}</span>
         </td>
       </tr>
-      {items.map((item, i) => <ItemRow key={i} item={item} />)}
+      {items.map((item, i) => <ItemRow key={i} item={item} nameZh={translations[item.name]} />)}
     </>
   )
 }
 
-function ItemRow({ item }) {
+function ItemRow({ item, nameZh }) {
   return (
     <tr className="border-b border-stone-100">
-      <td className="py-1.5 text-stone-700 pr-4">{item.name}</td>
+      <td className="py-1.5 text-stone-700 pr-4">
+        <span>{item.name}</span>
+        {nameZh && <span className="block text-[10px] text-stone-400 leading-tight">{nameZh}</span>}
+      </td>
       <td className="py-1.5 text-center text-stone-500">{item.quantity}</td>
       <td className="py-1.5 text-right text-stone-500">{fmt(item.price)}</td>
       <td className="py-1.5 text-right font-medium text-stone-800">{fmt(item.price * item.quantity)}</td>

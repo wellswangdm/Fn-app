@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { useTranslations } from '../lib/useTranslations.js'
 
 function fmt(n, min, max) {
   if (n != null) return `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -18,6 +19,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
   const [showCustom,   setShowCustom]   = useState(false)
   const [customName,   setCustomName]   = useState('')
   const [customPrice,  setCustomPrice]  = useState('')
+  const translations = useTranslations()
 
   function addCustomItem() {
     const name  = customName.trim()
@@ -153,7 +155,12 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-medium text-stone-700 leading-snug">{item.name}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-stone-700 leading-snug">{item.name}</span>
+                    {translations[item.name] && (
+                      <p className="text-[11px] text-stone-400 leading-tight">{translations[item.name]}</p>
+                    )}
+                  </div>
                   <span className="text-sm font-semibold text-stone-600 whitespace-nowrap shrink-0">
                     {fmt(item.price, item.price_min, item.price_max)}
                   </span>

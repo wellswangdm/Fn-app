@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
+import { useTranslations } from '../lib/useTranslations.js'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -22,6 +23,7 @@ export default function QuoteSummary({
   const [localDiscValue, setLocalDiscValue] = useState(discountValue || '')
   const [dragId,         setDragId]         = useState(null)
   const [showPayment,    setShowPayment]    = useState(false)
+  const translations = useTranslations()
 
   const statusStyle = {
     finalized: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -72,6 +74,7 @@ export default function QuoteSummary({
               subtitle={subtitle}
               items={secItems}
               sections={sections}
+              translations={translations}
               dragId={dragId}
               onDragStart={id => setDragId(id)}
               onDrop={handleDrop}
@@ -92,6 +95,7 @@ export default function QuoteSummary({
               <ItemRow
                 key={item.id} item={item}
                 sections={sections}
+                translations={translations}
                 onRemove={onRemove} onChangeQty={onChangeQty}
                 onToggleTax={onToggleTax} onEdit={onEdit}
                 onMoveItem={onMoveItem}
@@ -280,7 +284,7 @@ function PaymentTable({ name, birthdate, total }) {
 
 // ─── Section Block ────────────────────────────────────────────────────────────
 
-function SectionBlock({ section, subtitle, items, sections, dragId, onDragStart, onDrop,
+function SectionBlock({ section, subtitle, items, sections, translations, dragId, onDragStart, onDrop,
                         onRemove, onChangeQty, onToggleTax, onEdit,
                         onRenameSection, onRemoveSection, onMoveItem }) {
   const [editingName, setEditingName] = useState(false)
@@ -341,6 +345,7 @@ function SectionBlock({ section, subtitle, items, sections, dragId, onDragStart,
         <ItemRow
           key={item.id} item={item}
           sections={sections}
+          translations={translations}
           onRemove={onRemove} onChangeQty={onChangeQty}
           onToggleTax={onToggleTax} onEdit={onEdit}
           onMoveItem={onMoveItem}
@@ -355,7 +360,7 @@ function SectionBlock({ section, subtitle, items, sections, dragId, onDragStart,
 
 // ─── Item Row ─────────────────────────────────────────────────────────────────
 
-function ItemRow({ item, sections, onRemove, onChangeQty, onToggleTax, onEdit, onMoveItem,
+function ItemRow({ item, sections, translations = {}, onRemove, onChangeQty, onToggleTax, onEdit, onMoveItem,
                    isDragging, onDragStart, onDrop }) {
   const gstOn = item.gst !== false
   const pstOn = item.pst === true
@@ -415,14 +420,16 @@ function ItemRow({ item, sections, onRemove, onChangeQty, onToggleTax, onEdit, o
               onKeyDown={e => { if (e.key === 'Enter') commitName(); if (e.key === 'Escape') { setLocalName(item.name); setEditName(false) } }}
             />
           ) : (
-            <p
+            <div
               onClick={() => setEditName(true)}
-              className="text-xs font-medium text-stone-700 leading-snug truncate cursor-text
-                         hover:bg-stone-100 rounded px-1 -mx-1 py-0.5"
+              className="cursor-text hover:bg-stone-100 rounded px-1 -mx-1 py-0.5"
               title="Click to edit"
             >
-              {item.name}
-            </p>
+              <p className="text-xs font-medium text-stone-700 leading-snug truncate">{item.name}</p>
+              {translations[item.name] && (
+                <p className="text-[10px] text-stone-400 leading-tight truncate">{translations[item.name]}</p>
+              )}
+            </div>
           )}
         </div>
 

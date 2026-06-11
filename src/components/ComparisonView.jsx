@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 import { calcTotals } from '../lib/calcTotals.js'
+import { useTranslations, getTranslations } from '../lib/useTranslations.js'
 
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -75,7 +76,7 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
     </div>`
 }
 
-function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, gridCols }) {
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, gridCols, translations = {} }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
@@ -89,6 +90,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
           ${(itemsByVersion[q.id] || []).map(item => `
             <div style="margin-bottom:14px">
               <p style="margin:0;font-size:16px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
+              ${translations[item.name] ? `<p style="margin:2px 0 0;font-size:12px;color:#a1a1aa">${esc(translations[item.name])}</p>` : ''}
               ${showPrices ? `<p style="margin:3px 0 0;font-size:13px;color:#86868b">${fmt(item.amount)}</p>` : ''}
             </div>`).join('')}
         </div>`).join('')}
@@ -210,6 +212,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [showPayment,      setShowPayment]       = useState(false)
   const [loading,          setLoading]           = useState(true)
   const [shareStatus,      setShareStatus]       = useState(null) // null | 'uploading' | 'done' | 'error'
+  const translations = useTranslations()
 
   useEffect(() => {
     async function load() {
@@ -324,7 +327,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     })
   }
 
-  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote }
+  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, translations }
 
   function handlePrint() {
     const win = window.open('', '_blank')
@@ -342,10 +345,11 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     win.document.close()
   }
 
-  function handleOpenHTML() {
+  async function handleOpenHTML() {
     const win = window.open('', '_blank')
     if (!win) { alert('Allow popups for this site to preview.'); return }
-    win.document.write(buildWebHTML(sharedProps))
+    const t = await getTranslations()
+    win.document.write(buildWebHTML({ ...sharedProps, translations: t }))
     win.document.close()
   }
 
@@ -353,7 +357,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     if (shareStatus === 'uploading') return
     setShareStatus('uploading')
     try {
-      const html = buildWebHTML(sharedProps)
+      const t    = await getTranslations()
+      const html = buildWebHTML({ ...sharedProps, translations: t })
       const { data, error } = await supabase
         .from('comparison_shares')
         .insert({ html })
@@ -385,6 +390,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
               {(itemsByVersion[q.id] || []).map((item, i) => (
                 <div key={i} className="mt-4">
                   <p className="text-base font-semibold text-stone-800 leading-snug">{item.name}</p>
+                  {translations[item.name] && <p className="text-xs text-stone-400 leading-tight">{translations[item.name]}</p>}
                   {showPrices && <p className="text-sm text-stone-400 mt-1">{fmt(item.amount)}</p>}
                 </div>
               ))}
