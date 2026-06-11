@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 import { GST_RATE, PST_RATE } from '../lib/calcTotals.js'
 import { useTranslations } from '../lib/useTranslations.js'
+import { useChineseMode } from '../lib/useChineseMode.js'
 
 function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -57,6 +58,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
   const [showPayment,  setShowPayment]  = useState(false)
   const [shareStatus,  setShareStatus]  = useState(null) // null | 'uploading' | 'done' | 'error'
   const translations = useTranslations()
+  const [showChinese, setShowChinese] = useChineseMode()
 
   async function handleShare() {
     if (shareStatus === 'uploading') return
@@ -114,6 +116,10 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
             ← Back
           </button>
           <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none">
+              <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
+              中文
+            </label>
             <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none">
               <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
               Payment options
@@ -190,9 +196,9 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
               <tbody>
                 {activeSections.map(sec => {
                   const secItems = items.filter(i => (i.sectionId || 'sec-extra') === sec.id)
-                  return <SectionRows key={sec.id} title={sec.name} items={secItems} translations={translations} />
+                  return <SectionRows key={sec.id} title={sec.name} items={secItems} translations={translations} showChinese={showChinese} />
                 })}
-                {unsectioned.length > 0 && <SectionRows title="Items" items={unsectioned} translations={translations} />}
+                {unsectioned.length > 0 && <SectionRows title="Items" items={unsectioned} translations={translations} showChinese={showChinese} />}
               </tbody>
             </table>
 
@@ -302,7 +308,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
   )
 }
 
-function SectionRows({ title, items, translations = {} }) {
+function SectionRows({ title, items, translations = {}, showChinese }) {
   if (!items.length) return null
   return (
     <>
@@ -311,7 +317,12 @@ function SectionRows({ title, items, translations = {} }) {
           <span className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">{title}</span>
         </td>
       </tr>
-      {items.map((item, i) => <ItemRow key={i} item={item} nameZh={translations[item.name]} />)}
+      {items.map((item, i) => {
+        const nameZh = showChinese
+          ? (item.isCasketItem ? '棺木' : translations[item.name] || null)
+          : null
+        return <ItemRow key={i} item={item} nameZh={nameZh} />
+      })}
     </>
   )
 }

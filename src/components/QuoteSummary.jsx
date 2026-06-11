@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 import { useTranslations } from '../lib/useTranslations.js'
+import { useChineseMode } from '../lib/useChineseMode.js'
 
 const GST_RATE = 0.05
 const PST_RATE = 0.07
@@ -24,6 +25,7 @@ export default function QuoteSummary({
   const [dragId,         setDragId]         = useState(null)
   const [showPayment,    setShowPayment]    = useState(false)
   const translations = useTranslations()
+  const [showChinese, setShowChinese] = useChineseMode()
 
   const statusStyle = {
     finalized: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -49,9 +51,15 @@ export default function QuoteSummary({
       {/* Header */}
       <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-stone-700">Quote Summary</h2>
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>
-          {status}
-        </span>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1 text-[11px] text-stone-400 cursor-pointer select-none">
+            <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
+            中文
+          </label>
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>
+            {status}
+          </span>
+        </div>
       </div>
 
       {/* Items */}
@@ -75,6 +83,7 @@ export default function QuoteSummary({
               items={secItems}
               sections={sections}
               translations={translations}
+              showChinese={showChinese}
               dragId={dragId}
               onDragStart={id => setDragId(id)}
               onDrop={handleDrop}
@@ -96,6 +105,7 @@ export default function QuoteSummary({
                 key={item.id} item={item}
                 sections={sections}
                 translations={translations}
+                showChinese={showChinese}
                 onRemove={onRemove} onChangeQty={onChangeQty}
                 onToggleTax={onToggleTax} onEdit={onEdit}
                 onMoveItem={onMoveItem}
@@ -284,7 +294,7 @@ function PaymentTable({ name, birthdate, total }) {
 
 // ─── Section Block ────────────────────────────────────────────────────────────
 
-function SectionBlock({ section, subtitle, items, sections, translations, dragId, onDragStart, onDrop,
+function SectionBlock({ section, subtitle, items, sections, translations, showChinese, dragId, onDragStart, onDrop,
                         onRemove, onChangeQty, onToggleTax, onEdit,
                         onRenameSection, onRemoveSection, onMoveItem }) {
   const [editingName, setEditingName] = useState(false)
@@ -346,6 +356,7 @@ function SectionBlock({ section, subtitle, items, sections, translations, dragId
           key={item.id} item={item}
           sections={sections}
           translations={translations}
+          showChinese={showChinese}
           onRemove={onRemove} onChangeQty={onChangeQty}
           onToggleTax={onToggleTax} onEdit={onEdit}
           onMoveItem={onMoveItem}
@@ -360,7 +371,7 @@ function SectionBlock({ section, subtitle, items, sections, translations, dragId
 
 // ─── Item Row ─────────────────────────────────────────────────────────────────
 
-function ItemRow({ item, sections, translations = {}, onRemove, onChangeQty, onToggleTax, onEdit, onMoveItem,
+function ItemRow({ item, sections, translations = {}, showChinese, onRemove, onChangeQty, onToggleTax, onEdit, onMoveItem,
                    isDragging, onDragStart, onDrop }) {
   const gstOn = item.gst !== false
   const pstOn = item.pst === true
@@ -426,8 +437,11 @@ function ItemRow({ item, sections, translations = {}, onRemove, onChangeQty, onT
               title="Click to edit"
             >
               <p className="text-xs font-medium text-stone-700 leading-snug truncate">{item.name}</p>
-              {translations[item.name] && (
-                <p className="text-[10px] text-stone-400 leading-tight truncate">{translations[item.name]}</p>
+              {showChinese && (item.isCasketItem
+                ? <p className="text-[10px] text-stone-400 leading-tight">棺木</p>
+                : translations[item.name]
+                  ? <p className="text-[10px] text-stone-400 leading-tight truncate">{translations[item.name]}</p>
+                  : null
               )}
             </div>
           )}

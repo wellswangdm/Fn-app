@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useTranslations } from '../lib/useTranslations.js'
+import { useChineseMode } from '../lib/useChineseMode.js'
 
 function fmt(n, min, max) {
   if (n != null) return `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -20,6 +21,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
   const [customName,   setCustomName]   = useState('')
   const [customPrice,  setCustomPrice]  = useState('')
   const translations = useTranslations()
+  const [showChinese] = useChineseMode()
 
   function addCustomItem() {
     const name  = customName.trim()
@@ -157,7 +159,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <span className="text-sm font-medium text-stone-700 leading-snug">{item.name}</span>
-                    {translations[item.name] && (
+                    {showChinese && translations[item.name] && (
                       <p className="text-[11px] text-stone-400 leading-tight">{translations[item.name]}</p>
                     )}
                   </div>

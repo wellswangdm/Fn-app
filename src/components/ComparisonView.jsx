@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
 import { calcTotals } from '../lib/calcTotals.js'
 import { useTranslations, getTranslations } from '../lib/useTranslations.js'
+import { useChineseMode } from '../lib/useChineseMode.js'
 
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -76,7 +77,7 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
     </div>`
 }
 
-function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, gridCols, translations = {} }) {
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, gridCols, translations = {}, showChinese = true }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
@@ -90,7 +91,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
           ${(itemsByVersion[q.id] || []).map(item => `
             <div style="margin-bottom:14px">
               <p style="margin:0;font-size:16px;font-weight:600;color:#1d1d1f;line-height:1.4">${esc(item.name)}</p>
-              ${translations[item.name] ? `<p style="margin:2px 0 0;font-size:12px;color:#a1a1aa">${esc(translations[item.name])}</p>` : ''}
+              ${showChinese && translations[item.name] ? `<p style="margin:2px 0 0;font-size:12px;color:#a1a1aa">${esc(translations[item.name])}</p>` : ''}
               ${showPrices ? `<p style="margin:3px 0 0;font-size:13px;color:#86868b">${fmt(item.amount)}</p>` : ''}
             </div>`).join('')}
         </div>`).join('')}
@@ -109,6 +110,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
             ${e ? `
               ${showCasketImages && csk?.imageUrl ? `<img src="${esc(csk.imageUrl)}" style="max-width:220px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
               <p style="margin:0;font-size:16px;font-weight:600;color:#1d1d1f">${esc(e.name)}</p>
+              ${showChinese ? `<p style="margin:2px 0 0;font-size:12px;color:#a1a1aa">棺木</p>` : ''}
               ${csk?.description ? `<p style="margin:4px 0 0;font-size:13px;color:#86868b;line-height:1.4">${esc(csk.description)}</p>` : ''}
               ${showPrices ? `<p style="margin:5px 0 0;font-size:13px;color:#86868b">${fmt(e.price)}</p>` : ''}
             ` : `<span style="font-size:13px;color:#d1d1d6">Not selected</span>`}
@@ -213,6 +215,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [loading,          setLoading]           = useState(true)
   const [shareStatus,      setShareStatus]       = useState(null) // null | 'uploading' | 'done' | 'error'
   const translations = useTranslations()
+  const [showChinese, setShowChinese] = useChineseMode()
 
   useEffect(() => {
     async function load() {
@@ -327,7 +330,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     })
   }
 
-  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, translations }
+  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, translations, showChinese }
 
   function handlePrint() {
     const win = window.open('', '_blank')
@@ -390,7 +393,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
               {(itemsByVersion[q.id] || []).map((item, i) => (
                 <div key={i} className="mt-4">
                   <p className="text-base font-semibold text-stone-800 leading-snug">{item.name}</p>
-                  {translations[item.name] && <p className="text-xs text-stone-400 leading-tight">{translations[item.name]}</p>}
+                  {showChinese && translations[item.name] && <p className="text-xs text-stone-400 leading-tight">{translations[item.name]}</p>}
                   {showPrices && <p className="text-sm text-stone-400 mt-1">{fmt(item.amount)}</p>}
                 </div>
               ))}
@@ -454,6 +457,10 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                 </button>
               ))}
               <div className="ml-auto flex items-center gap-4">
+                <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
+                  <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
+                  中文
+                </label>
                 <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
                   <input type="checkbox" checked={showPrices} onChange={e => setShowPrices(e.target.checked)} className="rounded" />
                   Show prices
@@ -535,6 +542,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                                       : <div className="w-44 h-28 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
                                   )}
                                   <p className="text-base font-semibold text-stone-800">{entry.name}</p>
+                                  {showChinese && <p className="text-xs text-stone-400 leading-tight">棺木</p>}
                                   {csk?.description && <p className="text-xs text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
                                   {showPrices && <p className="text-sm text-stone-400">{fmt(entry.price)}</p>}
                                 </div>
