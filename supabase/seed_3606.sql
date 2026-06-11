@@ -113,14 +113,14 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
 -- ─── Packages (a la carte / service offerings from GPL) ───────────────────────
 
 insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_discount, default_casket_id, sort_order) values
-  ('pk001001', '3606', 'Full Service',              'package',  7810.00, 0, NULL, 1),
-  ('pk001002', '3606', 'Service of Remembrance',    'package',  7190.00, 0, NULL, 2),
-  ('pk001003', '3606', 'Graveside Service',          'package',  6195.00, 0, NULL, 3),
-  ('pk001004', '3606', 'Urn Committal',              'package',  5700.00, 0, NULL, 4),
-  ('pk001005', '3606', 'No Service Option',          'package',  4205.00, 0, NULL, 5),
-  ('pk001006', '3606', 'Disinterment',               'package',  4780.00, 0, NULL, 6),
-  ('pk001007', '3606', 'Forwarding of Remains',      'package',  7665.00, 0, NULL, 7),
-  ('pk001008', '3606', 'Receiving of Remains',       'package',  6050.00, 0, NULL, 8);
+  ('pk001001', '3606', 'Full Service',              'alacarte',  7810.00, 0, NULL, 1),
+  ('pk001002', '3606', 'Service of Remembrance',    'alacarte',  7190.00, 0, NULL, 2),
+  ('pk001003', '3606', 'Graveside Service',          'alacarte',  6195.00, 0, NULL, 3),
+  ('pk001004', '3606', 'Urn Committal',              'alacarte',  5700.00, 0, NULL, 4),
+  ('pk001005', '3606', 'No Service Option',          'alacarte',  4205.00, 0, NULL, 5),
+  ('pk001006', '3606', 'Disinterment',               'alacarte',  4780.00, 0, NULL, 6),
+  ('pk001007', '3606', 'Forwarding of Remains',      'alacarte',  7665.00, 0, NULL, 7),
+  ('pk001008', '3606', 'Receiving of Remains',       'alacarte',  6050.00, 0, NULL, 8);
 
 -- ─── Package Items ────────────────────────────────────────────────────────────
 

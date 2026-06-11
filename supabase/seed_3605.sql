@@ -125,16 +125,16 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
 -- Totals verified against GPL page 4-6, 13
 
 insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_discount, default_casket_id, sort_order) values
-  ('pk002001', '3605', 'Full Service',                           'package',  9065.00, 0, NULL,  1),
-  ('pk002002', '3605', 'Witness Cremation',                      'package',  7605.00, 0, NULL,  2),
-  ('pk002003', '3605', 'Service of Remembrance',                 'package',  8495.00, 0, NULL,  3),
-  ('pk002004', '3605', 'Graveside Service',                      'package',  8075.00, 0, NULL,  4),
-  ('pk002005', '3605', 'Urn Committal Option',                   'package',  6900.00, 0, NULL,  5),
-  ('pk002006', '3605', 'No Service Option',                      'package',  5285.00, 0, NULL,  6),
-  ('pk002007', '3605', 'Dignity Creative Event',                 'package', 10550.00, 0, NULL,  7),
-  ('pk002008', '3605', 'Disinterment',                           'package',  4880.00, 0, NULL,  8),
-  ('pk002009', '3605', 'Forwarding of Remains',                  'package',  8920.00, 0, NULL,  9),
-  ('pk002010', '3605', 'Receiving of Remains',                   'package',  7255.00, 0, NULL, 10);
+  ('pk002001', '3605', 'Full Service',                           'alacarte',  9065.00, 0, NULL,  1),
+  ('pk002002', '3605', 'Witness Cremation',                      'alacarte',  7605.00, 0, NULL,  2),
+  ('pk002003', '3605', 'Service of Remembrance',                 'alacarte',  8495.00, 0, NULL,  3),
+  ('pk002004', '3605', 'Graveside Service',                      'alacarte',  8075.00, 0, NULL,  4),
+  ('pk002005', '3605', 'Urn Committal Option',                   'alacarte',  6900.00, 0, NULL,  5),
+  ('pk002006', '3605', 'No Service Option',                      'alacarte',  5285.00, 0, NULL,  6),
+  ('pk002007', '3605', 'Dignity Creative Event',                 'alacarte', 10550.00, 0, NULL,  7),
+  ('pk002008', '3605', 'Disinterment',                           'alacarte',  4880.00, 0, NULL,  8),
+  ('pk002009', '3605', 'Forwarding of Remains',                  'alacarte',  8920.00, 0, NULL,  9),
+  ('pk002010', '3605', 'Receiving of Remains',                   'alacarte',  7255.00, 0, NULL, 10);
 
 -- ─── Package Items ────────────────────────────────────────────────────────────
 
