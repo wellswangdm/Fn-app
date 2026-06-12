@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
+import { calcAge, getPaymentPlans, MONTHLY_THRESHOLD } from '../lib/paymentPlans.js'
 import { useTranslations } from '../lib/useTranslations.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
 
@@ -248,8 +248,6 @@ export default function QuoteSummary({
 }
 
 // ─── Payment Table ────────────────────────────────────────────────────────────
-
-const MONTHLY_THRESHOLD = 15000
 
 function PaymentTable({ name, birthdate, total }) {
   if (total > MONTHLY_THRESHOLD) {

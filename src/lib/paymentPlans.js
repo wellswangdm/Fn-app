@@ -1,3 +1,24 @@
+// ─── Monthly payment threshold & helper ──────────────────────────────────────
+
+export const MONTHLY_THRESHOLD = 15000
+
+// Returns array of plan rows for total > MONTHLY_THRESHOLD.
+// annualRatePct defaults to 0 (interest-free); terms in months.
+export function getMonthlyPlans(total, annualRatePct = 0, terms = [12, 24, 36, 60]) {
+  const downPayment = Math.round(total * 0.10 * 100) / 100
+  const balance     = Math.round((total - downPayment) * 100) / 100
+  const r           = (annualRatePct / 100) / 12
+  return terms.map(months => {
+    const monthly = r === 0
+      ? Math.round((balance / months) * 100) / 100
+      : Math.round(balance * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1) * 100) / 100
+    const totalFinanced = Math.round(monthly * months * 100) / 100
+    const interest      = Math.max(0, Math.round((totalFinanced - balance) * 100) / 100)
+    const termLabel     = months >= 12 ? `${months / 12}-year` : `${months}-month`
+    return { months, termLabel, downPayment, balance, monthly, totalFinanced, interest }
+  })
+}
+
 // ─── Rate Tables ──────────────────────────────────────────────────────────────
 
 // Table 1: 1yr / 3yr / 5yr / 10yr — rate per $10,000/month

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { calcAge, getPaymentPlans } from '../lib/paymentPlans.js'
+import { calcAge, getPaymentPlans, getMonthlyPlans, MONTHLY_THRESHOLD } from '../lib/paymentPlans.js'
 import { calcTotals } from '../lib/calcTotals.js'
 import { useTranslations, getTranslations } from '../lib/useTranslations.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
@@ -34,7 +34,7 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
   }).join('')
 }
 
-function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
+function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote = {}, gridCols }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
   return `
     <div style="text-align:center;padding:32px 0 10px;">
@@ -42,6 +42,31 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
     </div>
     <div style="${g}">
       ${shown.map((q) => {
+        if (q.total > MONTHLY_THRESHOLD) {
+          const plans = monthlyPlansByQuote[q.id] || getMonthlyPlans(q.total)
+          const { downPayment, balance } = plans[0] || {}
+          return `
+            <div style="padding:6px 24px 24px;">
+              <p style="margin:0 0 8px;font-size:12px;color:#86868b">10% down · ${fmt(downPayment)} · Financed: ${fmt(balance)}</p>
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:1px solid #e5e5e5;">
+                    <th style="text-align:left;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Term</th>
+                    <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Monthly</th>
+                    <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${plans.map(p => `
+                    <tr style="border-bottom:1px solid #f5f5f7;">
+                      <td style="padding:6px 6px;color:#3a3a3c;font-weight:600;font-size:13px">${esc(p.termLabel)}</td>
+                      <td style="padding:6px 6px;text-align:right;font-weight:700;color:#1d1d1f;font-size:14px">${fmt(p.monthly)}</td>
+                      <td style="padding:6px 6px;text-align:right;color:#86868b;font-size:12px">${fmt(p.totalFinanced)}${p.interest > 0 ? ` (+${fmt(p.interest)})` : ''}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>`
+        }
         const plans = paymentPlansByQuote[q.id] || []
         const age   = calcAge(q.beneficiary_birthdate)
         const nameHeader = q.beneficiary_birthdate
@@ -77,7 +102,7 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols }) {
     </div>`
 }
 
-function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, gridCols, translations = {}, showChinese = true }) {
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, monthlyPlansByQuote, gridCols, translations = {}, showChinese = true }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
@@ -123,7 +148,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
   const caCat    = categoryData.find(c => c.catId === 'ca')
 
   const paymentHTML = showPayment && paymentPlansByQuote
-    ? buildPaymentSectionHTML({ shown, paymentPlansByQuote, gridCols })
+    ? buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote, gridCols })
     : ''
 
   return `
@@ -212,6 +237,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [showTicker,       setShowTicker]        = useState(true)
   const [showArrangement,  setShowArrangement]   = useState(true)
   const [showPayment,      setShowPayment]       = useState(false)
+  const [payRateStr,       setPayRateStr]        = useState('0')
   const [loading,          setLoading]           = useState(true)
   const [shareStatus,      setShareStatus]       = useState(null) // null | 'uploading' | 'done' | 'error'
   const translations = useTranslations()
@@ -322,15 +348,21 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const casketByQuote = hasCaskets ? getCasketByQuote() : {}
   const categoryData  = shown.length ? buildCategoryData() : []
 
-  const paymentPlansByQuote = {}
+  const paymentPlansByQuote  = {}
+  const monthlyPlansByQuote  = {}
   if (showPayment) {
+    const payRate = parseFloat(payRateStr) || 0
     shown.forEach(q => {
-      const age = calcAge(q.beneficiary_birthdate)
-      paymentPlansByQuote[q.id] = getPaymentPlans(age, q.total)
+      if (q.total > MONTHLY_THRESHOLD) {
+        monthlyPlansByQuote[q.id] = getMonthlyPlans(q.total, payRate)
+      } else {
+        const age = calcAge(q.beneficiary_birthdate)
+        paymentPlansByQuote[q.id] = getPaymentPlans(age, q.total)
+      }
     })
   }
 
-  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, translations, showChinese }
+  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, monthlyPlansByQuote, translations, showChinese }
 
   function handlePrint() {
     const win = window.open('', '_blank')
@@ -485,6 +517,18 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
                   Payment options
                 </label>
+                {showPayment && shown.some(q => q.total > MONTHLY_THRESHOLD) && (
+                  <div className="flex items-center gap-1.5 text-sm text-stone-500">
+                    <span className="text-xs">Interest:</span>
+                    <input
+                      type="number" min="0" max="100" step="0.25"
+                      value={payRateStr}
+                      onChange={e => setPayRateStr(e.target.value)}
+                      className="input text-xs py-0.5 px-1.5 w-16 text-right"
+                    />
+                    <span className="text-xs">% / yr</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -568,6 +612,36 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
+                          if (q.total > MONTHLY_THRESHOLD) {
+                            const plans = monthlyPlansByQuote[q.id] || []
+                            return (
+                              <div key={q.id} className="px-6 pb-8 pt-3">
+                                <p className="text-xs text-stone-400 mb-3">
+                                  10% down · {fmt(plans[0]?.downPayment)} · Financed: {fmt(plans[0]?.balance)}
+                                </p>
+                                <table className="w-full text-sm border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-stone-100">
+                                      <th className="text-left py-1.5 text-xs font-semibold text-stone-400">Term</th>
+                                      <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Monthly</th>
+                                      <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {plans.map(p => (
+                                      <tr key={p.months} className="border-b border-stone-50">
+                                        <td className="py-2 text-stone-700 font-semibold">{p.termLabel}</td>
+                                        <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
+                                        <td className="py-2 text-right text-stone-400 text-xs">
+                                          {fmt(p.totalFinanced)}{p.interest > 0 ? ` (+${fmt(p.interest)})` : ''}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )
+                          }
                           const plans = paymentPlansByQuote[q.id] || []
                           const age   = calcAge(q.beneficiary_birthdate)
                           return (
