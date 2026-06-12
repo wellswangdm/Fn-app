@@ -52,6 +52,7 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuo
                 <thead>
                   <tr style="border-bottom:1px solid #e5e5e5;">
                     <th style="text-align:left;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Term</th>
+                    <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Rate</th>
                     <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Monthly</th>
                     <th style="text-align:right;padding:4px 6px;color:#86868b;font-weight:600;font-size:11px">Total</th>
                   </tr>
@@ -59,9 +60,10 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuo
                 <tbody>
                   ${plans.map(p => `
                     <tr style="border-bottom:1px solid #f5f5f7;">
-                      <td style="padding:6px 6px;color:#3a3a3c;font-weight:600;font-size:13px">${esc(p.termLabel)}</td>
+                      <td style="padding:6px 6px;color:#3a3a3c;font-weight:600;font-size:13px">${esc(p.label)}</td>
+                      <td style="padding:6px 6px;text-align:right;color:#86868b;font-size:12px">${p.rate > 0 ? `${p.rate}%` : '0%'}</td>
                       <td style="padding:6px 6px;text-align:right;font-weight:700;color:#1d1d1f;font-size:14px">${fmt(p.monthly)}</td>
-                      <td style="padding:6px 6px;text-align:right;color:#86868b;font-size:12px">${fmt(p.totalFinanced)}${p.interest > 0 ? ` (+${fmt(p.interest)})` : ''}</td>
+                      <td style="padding:6px 6px;text-align:right;color:#86868b;font-size:12px">${fmt(p.totalFinanced)}</td>
                     </tr>`).join('')}
                 </tbody>
               </table>
@@ -237,7 +239,6 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [showTicker,       setShowTicker]        = useState(true)
   const [showArrangement,  setShowArrangement]   = useState(true)
   const [showPayment,      setShowPayment]       = useState(false)
-  const [payRateStr,       setPayRateStr]        = useState('0')
   const [loading,          setLoading]           = useState(true)
   const [shareStatus,      setShareStatus]       = useState(null) // null | 'uploading' | 'done' | 'error'
   const translations = useTranslations()
@@ -351,10 +352,9 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const paymentPlansByQuote  = {}
   const monthlyPlansByQuote  = {}
   if (showPayment) {
-    const payRate = parseFloat(payRateStr) || 0
     shown.forEach(q => {
       if (q.total > MONTHLY_THRESHOLD) {
-        monthlyPlansByQuote[q.id] = getMonthlyPlans(q.total, payRate)
+        monthlyPlansByQuote[q.id] = getMonthlyPlans(q.total)
       } else {
         const age = calcAge(q.beneficiary_birthdate)
         paymentPlansByQuote[q.id] = getPaymentPlans(age, q.total)
@@ -517,18 +517,6 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
                   Payment options
                 </label>
-                {showPayment && shown.some(q => q.total > MONTHLY_THRESHOLD) && (
-                  <div className="flex items-center gap-1.5 text-sm text-stone-500">
-                    <span className="text-xs">Interest:</span>
-                    <input
-                      type="number" min="0" max="100" step="0.25"
-                      value={payRateStr}
-                      onChange={e => setPayRateStr(e.target.value)}
-                      className="input text-xs py-0.5 px-1.5 w-16 text-right"
-                    />
-                    <span className="text-xs">% / yr</span>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -623,6 +611,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                                   <thead>
                                     <tr className="border-b border-stone-100">
                                       <th className="text-left py-1.5 text-xs font-semibold text-stone-400">Term</th>
+                                      <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Rate</th>
                                       <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Monthly</th>
                                       <th className="text-right py-1.5 text-xs font-semibold text-stone-400">Total</th>
                                     </tr>
@@ -630,11 +619,10 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                                   <tbody>
                                     {plans.map(p => (
                                       <tr key={p.months} className="border-b border-stone-50">
-                                        <td className="py-2 text-stone-700 font-semibold">{p.termLabel}</td>
+                                        <td className="py-2 text-stone-700 font-semibold">{p.label}</td>
+                                        <td className="py-2 text-right text-stone-400 text-xs">{p.rate > 0 ? `${p.rate}%` : '0%'}</td>
                                         <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
-                                        <td className="py-2 text-right text-stone-400 text-xs">
-                                          {fmt(p.totalFinanced)}{p.interest > 0 ? ` (+${fmt(p.interest)})` : ''}
-                                        </td>
+                                        <td className="py-2 text-right text-stone-400 text-xs">{fmt(p.totalFinanced)}</td>
                                       </tr>
                                     ))}
                                   </tbody>

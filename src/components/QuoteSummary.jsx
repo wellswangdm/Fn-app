@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { calcAge, getPaymentPlans, MONTHLY_THRESHOLD } from '../lib/paymentPlans.js'
+import { calcAge, getPaymentPlans, getMonthlyPlans, MONTHLY_THRESHOLD, MONTHLY_PLANS_TABLE } from '../lib/paymentPlans.js'
 import { useTranslations } from '../lib/useTranslations.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
 
@@ -19,6 +19,7 @@ export default function QuoteSummary({
   onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder,
   onRenameSection, onAddSection, onRemoveSection, onMoveItem,
   onChangeCasket, onPrint,
+  paymentTerms, onChangePaymentTerms,
 }) {
   const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
   const [localDiscValue, setLocalDiscValue] = useState(discountValue || '')
@@ -229,7 +230,10 @@ export default function QuoteSummary({
               Payment options
             </button>
             {showPayment && (
-              <PaymentTable name={beneficiaryName} birthdate={beneficiaryBirthdate} total={total} />
+              <PaymentTable
+                name={beneficiaryName} birthdate={beneficiaryBirthdate} total={total}
+                paymentTerms={paymentTerms} onChangePaymentTerms={onChangePaymentTerms}
+              />
             )}
           </div>
         )}
@@ -249,9 +253,9 @@ export default function QuoteSummary({
 
 // ─── Payment Table ────────────────────────────────────────────────────────────
 
-function PaymentTable({ name, birthdate, total }) {
+function PaymentTable({ name, birthdate, total, paymentTerms, onChangePaymentTerms }) {
   if (total > MONTHLY_THRESHOLD) {
-    return <MonthlyPaymentCalculator total={total} />
+    return <MonthlyPaymentCalculator total={total} paymentTerms={paymentTerms} onChangePaymentTerms={onChangePaymentTerms} />
   }
 
   const age   = calcAge(birthdate)
@@ -298,37 +302,25 @@ function PaymentTable({ name, birthdate, total }) {
 
 // ─── Monthly Payment Calculator (total > $15,000) ─────────────────────────────
 
-const TERM_OPTS = [12, 24, 36, 60]
+const ALL_TERM_MONTHS = MONTHLY_PLANS_TABLE.map(p => p.months)
 
-function MonthlyPaymentCalculator({ total }) {
-  const [months,    setMonths]    = useState(12)
-  const [monthsStr, setMonthsStr] = useState('12')
-  const [rateStr,   setRateStr]   = useState('0')
+function MonthlyPaymentCalculator({ total, paymentTerms, onChangePaymentTerms }) {
+  // null means all selected
+  const selected = paymentTerms ?? ALL_TERM_MONTHS
 
-  const rate        = Math.max(0, parseFloat(rateStr) || 0)
-  const downPayment = Math.round(total * 0.10 * 100) / 100
-  const balance     = Math.round((total - downPayment) * 100) / 100
-  const monthlyRate = (rate / 100) / 12
-
-  const monthly = monthlyRate === 0
-    ? Math.round((balance / months) * 100) / 100
-    : Math.round(
-        (balance * monthlyRate * Math.pow(1 + monthlyRate, months)) /
-        (Math.pow(1 + monthlyRate, months) - 1) * 100
-      ) / 100
-
-  const totalFinanced = Math.round(monthly * months * 100) / 100
-  const interest      = Math.max(0, Math.round((totalFinanced - balance) * 100) / 100)
-
-  function commitMonths() {
-    const v = parseInt(monthsStr)
-    if (v >= 1 && v <= 360) setMonths(v)
-    else setMonthsStr(String(months))
+  function toggleTerm(months) {
+    const next = selected.includes(months)
+      ? selected.filter(m => m !== months)
+      : [...ALL_TERM_MONTHS.filter(m => selected.includes(m) || m === months)]
+    onChangePaymentTerms(next.length === ALL_TERM_MONTHS.length ? null : next)
   }
+
+  const allPlans = getMonthlyPlans(total)
+  const { downPayment, balance } = allPlans[0]
 
   return (
     <div className="mt-2 space-y-2">
-      {/* Down payment + financed balance */}
+      {/* Down payment summary */}
       <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] space-y-1">
         <div className="flex justify-between text-stone-500">
           <span>Down payment (10%)</span>
@@ -340,58 +332,45 @@ function MonthlyPaymentCalculator({ total }) {
         </div>
       </div>
 
-      {/* Term selector */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[11px] text-stone-500 w-16 shrink-0">Term</span>
-        <div className="flex items-center gap-1 flex-wrap">
-          {TERM_OPTS.map(m => (
-            <button
-              key={m}
-              onClick={() => { setMonths(m); setMonthsStr(String(m)) }}
-              className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold transition-colors ${
-                months === m
-                  ? 'bg-primary-700 text-white border-primary-700'
-                  : 'border-stone-200 text-stone-500 hover:border-stone-300'
-              }`}
-            >
-              {m / 12 >= 1 ? `${m / 12}yr` : `${m}mo`}
-            </button>
-          ))}
-          <input
-            type="number" min="1" max="360"
-            className="input text-[10px] py-0.5 px-1 w-12 text-center"
-            value={monthsStr}
-            onChange={e => setMonthsStr(e.target.value)}
-            onBlur={commitMonths}
-            onKeyDown={e => e.key === 'Enter' && commitMonths()}
-          />
-          <span className="text-[10px] text-stone-400">mo</span>
-        </div>
-      </div>
-
-      {/* Interest rate */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[11px] text-stone-500 w-16 shrink-0">Interest</span>
-        <input
-          type="number" min="0" max="100" step="0.25"
-          className="input text-[10px] py-0.5 px-1.5 w-16 text-right"
-          value={rateStr}
-          onChange={e => setRateStr(e.target.value)}
-        />
-        <span className="text-[10px] text-stone-400">% / yr</span>
-      </div>
-
-      {/* Result */}
-      <div className="bg-primary-50 rounded-lg px-3 py-2.5 border border-primary-100">
-        <div className="flex justify-between items-center">
-          <span className="text-[11px] text-primary-700 font-semibold">Monthly Payment</span>
-          <span className="text-sm font-bold text-primary-800">{fmt(monthly)}</span>
-        </div>
-        <div className="flex justify-between text-[10px] text-stone-400 mt-0.5">
-          <span>{months} payments · {fmt(downPayment)} down</span>
-          <span>Total {fmt(totalFinanced)}{interest > 0 ? ` +${fmt(interest)}` : ''}</span>
-        </div>
-      </div>
+      {/* Term selection table */}
+      <table className="w-full text-[11px] border-collapse">
+        <thead>
+          <tr className="text-stone-400 border-b border-stone-100">
+            <th className="py-1 w-5" />
+            <th className="text-left py-1 px-1 font-semibold">Term</th>
+            <th className="text-right py-1 px-1 font-semibold">Rate</th>
+            <th className="text-right py-1 px-1 font-semibold">Factor</th>
+            <th className="text-right py-1 px-1 font-semibold">Monthly</th>
+            <th className="text-right py-1 px-1 font-semibold">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {allPlans.map(p => {
+            const on = selected.includes(p.months)
+            return (
+              <tr
+                key={p.months}
+                className={`border-b border-stone-50 transition-opacity ${on ? '' : 'opacity-30'}`}
+              >
+                <td className="py-1.5">
+                  <input
+                    type="checkbox" checked={on}
+                    onChange={() => toggleTerm(p.months)}
+                    className="rounded cursor-pointer"
+                  />
+                </td>
+                <td className="py-1.5 px-1 text-stone-600 font-semibold">{p.label}</td>
+                <td className="py-1.5 px-1 text-right text-stone-400">{p.rate > 0 ? `${p.rate}%` : '0%'}</td>
+                <td className="py-1.5 px-1 text-right text-stone-400 font-mono text-[10px]">
+                  {p.factor != null ? p.factor.toFixed(6) : '—'}
+                </td>
+                <td className="py-1.5 px-1 text-right font-bold text-stone-800">{fmt(p.monthly)}</td>
+                <td className="py-1.5 px-1 text-right text-stone-400">{fmt(p.totalFinanced)}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

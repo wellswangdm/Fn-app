@@ -1,21 +1,31 @@
-// ─── Monthly payment threshold & helper ──────────────────────────────────────
+// ─── Monthly payment threshold & fixed plan table ─────────────────────────────
 
 export const MONTHLY_THRESHOLD = 15000
 
-// Returns array of plan rows for total > MONTHLY_THRESHOLD.
-// annualRatePct defaults to 0 (interest-free); terms in months.
-export function getMonthlyPlans(total, annualRatePct = 0, terms = [12, 24, 36, 60]) {
+export const MONTHLY_PLANS_TABLE = [
+  { months: 12, label: '1-year', rate: 0,   factor: null      },
+  { months: 24, label: '2-year', rate: 4.9, factor: 0.043827  },
+  { months: 36, label: '3-year', rate: 4.9, factor: 0.029926  },
+  { months: 48, label: '4-year', rate: 4.9, factor: 0.022984  },
+  { months: 60, label: '5-year', rate: 4.9, factor: 0.018825  },
+  { months: 72, label: '6-year', rate: 4.9, factor: 0.016059  },
+  { months: 84, label: '7-year', rate: 4.9, factor: 0.014087  },
+]
+
+// Returns plan rows using the fixed factor table.
+// selectedMonths filters to specific terms (default: all).
+export function getMonthlyPlans(total, selectedMonths = null) {
   const downPayment = Math.round(total * 0.10 * 100) / 100
   const balance     = Math.round((total - downPayment) * 100) / 100
-  const r           = (annualRatePct / 100) / 12
-  return terms.map(months => {
-    const monthly = r === 0
-      ? Math.round((balance / months) * 100) / 100
-      : Math.round(balance * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1) * 100) / 100
-    const totalFinanced = Math.round(monthly * months * 100) / 100
-    const interest      = Math.max(0, Math.round((totalFinanced - balance) * 100) / 100)
-    const termLabel     = months >= 12 ? `${months / 12}-year` : `${months}-month`
-    return { months, termLabel, downPayment, balance, monthly, totalFinanced, interest }
+  const rows = selectedMonths
+    ? MONTHLY_PLANS_TABLE.filter(p => selectedMonths.includes(p.months))
+    : MONTHLY_PLANS_TABLE
+  return rows.map(p => {
+    const monthly = p.factor == null
+      ? Math.round((balance / p.months) * 100) / 100
+      : Math.round(balance * p.factor * 100) / 100
+    const totalFinanced = Math.round(monthly * p.months * 100) / 100
+    return { ...p, downPayment, balance, monthly, totalFinanced }
   })
 }
 

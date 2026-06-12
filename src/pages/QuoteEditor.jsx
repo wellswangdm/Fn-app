@@ -285,7 +285,8 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   const [tab,            setTab]            = useState('packages')
   const [showPrint,      setShowPrint]      = useState(false)
   const [attachedImage,  setAttachedImage]  = useState(null)
-  const [casketPickerOpen, setCasketPickerOpen] = useState(false)
+  const [casketPickerOpen,  setCasketPickerOpen]  = useState(false)
+  const [paymentTerms,     setPaymentTerms]      = useState(null) // null = all selected
   const [pendingOptionals, setPendingOptionals] = useState([])
   const [priceMap,        setPriceMap]        = useState(null) // { itemId -> newPrice } when stale
   const [versions,        setVersions]        = useState([])
@@ -987,12 +988,14 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             onMoveItem={(itemId, sectionId) => dispatch({ type: 'MOVE_ITEM_SECTION', itemId, sectionId })}
             onChangeCasket={() => setCasketPickerOpen(true)}
             onPrint={() => setShowPrint(true)}
+            paymentTerms={paymentTerms}
+            onChangePaymentTerms={setPaymentTerms}
           />
         </div>
       </div>
 
       {showPrint && (
-        <PrintView home={currentHome} state={state} attachedImage={attachedImage} onClose={() => setShowPrint(false)} />
+        <PrintView home={currentHome} state={state} attachedImage={attachedImage} onClose={() => setShowPrint(false)} paymentTerms={paymentTerms} />
       )}
 
       {showCompare && state.contactId && (

@@ -44,7 +44,7 @@ function openPrintWindow() {
   win.document.close()
 }
 
-export default function PrintView({ home, state, attachedImage, onClose }) {
+export default function PrintView({ home, state, attachedImage, onClose, paymentTerms }) {
   const {
     quoteNumber, advisorName, advisorEmail, advisorPhone,
     items, sections, selectedCasket, packageName, arrangementType,
@@ -56,7 +56,6 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
 
   const total = subtotal - discountAmount + gstAmount + pstAmount
   const [showPayment,  setShowPayment]  = useState(false)
-  const [payRateStr,   setPayRateStr]   = useState('0')
   const [shareStatus,  setShareStatus]  = useState(null) // null | 'uploading' | 'done' | 'error'
   const translations = useTranslations()
   const [showChinese, setShowChinese] = useChineseMode()
@@ -125,18 +124,6 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
               <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
               Payment options
             </label>
-            {showPayment && total > MONTHLY_THRESHOLD && (
-              <div className="flex items-center gap-1.5 text-xs text-white/60">
-                <span>Interest:</span>
-                <input
-                  type="number" min="0" max="100" step="0.25"
-                  value={payRateStr}
-                  onChange={e => setPayRateStr(e.target.value)}
-                  className="w-14 text-center bg-white/10 border border-white/20 rounded text-white px-1 py-0.5"
-                />
-                <span>% / yr</span>
-              </div>
-            )}
             <button
               onClick={handleShare}
               disabled={shareStatus === 'uploading'}
@@ -262,7 +249,7 @@ export default function PrintView({ home, state, attachedImage, onClose }) {
           {/* Payment Options Table */}
           {showPayment && (
             total > MONTHLY_THRESHOLD
-              ? <PrintMonthlyPayment total={total} rate={parseFloat(payRateStr) || 0} />
+              ? <PrintMonthlyPayment total={total} paymentTerms={paymentTerms} />
               : (() => {
                   const age   = calcAge(beneficiaryBirthdate)
                   const plans = getPaymentPlans(age, total)
@@ -367,31 +354,31 @@ function TotalRow({ label, value, className = 'text-stone-500' }) {
   )
 }
 
-function PrintMonthlyPayment({ total, rate }) {
-  const plans = getMonthlyPlans(total, rate)
+function PrintMonthlyPayment({ total, paymentTerms }) {
+  const plans = getMonthlyPlans(total, paymentTerms)
   const { downPayment, balance } = plans[0]
   return (
     <div className="pb-6 pt-4 border-t border-stone-100">
       <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">Payment Options</h3>
       <p className="text-xs text-stone-500 mb-3">
-        10% down · {fmt(downPayment)} · Financed: {fmt(balance)}{rate > 0 ? ` · ${rate}% / yr` : ''}
+        10% down · {fmt(downPayment)} · Financed: {fmt(balance)}
       </p>
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-stone-200">
             <th className="text-left pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Term</th>
+            <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Rate</th>
             <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Monthly</th>
-            <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Total{rate > 0 ? ' (incl. interest)' : ''}</th>
+            <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Total</th>
           </tr>
         </thead>
         <tbody>
           {plans.map(p => (
             <tr key={p.months} className="border-b border-stone-100">
-              <td className="py-2 font-semibold text-stone-700">{p.termLabel}</td>
+              <td className="py-2 font-semibold text-stone-700">{p.label}</td>
+              <td className="py-2 text-right text-stone-500">{p.rate > 0 ? `${p.rate}%` : '0%'}</td>
               <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
-              <td className="py-2 text-right text-stone-500">
-                {fmt(p.totalFinanced)}{p.interest > 0 ? ` (+${fmt(p.interest)})` : ''}
-              </td>
+              <td className="py-2 text-right text-stone-500">{fmt(p.totalFinanced)}</td>
             </tr>
           ))}
         </tbody>
