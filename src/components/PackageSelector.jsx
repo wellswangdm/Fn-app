@@ -41,7 +41,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
     if (itemsMap[pkgId]) return
     const { data } = await supabase
       .from('package_items')
-      .select('quantity, service_items(id, name, price, category_id)')
+      .select('quantity, is_optional, service_items(id, name, price, category_id)')
       .eq('package_id', pkgId)
     setItemsMap(m => ({
       ...m,
@@ -51,6 +51,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
         price:         Number(r.service_items.price || 0),
         quantity:      r.quantity,
         categoryId:    r.service_items.category_id,
+        isOptional:    r.is_optional || false,
       })),
     }))
   }

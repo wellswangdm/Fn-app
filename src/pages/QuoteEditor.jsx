@@ -28,8 +28,7 @@ const CREMATORY_FEE = { serviceItemId: 'si000076', name: 'Crematory Fee', price:
 const STATIONERY_CATEGORY_ID = 'c1000000-0000-0000-0000-000000000006'
 const URN_ITEM_IDS = new Set(['si000213', 'si000214', 'si000215'])
 
-// Items that are opt-in within a package (excluded from auto-add, user picks them in casket picker)
-const OPTIONAL_ITEM_IDS = new Set(['si000042', 'si000088', 'si000207', 'si000208', 'si000209', 'si000213', 'si000214', 'si000215'])
+// Optional item detection is driven by package_items.is_optional (set per funeral home in the DB)
 
 const INIT_SECTIONS = [
   { id: 'sec-main',        name: 'Guaranteed Items' },
@@ -438,8 +437,8 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   }, [state.contactId, quoteId])
 
   function handlePackageSelect(id, allItems, pkgDisc, pkgName, defaultCasket) {
-    const optionals      = allItems.filter(i => OPTIONAL_ITEM_IDS.has(i.serviceItemId))
-    const regularItems   = allItems.filter(i => !OPTIONAL_ITEM_IDS.has(i.serviceItemId))
+    const optionals    = allItems.filter(i => i.isOptional)
+    const regularItems = allItems.filter(i => !i.isOptional)
     const hasCremFee     = regularItems.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
     const addCrematoryFee = state.arrangementType === 'cremation' && !hasCremFee
     dispatch({ type: 'SET_PACKAGE', id, items: regularItems, packageDiscount: pkgDisc,

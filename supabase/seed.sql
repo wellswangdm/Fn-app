@@ -388,3 +388,12 @@ insert into package_items (package_id, service_item_id) values
   ('pk000015','si000026'),('pk000015','si000012'),('pk000015','si000040'),
   ('pk000015','si000058'),('pk000015','si000076'),('pk000015','si000201'),
   ('pk000015','si000215');
+
+-- Mark optional add-on items within Victory Memorial packages
+update package_items set is_optional = true
+where service_item_id in (
+  'si000042',                          -- Limousine
+  'si000088',                          -- Reception and Hostess
+  'si000207', 'si000208', 'si000209',  -- Catered Reception III / II / I
+  'si000213', 'si000214', 'si000215'   -- Memorial Urn Selection (tiers 1–3)
+);

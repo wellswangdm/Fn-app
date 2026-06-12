@@ -213,3 +213,17 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk002018', 'si002104', 1), -- Cremation Plan Support Options (Select 2)           590
   ('pk002018', 'si002100', 1), -- Catered Receptions III                            1,695
   ('pk002018', 'si002029', 1); -- Memory Portrait                                     295
+
+-- ─── 5. Mark optional add-on items within Forest Lawn PPL packages ───────────
+-- These are shown as opt-in checkboxes in the casket picker.
+
+update package_items set is_optional = true
+where service_item_id in (
+  -- Stationery / memorial collections (customer picks style)
+  'si002078', 'si002079', 'si002080',
+  -- Flowers — burial and cremation (customer picks tier)
+  'si002093', 'si002094', 'si002095',
+  'si002096', 'si002097',
+  -- Catered Receptions (customer picks tier)
+  'si002098', 'si002099', 'si002100'
+);

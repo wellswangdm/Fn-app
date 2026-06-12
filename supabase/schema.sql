@@ -77,7 +77,8 @@ create table if not exists package_items (
   id              uuid primary key default gen_random_uuid(),
   package_id      text references packages    on delete cascade,
   service_item_id text references service_items,
-  quantity        int  default 1
+  quantity        int  default 1,
+  is_optional     boolean default false
 );
 
 -- Quotes
