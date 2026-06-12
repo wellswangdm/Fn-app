@@ -213,14 +213,14 @@ insert into package_items (package_id, service_item_id, quantity) values
 -- Final customer price = total_price - package_discount
 
 insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_discount, default_casket_id, sort_order) values
-  ('pk001010', '3606', 'Dignity Memorial Heritage Funeral Service',  'package', 19229.00,  540, 'si001117', 1),
-  ('pk001011', '3606', 'Dignity Memorial Honour Funeral Service',    'package', 16329.00,  460, 'si001118', 2),
-  ('pk001012', '3606', 'Dignity Memorial Tribute Funeral Service',   'package', 14729.00,  435, 'si001119', 3),
-  ('pk001013', '3606', 'Dignity Jade Burial Plan',                   'package', 18239.00,  505, 'si001117', 4),
-  ('pk001014', '3606', 'Dignity Memorial Heritage Cremation Service','package', 16424.00,  465, 'si001120', 5),
-  ('pk001015', '3606', 'Dignity Memorial Honour Cremation Service',  'package', 12510.00,  360, 'si001121', 6),
-  ('pk001016', '3606', 'Dignity Memorial Tribute Cremation Service', 'package',  7640.00,   50, 'si001121', 7),
-  ('pk001017', '3606', 'Dignity Jade Cremation Plan',                'package', 14680.00,  405, 'si001122', 8);
+  ('pk001010', '3606', 'Dignity Memorial Heritage Funeral Service',  'package', 19229.00,  540, NULL, 1),
+  ('pk001011', '3606', 'Dignity Memorial Honour Funeral Service',    'package', 16329.00,  460, NULL, 2),
+  ('pk001012', '3606', 'Dignity Memorial Tribute Funeral Service',   'package', 14729.00,  435, NULL, 3),
+  ('pk001013', '3606', 'Dignity Jade Burial Plan',                   'package', 18239.00,  505, NULL, 4),
+  ('pk001014', '3606', 'Dignity Memorial Heritage Cremation Service','package', 16424.00,  465, NULL, 5),
+  ('pk001015', '3606', 'Dignity Memorial Honour Cremation Service',  'package', 12510.00,  360, NULL, 6),
+  ('pk001016', '3606', 'Dignity Memorial Tribute Cremation Service', 'package',  7640.00,   50, NULL, 7),
+  ('pk001017', '3606', 'Dignity Jade Cremation Plan',                'package', 14680.00,  405, NULL, 8);
 
 -- Heritage Funeral Service — $19,229 → $18,689 with savings
 insert into package_items (package_id, service_item_id, quantity) values
