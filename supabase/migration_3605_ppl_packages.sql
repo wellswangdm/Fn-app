@@ -219,11 +219,8 @@ insert into package_items (package_id, service_item_id, quantity) values
 
 update package_items set is_optional = true
 where service_item_id in (
-  -- Stationery / memorial collections (customer picks style)
-  'si002078', 'si002079', 'si002080',
-  -- Flowers — burial and cremation (customer picks tier)
-  'si002093', 'si002094', 'si002095',
-  'si002096', 'si002097',
-  -- Catered Receptions (customer picks tier)
-  'si002098', 'si002099', 'si002100'
+  'si002021',                            -- Limousine
+  'si002092',                            -- Reception Room
+  'si002019',                            -- Flower Vehicle
+  'si002098', 'si002099', 'si002100'     -- Catered Receptions I / II / III
 );
