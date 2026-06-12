@@ -207,6 +207,11 @@ insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_
   ('pk001009', '3606', 'Witness Cremation', 'alacarte', 6500.00, 0, NULL, 9)
 on conflict (id) do nothing;
 
+delete from package_items where package_id in (
+  'pk001009','pk001010','pk001011','pk001012','pk001013',
+  'pk001014','pk001015','pk001016','pk001017'
+);
+
 insert into package_items (package_id, service_item_id, quantity) values
   ('pk001009', 'si001084', 1),  -- Professional Service Fees for Cremation Witness   3440
   ('pk001009', 'si001010', 1),  -- Registration and Documentation                     495
@@ -215,7 +220,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001009', 'si001022', 1),  -- Transfer of Remains from Place of Death            545
   ('pk001009', 'si001045', 1),  -- Estate Fraud Protection                            135
   ('pk001009', 'si001036', 1)   -- Crematory Fee                                      995
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- ─── 6. PPL packages (pkg_type = 'package') ──────────────────────────────────
 -- total_price = sum of all components; package_discount = savings amount
@@ -252,7 +257,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001010', 'si001117', 1),  -- Recommended Casket — Heritage/Jade Tier            6499
   ('pk001010', 'si001098', 1),  -- Catered Receptions III                             2495
   ('pk001010', 'si001100', 1)   -- Esteemed Collection                                 795
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Honour Funeral Service — $16,329 → $15,869 with savings
 insert into package_items (package_id, service_item_id, quantity) values
@@ -273,7 +278,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001011', 'si001118', 1),  -- Recommended Casket — Honour Tier                   4699
   ('pk001011', 'si001097', 1),  -- Catered Receptions II                              1795
   ('pk001011', 'si001099', 1)   -- Commemorative Collection                            495
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Tribute Funeral Service — $14,729 → $14,294 with savings
 insert into package_items (package_id, service_item_id, quantity) values
@@ -294,7 +299,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001012', 'si001119', 1),  -- Recommended Casket — Tribute Tier                  4099
   ('pk001012', 'si001096', 1),  -- Catered Receptions I                                995
   ('pk001012', 'si001101', 1)   -- Remembrance Collection                              395
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Jade Burial Plan — $18,239 → $17,734 with savings (2 family support options, no Everlasting Memorial)
 insert into package_items (package_id, service_item_id, quantity) values
@@ -314,7 +319,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001013', 'si001030', 1),  -- Family Support Option 2                             295
   ('pk001013', 'si001117', 1),  -- Recommended Casket — Heritage/Jade Tier            6499
   ('pk001013', 'si001098', 1)   -- Catered Receptions III                             2495
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Heritage Cremation Service — $16,424 → $15,959 with savings
 insert into package_items (package_id, service_item_id, quantity) values
@@ -337,7 +342,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001014', 'si001120', 1),  -- Batesville Brockton Oak Ceremonial                 1599
   ('pk001014', 'si001098', 1),  -- Catered Receptions III                             2495
   ('pk001014', 'si001100', 1)   -- Esteemed Collection                                 795
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Honour Cremation Service — $12,510 → $12,150 with savings
 insert into package_items (package_id, service_item_id, quantity) values
@@ -357,7 +362,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001015', 'si001121', 1),  -- Vancouver Casket Burlington                         850
   ('pk001015', 'si001097', 1),  -- Catered Receptions II                              1795
   ('pk001015', 'si001099', 1)   -- Commemorative Collection                            495
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Tribute Cremation Service — $7,640 → $7,590 with savings
 insert into package_items (package_id, service_item_id, quantity) values
@@ -371,7 +376,7 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001016', 'si001029', 1),  -- Family Support Option (Select 1)                    295
   ('pk001016', 'si001115', 1),  -- Memorial Urn Selection — Tribute Tier               595
   ('pk001016', 'si001121', 1)   -- Vancouver Casket Burlington                         850
-on conflict (package_id, service_item_id) do nothing;
+
 
 -- Jade Cremation Plan — $14,680 → $14,275 with savings (2 family support options)
 insert into package_items (package_id, service_item_id, quantity) values
@@ -393,4 +398,4 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001017', 'si001116', 1),  -- Memorial Urn Selection — Jade Tier                  895
   ('pk001017', 'si001122', 1),  -- Vancouver Casket McConnell                         1050
   ('pk001017', 'si001098', 1)   -- Catered Receptions III                             2495
-on conflict (package_id, service_item_id) do nothing;
+
