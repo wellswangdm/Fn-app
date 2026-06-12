@@ -113,6 +113,19 @@ insert into casket_catalog (id, name, description, manufacturer, item_code, cate
   ('csk070', 'Sierra',                               '18 gauge steel casket with shaded exterior and black accents; champagne sovereign velvet interior.',                      'Batesville',       'CMS8BASZBQ',  'metal',    47),
   ('csk071', 'Burlington',                           'Hollow cored poplar container with natural stain finish and white satin lining with pillow.',                             'Vancouver Casket', 'CCVBUCC',     'cremation', 52);
 
+-- ─── Mount Pleasant (3606) only catalog entries ──────────────────────────────
+
+insert into casket_catalog (id, name, description, manufacturer, item_code, category, sort_order) values
+  ('csk073', 'Folksau (Full Couch)',       'Solid oak full couch casket with honey oak high gloss finish and off-white velvet interior and brushed copper hardware.',    'Vancouver Casket', 'CWOKVFAVGU', 'wood',       1),
+  ('csk074', 'Sacrament Maple',            'Solid hardwood casket with a dark cherry, hand-rubbed, high gloss exterior and champagne velvet interior.',                   'Batesville',       'CWMLBAGIBQ', 'wood',       2),
+  ('csk075', 'Lotus',                      'Solid ailanthus casket with a dark, polished, cherry stained exterior and pearl velvet interior.',                             'Vancouver Casket', 'CWPRVFBNEJ', 'wood',       3),
+  ('csk076', 'Westcott',                   'Hardwood casket with a medium finished exterior and rosetan crepe interior.',                                                  'Batesville',       'CWAFBEA7KL', 'wood',       4),
+  ('csk077', 'Graytone',                   '20-gauge steel casket with a dark gray painted exterior and silver crepe interior.',                                           'Batesville',       'CMS0BDTCFW', 'metal',      5),
+  ('csk078', 'Dignity Peach',              'Fiberboard casket with a cloth-covered exterior and white barry interior.',                                                    'Batesville',       'CCCLBBZRGX', 'container',  6),
+  ('csk079', 'Grey Malet',                 'Fiberboard casket with handles and a grey cloth-covered exterior and white barry interior.',                                   'Batesville',       'CCCLBCKOGX', 'container',  7),
+  ('csk080', 'Hadley Cremation Container', 'Wood composite with a dark finish and an ivory crepe interior.',                                                               'Batesville',       'CCBHCRC',    'cremation',  8),
+  ('csk081', 'Novato Cremation Container', 'Wood composite container with a printed woodgrain finish exterior and an ivory crepe interior.',                               'Batesville',       'CCBNVTO',    'container',  9);
+
 -- ─── Victory Memorial (3745) casket pricing ───────────────────────────────────
 -- Effective Feb 20, 2026
 
