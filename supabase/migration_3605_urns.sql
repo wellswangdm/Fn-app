@@ -1,346 +1,53 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- SEED — Forest Lawn Funeral Home (ID: 3605)
--- 3789 Royal Oak Ave, Burnaby, BC V5G 3M1 | 604-299-7720
--- GPL effective April 14, 2026
+-- Forest Lawn (3605) — Cremation Remembrance Price List (effective April 14, 2026)
+-- Adds categories: Keepsakes (10), Jewelry (11)
+-- Inserts 113 urns (si002105–si002217), 42 keepsakes (si002218–si002259),
+--         60 jewelry items (si002260–si002319)
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- ─── Funeral Home ─────────────────────────────────────────────────────────────
+-- ── New categories ────────────────────────────────────────────────────────────
 
-insert into funeral_homes (id, name, address, phone, website) values
-  ('3605', 'Forest Lawn Funeral Home', '3789 Royal Oak Ave, Burnaby, BC V5G 3M1', '604-299-7720', 'www.forestlawn-burnaby.com')
+insert into service_categories (id, name, sort_order) values
+  ('c1000000-0000-0000-0000-000000000010', 'Keepsakes', 10),
+  ('c1000000-0000-0000-0000-000000000011', 'Jewelry',   11)
   on conflict (id) do nothing;
 
--- ─── Service Items ────────────────────────────────────────────────────────────
--- IDs start at si002001 to avoid collision with 3606 (si001xxx)
-
-insert into service_items (id, funeral_home_id, category_id, name, description, price, price_min, price_max, is_cash_advance, sort_order) values
-
-  -- ── Professional Staff & Services ──────────────────────────────────────────
-  ('si002001', '3605', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Gathering Celebrations',               NULL,  7195.00, NULL, NULL, false,  1),
-  ('si002002', '3605', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Graveside Service',                    NULL,  4695.00, NULL, NULL, false,  2),
-  ('si002003', '3605', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Full Service',                         NULL,  4695.00, NULL, NULL, false,  3),
-  ('si002004', '3605', 'c1000000-0000-0000-0000-000000000001', 'Basic Professional Service Fee when Forwarding Remains',              NULL,  4695.00, NULL, NULL, false,  4),
-  ('si002005', '3605', 'c1000000-0000-0000-0000-000000000001', 'Basic Professional Service Fees when Receiving Remains',             NULL,  4695.00, NULL, NULL, false,  5),
-  ('si002006', '3605', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Memorial Service',                    NULL,  4545.00, NULL, NULL, false,  6),
-  ('si002007', '3605', 'c1000000-0000-0000-0000-000000000001', 'Professional Service Fees of Funeral Director and Staff for Cremation Witness', NULL, 4545.00, NULL, NULL, false,  7),
-  ('si002008', '3605', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Urn Committal',                       NULL,  3840.00, NULL, NULL, false,  8),
-  ('si002009', '3605', 'c1000000-0000-0000-0000-000000000001', 'Supervision of Disinterment',                                        NULL,  3595.00, NULL, NULL, false,  9),
-  ('si002010', '3605', 'c1000000-0000-0000-0000-000000000001', 'Basic Service Fees for No Service Option',                           NULL,  2225.00, NULL, NULL, false, 10),
-  ('si002011', '3605', 'c1000000-0000-0000-0000-000000000001', 'Limited Funeral Director and Staff Services',                        NULL,  2225.00, NULL, NULL, false, 11),
-  ('si002012', '3605', 'c1000000-0000-0000-0000-000000000001', 'Registration and Documentation',                                     'Completion and filing of all documents including death registration, burial or cremation permit, coroner''s certificate.', 495.00, NULL, NULL, false, 12),
-  ('si002013', '3605', 'c1000000-0000-0000-0000-000000000001', 'Embalming',                                                          'Sanitation, restoration and temporary preservation; includes autopsy embalming and restorative practices.', 625.00, NULL, NULL, false, 13),
-  ('si002014', '3605', 'c1000000-0000-0000-0000-000000000001', 'Other Care and Preparation',                                         'Dignified and respectful preparation including dressing, handling of communicable illness, trauma or autopsy cases; removal of pacemaker or radioactive implant.', 445.00, NULL, NULL, false, 14),
-
-  -- ── Facilities and Supervision ─────────────────────────────────────────────
-  ('si002015', '3605', 'c1000000-0000-0000-0000-000000000002', 'Use of Facilities for Embalming and Preparation',                   'Facilities used to prepare, embalm and shelter the body.',  445.00, NULL, NULL, false, 1),
-  ('si002016', '3605', 'c1000000-0000-0000-0000-000000000002', 'Sheltering of Remains',                                             NULL,  445.00, NULL, NULL, false, 2),
-
-  -- ── Transportation ─────────────────────────────────────────────────────────
-  ('si002017', '3605', 'c1000000-0000-0000-0000-000000000003', 'Transfer to or from Airport',                                       'Within 50 km radius. Additional distance charged at $2.00/km.',  545.00, NULL, NULL, false, 1),
-  ('si002018', '3605', 'c1000000-0000-0000-0000-000000000003', 'Transfer of Remains from Place of Death to Funeral Home',           'Within 50 km radius. Additional distance charged at $2.00/km.',  545.00, NULL, NULL, false, 2),
-  ('si002019', '3605', 'c1000000-0000-0000-0000-000000000003', 'Flower Vehicle',                                                    'Within 50 km radius. Additional distance charged at $2.00/km.',  295.00, NULL, NULL, false, 3),
-  ('si002020', '3605', 'c1000000-0000-0000-0000-000000000003', 'Funeral Vehicle (Hearse)',                                          'Within 50 km radius. Additional distance charged at $2.00/km.',  395.00, NULL, NULL, false, 4),
-  ('si002021', '3605', 'c1000000-0000-0000-0000-000000000003', 'Limousine',                                                         'Within 50 km radius. Additional distance charged at $2.00/km.',  395.00, NULL, NULL, false, 5),
-  ('si002022', '3605', 'c1000000-0000-0000-0000-000000000003', 'Service Vehicle',                                                   'Within 50 km radius. Additional distance charged at $2.00/km.',  395.00, NULL, NULL, false, 6),
-  ('si002023', '3605', 'c1000000-0000-0000-0000-000000000003', 'Additional Hours – Transportation',                                 'After 4 hours, limited to 8 hours total usage.',                 150.00, NULL, NULL, false, 7),
-
-  -- ── Family Support Options ─────────────────────────────────────────────────
-  ('si002024', '3605', 'c1000000-0000-0000-0000-000000000004', 'Retractable Table Banner',                                          'Showcases up to 4 pictures of your loved one with personalized design; option to generate a QR code.', 295.00, NULL, NULL, false, 1),
-  ('si002025', '3605', 'c1000000-0000-0000-0000-000000000004', 'Timeless Touch Fingerprint Selection',                              NULL,  295.00, NULL, NULL, false, 2),
-  ('si002026', '3605', 'c1000000-0000-0000-0000-000000000004', 'Medallion Bundle',                                                  NULL,  295.00, NULL, NULL, false, 3),
-  ('si002027', '3605', 'c1000000-0000-0000-0000-000000000004', 'Funeral Webcasting',                                                'Broadcast live online; recording accessible to friends and family for 90 days following the service.', 295.00, NULL, NULL, false, 4),
-  ('si002028', '3605', 'c1000000-0000-0000-0000-000000000004', 'Legal Service Plan',                                                'Unlimited 24/7 telephone consultations with estate lawyers; 12-month membership following the death.', 295.00, NULL, NULL, false, 5),
-  ('si002029', '3605', 'c1000000-0000-0000-0000-000000000004', 'Memory Portrait',                                                   'Favourite photograph reproduced on canvas in oil painting style; three frame choices — Elegance, Contemporary or Classic.', 295.00, NULL, NULL, false, 6),
-  ('si002030', '3605', 'c1000000-0000-0000-0000-000000000004', 'Treasure Kits',                                                     'Choice of blanket or collection of joss paper and other paper products to help fulfill the tradition of paying respect and homage to ancestors.', 295.00, NULL, NULL, false, 7),
-  ('si002031', '3605', 'c1000000-0000-0000-0000-000000000004', 'Chinese Funeral Custom Items',                                      NULL,  590.00, NULL, NULL, false, 8),
-  ('si002032', '3605', 'c1000000-0000-0000-0000-000000000004', 'Family Estate Manager',                                             'Step-by-step tool to simplify estate settlement; immediate access to legal professionals, notify interested parties, maximize estate value.', 295.00, NULL, NULL, false, 9),
-
-  -- ── Miscellaneous Services & Merchandise ───────────────────────────────────
-  ('si002033', '3605', 'c1000000-0000-0000-0000-000000000005', 'Estate Fraud Protection',                                           'Fraud specialists notify credit reporting agencies to help protect your loved one''s estate from security breaches.', 135.00, NULL, NULL, false,  1),
-  ('si002034', '3605', 'c1000000-0000-0000-0000-000000000005', 'Crematory Fee',                                                     NULL,  995.00, NULL, NULL, false,  2),
-  ('si002035', '3605', 'c1000000-0000-0000-0000-000000000005', 'Cremation Expediting Fee',                                          NULL,  695.00, NULL, NULL, false,  3),
-  ('si002036', '3605', 'c1000000-0000-0000-0000-000000000005', 'Cremation Witnessing Fee',                                          NULL,  695.00, NULL, NULL, false,  4),
-  ('si002037', '3605', 'c1000000-0000-0000-0000-000000000005', 'Witness of Ashes Transfer',                                         'Fee to witness transfer of ashes from a container or urn to another container or urn.', 695.00, NULL, NULL, false,  5),
-  ('si002038', '3605', 'c1000000-0000-0000-0000-000000000005', 'Scattering of Ashes at Sea',                                        NULL,  500.00, NULL, NULL, false,  6),
-  ('si002039', '3605', 'c1000000-0000-0000-0000-000000000005', 'Handling and Transfer of Ashes',                                    NULL,  195.00, NULL, NULL, false,  7),
-  ('si002040', '3605', 'c1000000-0000-0000-0000-000000000005', 'Shipping of Ashes Domestic',                                        NULL,  195.00, NULL, NULL, false,  8),
-  ('si002041', '3605', 'c1000000-0000-0000-0000-000000000005', 'Shipping of Ashes International',                                   'Obtaining necessary paperwork and preparing ashes for shipment. Courier, postal and air charges are additional.', 395.00, NULL, NULL, false,  9),
-  ('si002042', '3605', 'c1000000-0000-0000-0000-000000000005', 'Private Family Moment at our Facility',                            'Private quiet time with the deceased for up to one hour with up to ten family members.', 495.00, NULL, NULL, false, 10),
-  ('si002043', '3605', 'c1000000-0000-0000-0000-000000000005', 'Staff Services for Urn Committal',                                  'Equipment and staff services for urn committal; includes accompaniment of remains to cemetery, supervision and staff assistance.', 395.00, NULL, NULL, false, 11),
-  ('si002044', '3605', 'c1000000-0000-0000-0000-000000000005', 'Basic Venue',                                                       'Basic venue at our location for service or gathering.',  395.00, NULL, NULL, false, 12),
-  ('si002045', '3605', 'c1000000-0000-0000-0000-000000000005', 'Standard Venue',                                                    'Flexible space in our location for service or gathering.',  495.00, NULL, NULL, false, 13),
-  ('si002046', '3605', 'c1000000-0000-0000-0000-000000000005', 'Premium Venue',                                                     'Larger flexible space in our location for service or gathering.',  595.00, NULL, NULL, false, 14),
-  ('si002047', '3605', 'c1000000-0000-0000-0000-000000000005', 'Exclusive Venue',                                                   'Exclusive use of all ceremony and visitation venues in the location for the duration of the visitation and ceremony.', 7995.00, NULL, NULL, false, 15),
-  ('si002048', '3605', 'c1000000-0000-0000-0000-000000000005', 'Everlasting Memorial',                                              'Choose a theme, share photos and videos; our team creates polished, professional mementos to cherish forever.', 490.00, NULL, NULL, false, 16),
-  ('si002049', '3605', 'c1000000-0000-0000-0000-000000000005', 'Dignity Celebrant',                                                 'Certified officiant for the service.',  395.00, NULL, NULL, false, 17),
-  ('si002050', '3605', 'c1000000-0000-0000-0000-000000000005', 'Sterling Silver Oval Pendant',                                      '.925 sterling silver, oval, pendant with thumbprint on a sterling silver curb style chain with spring ring clasp.', 295.00, NULL, NULL, false, 18),
-  ('si002051', '3605', 'c1000000-0000-0000-0000-000000000005', 'A Life Remembered Book',                                            NULL,   95.00, NULL, NULL, false, 19),
-  ('si002052', '3605', 'c1000000-0000-0000-0000-000000000005', 'Cremation Jewellery Bundle',                                        'Modern and contemporary designs; includes a matching pendant and chain, charm and earrings.', 295.00, NULL, NULL, false, 20),
-  ('si002053', '3605', 'c1000000-0000-0000-0000-000000000005', 'Sheltering of Remains Charge Per Day',                             NULL,   25.00, NULL, NULL, false, 21),
-  ('si002054', '3605', 'c1000000-0000-0000-0000-000000000005', 'Additional Charge – Use of Facilities – Holidays',                 'Additional charge for use of facilities and staff on holidays.', 1000.00, NULL, NULL, false, 22),
-  ('si002055', '3605', 'c1000000-0000-0000-0000-000000000005', 'Audio Visual Equipment Rental',                                    'AV equipment rental.',  195.00, NULL, NULL, false, 23),
-  ('si002056', '3605', 'c1000000-0000-0000-0000-000000000005', 'Evening Visitation for 2 Hours',                                   NULL,  595.00, NULL, NULL, false, 24),
-  ('si002057', '3605', 'c1000000-0000-0000-0000-000000000005', 'Reception and Hostess',                                            NULL,  495.00, NULL, NULL, false, 25),
-  ('si002058', '3605', 'c1000000-0000-0000-0000-000000000005', 'Retractable Floor Banner',                                         NULL,  395.00, NULL, NULL, false, 26),
-  ('si002059', '3605', 'c1000000-0000-0000-0000-000000000005', 'Supervision – Evening Charge',                                     NULL,  350.00, NULL, NULL, false, 27),
-  ('si002060', '3605', 'c1000000-0000-0000-0000-000000000005', 'Supervision for Visitation – Additional Days',                    NULL,  350.00, NULL, NULL, false, 28),
-  ('si002061', '3605', 'c1000000-0000-0000-0000-000000000005', 'Supervision of Off-Site Venue',                                   NULL,  595.00, NULL, NULL, false, 29),
-  ('si002062', '3605', 'c1000000-0000-0000-0000-000000000005', 'Memory Register Book',                                             'The Ivory Register serves as a classic guest register for families; printed on site.',  75.00, NULL, NULL, false, 30),
-  ('si002063', '3605', 'c1000000-0000-0000-0000-000000000005', 'Keepsake Box',                                                     'Modern keepsake box with magnetic closure; useful way to preserve precious memories and keepsakes. (11.5" x 10" x 3.75")',  25.00, NULL, NULL, false, 31),
-  ('si002064', '3605', 'c1000000-0000-0000-0000-000000000005', 'Medium Memory Book',                                               'Elegant ivory or charcoal keepsake book adorned with a tone-on-tone pattern; documents guest lists and details.',  75.00, NULL, NULL, false, 32),
-  ('si002065', '3605', 'c1000000-0000-0000-0000-000000000005', 'Small Memory Folders or Memory Cards (Per 100)',                  'Include 1 photo, name, dates, service details, obituary, and choice of poem or verse.', 220.00, NULL, NULL, false, 33),
-  ('si002066', '3605', 'c1000000-0000-0000-0000-000000000005', 'Medium Memory Cards or Memory Folders (Per 100)',                 'Include up to 4 photos, name, dates, service details, obituary, and choice of poem or verse.', 320.00, NULL, NULL, false, 34),
-  ('si002067', '3605', 'c1000000-0000-0000-0000-000000000005', 'Large Memory Booklets or Memory Cards (Per 100)',                 '8-page booklets with up to 15 photos, name, dates, service details, obituary and choice of poem or verse; or large memory cards with soft-touch finish.', 620.00, NULL, NULL, false, 35),
-  ('si002068', '3605', 'c1000000-0000-0000-0000-000000000005', 'Our Collection Folders or Prayer Cards (Per 100)',                'Choose from a selection of themes available on site.', 195.00, NULL, NULL, false, 36),
-  ('si002069', '3605', 'c1000000-0000-0000-0000-000000000005', 'Memorial Cards',                                                   NULL,  225.00, NULL, NULL, false, 37),
-  ('si002070', '3605', 'c1000000-0000-0000-0000-000000000005', 'Casket Medallions',                                                'Memorial keepsake that reflects the life of the individual; displayed in specific caskets.', NULL, 50.00, 295.00, false, 38),
-  ('si002071', '3605', 'c1000000-0000-0000-0000-000000000005', 'Single Small Medallion Case',                                      NULL,   65.00, NULL, NULL, false, 39),
-  ('si002072', '3605', 'c1000000-0000-0000-0000-000000000005', 'Triple Small Medallion Case',                                      NULL,   95.00, NULL, NULL, false, 40),
-  ('si002073', '3605', 'c1000000-0000-0000-0000-000000000005', 'Premier Design Upgrade (Per 100)',                                 'Upgrade standard program with additional design elements to reflect special interests or include different content.', 130.00, NULL, NULL, false, 41),
-  ('si002074', '3605', 'c1000000-0000-0000-0000-000000000005', 'Soft Touch Bookmarks (50)',                                        NULL,  200.00, NULL, NULL, false, 42),
-  ('si002075', '3605', 'c1000000-0000-0000-0000-000000000005', 'Our Collection Thank You Cards (Per 50)',                         NULL,  100.00, NULL, NULL, false, 43),
-  ('si002076', '3605', 'c1000000-0000-0000-0000-000000000005', 'Personalized Thank You Cards (Per 25)',                           NULL,   75.00, NULL, NULL, false, 44),
-  ('si002077', '3605', 'c1000000-0000-0000-0000-000000000005', 'Personalized Service Folders',                                    NULL,    NULL, NULL, NULL, false, 45),
-
-  -- ── Stationery ─────────────────────────────────────────────────────────────
-  ('si002078', '3605', 'c1000000-0000-0000-0000-000000000006', 'Commemorative Collection',                                         'Includes 1 Medium Memory Book, choice of 100 Medium Memory Folders or Memory Cards, choice of 25 Tribute Thank You Cards and 1 Keepsake Box.', 495.00, NULL, NULL, false, 1),
-  ('si002079', '3605', 'c1000000-0000-0000-0000-000000000006', 'Esteemed Collection',                                              'Includes 1 Medium Memory Book, choice of 100 Large Memory Booklets or Memory Cards, choice of 25 Tribute Thank You Cards and 1 Keepsake Box.', 795.00, NULL, NULL, false, 2),
-  ('si002080', '3605', 'c1000000-0000-0000-0000-000000000006', 'Remembrance Collection',                                          'Includes 1 Medium Memory Book, choice of 100 Small Memory Folders or Memory Cards, choice of 25 Small Tribute Thank You Cards and 1 Keepsake Box.', 395.00, NULL, NULL, false, 3),
-  ('si002081', '3605', 'c1000000-0000-0000-0000-000000000006', 'Our Collection',                                                   'Includes 1 Memory Register Book, choice of 100 Our Collection Folders or Prayer Cards, choice of 50 Our Collection Thank You Cards and 1 Keepsake Box.', 395.00, NULL, NULL, false, 4),
-
-  -- ── Cash Advances ──────────────────────────────────────────────────────────
-  ('si002082', '3605', 'c1000000-0000-0000-0000-000000000007', 'Hostess Fee',                                                      NULL,    NULL, NULL, NULL, true,  1),
-  ('si002083', '3605', 'c1000000-0000-0000-0000-000000000007', 'Death Certificate',                                                NULL,    NULL, NULL, NULL, true,  2),
-  ('si002084', '3605', 'c1000000-0000-0000-0000-000000000007', 'Reception Facility Rental',                                        NULL,    NULL, NULL, NULL, true,  3),
-  ('si002085', '3605', 'c1000000-0000-0000-0000-000000000007', 'Consumer Protection BC Fee',                                      NULL,   48.00, NULL, NULL, true,  4),
-  ('si002086', '3605', 'c1000000-0000-0000-0000-000000000007', 'Celebrant – Officiant for Service',                               NULL,    NULL, NULL, NULL, true,  5),
-  ('si002087', '3605', 'c1000000-0000-0000-0000-000000000007', 'Clergy Honorarium',                                               NULL,    NULL, NULL, NULL, true,  6),
-  ('si002088', '3605', 'c1000000-0000-0000-0000-000000000007', 'Newspaper Notice',                                                NULL,    NULL, NULL, NULL, true,  7),
-  ('si002089', '3605', 'c1000000-0000-0000-0000-000000000007', 'Organist',                                                        NULL,    NULL, NULL, NULL, true,  8),
-  ('si002090', '3605', 'c1000000-0000-0000-0000-000000000007', 'Public Transportation',                                           NULL,    NULL, NULL, NULL, true,  9),
-  ('si002091', '3605', 'c1000000-0000-0000-0000-000000000007', 'Soloist',                                                         NULL,    NULL, NULL, NULL, true, 10);
-
--- ─── Packages (Service Offerings from GPL) ────────────────────────────────────
--- IDs start at pk002001 to avoid collision with 3606 (pk001xxx)
--- Totals verified against GPL page 4-6, 13
-
-insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_discount, default_casket_id, sort_order) values
-  ('pk002001', '3605', 'Full Service',                           'alacarte',  9065.00, 0, NULL,  1),
-  ('pk002002', '3605', 'Witness Cremation',                      'alacarte',  7605.00, 0, NULL,  2),
-  ('pk002003', '3605', 'Service of Remembrance',                 'alacarte',  8495.00, 0, NULL,  3),
-  ('pk002004', '3605', 'Graveside Service',                      'alacarte',  8075.00, 0, NULL,  4),
-  ('pk002005', '3605', 'Urn Committal Option',                   'alacarte',  6900.00, 0, NULL,  5),
-  ('pk002006', '3605', 'No Service Option',                      'alacarte',  5285.00, 0, NULL,  6),
-  ('pk002007', '3605', 'Dignity Creative Event',                 'alacarte', 10550.00, 0, NULL,  7),
-  ('pk002008', '3605', 'Disinterment',                           'alacarte',  4880.00, 0, NULL,  8),
-  ('pk002009', '3605', 'Forwarding of Remains',                  'alacarte',  8920.00, 0, NULL,  9),
-  ('pk002010', '3605', 'Receiving of Remains',                   'alacarte',  7255.00, 0, NULL, 10);
-
--- ─── Package Items ────────────────────────────────────────────────────────────
-
-insert into package_items (package_id, service_item_id, quantity) values
-
-  -- Full Service ($9,065)
-  ('pk002001', 'si002003', 1), -- Professional Services Fees for Full Service              4,695
-  ('pk002001', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002001', 'si002013', 1), -- Embalming                                                  625
-  ('pk002001', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002001', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002001', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002001', 'si002019', 1), -- Flower Vehicle                                             295
-  ('pk002001', 'si002020', 1), -- Funeral Vehicle (Hearse)                                   395
-  ('pk002001', 'si002021', 1), -- Limousine                                                  395
-  ('pk002001', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002001', 'si002046', 1), -- Premium Venue (Larger flexible space)                      595
-
-  -- Witness Cremation ($7,605)
-  ('pk002002', 'si002007', 1), -- Professional Service Fees Cremation Witness              4,545
-  ('pk002002', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002002', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002002', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002002', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002002', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002002', 'si002034', 1), -- Crematory Fee                                              995
-
-  -- Service of Remembrance ($8,495)
-  ('pk002003', 'si002006', 1), -- Professional Services Fees for Memorial Service          4,545
-  ('pk002003', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002003', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002003', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002003', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002003', 'si002019', 1), -- Flower Vehicle                                             295
-  ('pk002003', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002003', 'si002034', 1), -- Crematory Fee                                              995
-  ('pk002003', 'si002046', 1), -- Premium Venue (Larger flexible space)                      595
-
-  -- Graveside Service ($8,075)
-  -- Cemetery Fees, Clergy Honorarium, Newspaper Notice are "As Selected" — add as cash advances separately
-  ('pk002004', 'si002002', 1), -- Professional Services Fees for Graveside Service         4,695
-  ('pk002004', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002004', 'si002013', 1), -- Embalming                                                  625
-  ('pk002004', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002004', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002004', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002004', 'si002019', 1), -- Flower Vehicle                                             295
-  ('pk002004', 'si002020', 1), -- Funeral Vehicle (Hearse)                                   395
-  ('pk002004', 'si002033', 1), -- Estate Fraud Protection                                    135
-
-  -- Urn Committal Option ($6,900)
-  ('pk002005', 'si002008', 1), -- Professional Services Fees for Urn Committal             3,840
-  ('pk002005', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002005', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002005', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002005', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002005', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002005', 'si002034', 1), -- Crematory Fee                                              995
-
-  -- No Service Option ($5,285)
-  ('pk002006', 'si002010', 1), -- Basic Service Fees for No Service Option                 2,225
-  ('pk002006', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002006', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002006', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002006', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002006', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002006', 'si002034', 1), -- Crematory Fee                                              995
-
-  -- Dignity Creative Event ($10,550)
-  -- Reception Facility Rental is "As Selected" (cash advance) — not included in base total
-  ('pk002007', 'si002001', 1), -- Professional Services Fees for Gathering Celebrations    7,195
-  ('pk002007', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002007', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002007', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002007', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002007', 'si002019', 1), -- Flower Vehicle                                             295
-  ('pk002007', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002007', 'si002034', 1), -- Crematory Fee                                              995
-
-  -- Disinterment ($4,880)
-  ('pk002008', 'si002009', 1), -- Supervision of Disinterment                              3,595
-  ('pk002008', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002008', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002008', 'si002022', 1), -- Service Vehicle                                            395
-
-  -- Forwarding of Remains ($8,920)
-  -- Newspaper Notice, Public Transportation are "As Selected" (cash advances) — not in base total
-  ('pk002009', 'si002004', 1), -- Basic Professional Service Fee when Forwarding Remains   4,695
-  ('pk002009', 'si002012', 1), -- Registration and Documentation                             495
-  ('pk002009', 'si002013', 1), -- Embalming                                                  625
-  ('pk002009', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002009', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002009', 'si002017', 1), -- Transfer to or from Airport                                545
-  ('pk002009', 'si002018', 1), -- Transfer of Remains from Place of Death to Funeral Home    545
-  ('pk002009', 'si002020', 1), -- Funeral Vehicle (Hearse)                                   395
-  ('pk002009', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002009', 'si002046', 1), -- Premium Venue (Larger flexible space)                      595
-
-  -- Receiving of Remains ($7,255)
-  -- Cemetery Fees, Newspaper Notice, Outside Funeral Director Expense, Public Transportation are "As Selected"
-  ('pk002010', 'si002005', 1), -- Basic Professional Service Fees when Receiving Remains   4,695
-  ('pk002010', 'si002014', 1), -- Other Care and Preparation                                 445
-  ('pk002010', 'si002016', 1), -- Sheltering of Remains                                      445
-  ('pk002010', 'si002017', 1), -- Transfer to or from Airport                                545
-  ('pk002010', 'si002020', 1), -- Funeral Vehicle (Hearse)                                   395
-  ('pk002010', 'si002033', 1), -- Estate Fraud Protection                                    135
-  ('pk002010', 'si002046', 1); -- Premium Venue (Larger flexible space)                      595
-
--- ─── Forest Lawn (3605) Casket Pricing ───────────────────────────────────────
--- Casket catalog entries (products) live in seed.sql / casket_catalog table.
--- This section only adds per-home pricing rows for Forest Lawn.
--- Effective April 14, 2026
-
-insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order) values
-  -- Wood Caskets
-  ('3605', 'csk060', 18588.00,  1),   -- Dynasty (Full Couch)
-  ('3605', 'csk017', 16599.00,  2),   -- 710 President
-  ('3605', 'csk061', 12488.00,  3),   -- Emperor
-  ('3605', 'csk062', 12488.00,  4),   -- Executive Mahogany
-  ('3605', 'csk018', 10899.00,  5),   -- Eloquence Mahogany
-  ('3605', 'csk019',  8299.00,  6),   -- Bexley Oak
-  ('3605', 'csk020',  8299.00,  7),   -- Cantonese Red (Full Couch)
-  ('3605', 'csk016',  8299.00,  8),   -- Regent
-  ('3605', 'csk021',  7499.00,  9),   -- Langdon Cherry
-  ('3605', 'csk063',  7199.00, 10),   -- Pieta Maple
-  ('3605', 'csk023',  6499.00, 11),   -- Chandler
-  ('3605', 'csk024',  6499.00, 12),   -- Classic Mahogany
-  ('3605', 'csk025',  6499.00, 13),   -- Jamestown PC
-  ('3605', 'csk015',  6499.00, 14),   -- Prominence
-  ('3605', 'csk026',  6499.00, 15),   -- Warren Oak
-  ('3605', 'csk064',  5999.00, 16),   -- Ho Wan
-  ('3605', 'csk065',  5999.00, 17),   -- Shanghai
-  ('3605', 'csk027',  5699.00, 18),   -- Woodbridge Pecan
-  ('3605', 'csk028',  5199.00, 19),   -- St. Thomas Oak
-  ('3605', 'csk066',  5199.00, 20),   -- Woodhaven Pecan
-  ('3605', 'csk029',  5099.00, 21),   -- Mansfield-27
-  ('3605', 'csk033',  4799.00, 22),   -- Promise  (FL $4,799 vs Victory $4,699)
-  ('3605', 'csk030',  4699.00, 23),   -- Briar Hill
-  ('3605', 'csk031',  4699.00, 24),   -- Camden Oak
-  ('3605', 'csk032',  4699.00, 25),   -- Cameron Oak
-  ('3605', 'csk034',  4699.00, 26),   -- Rosette
-  ('3605', 'csk035',  4699.00, 27),   -- Victoria Cherry
-  ('3605', 'csk003',  4299.00, 28),   -- Fireside   (FL $4,299 vs Victory $4,099)
-  ('3605', 'csk036',  4295.00, 29),   -- Sincerity
-  ('3605', 'csk037',  4099.00, 30),   -- Brexton
-  ('3605', 'csk014',  4099.00, 31),   -- Dominion HC Wood Maple Crepe
-  ('3605', 'csk004',  4099.00, 32),   -- Eleanor Oak
-  ('3605', 'csk008',  3599.00, 33),   -- Hartvic
-  ('3605', 'csk039',  3599.00, 34),   -- Sherwood Oak
-  ('3605', 'csk011',  2999.00, 35),   -- Heavenly White
-  ('3605', 'csk041',  2999.00, 36),   -- White Rose
-  ('3605', 'csk012',  2999.00, 37),   -- Winfield
-  ('3605', 'csk043',  2799.00, 38),   -- Atlantic
-  ('3605', 'csk044',  2799.00, 39),   -- Natura
-  ('3605', 'csk072',  2099.00, 40),   -- Butler
-  -- Metal Caskets
-  ('3605', 'csk067', 55399.00, 41),   -- Promethean (Full Couch)
-  ('3605', 'csk068', 18399.00, 42),   -- Venetian Bronze
-  ('3605', 'csk069', 18299.00, 43),   -- Classic Mahogany Bronze (Full Couch)
-  ('3605', 'csk047', 12499.00, 44),   -- Mediterranean Copper
-  ('3605', 'csk048', 10899.00, 45),   -- Aegean Copper
-  ('3605', 'csk049',  5199.00, 46),   -- Golden Granite
-  ('3605', 'csk070',  5199.00, 47),   -- Sierra
-  ('3605', 'csk050',  5099.00, 48),   -- Primrose
-  ('3605', 'csk051',  4299.00, 49),   -- Merlot-28
-  ('3605', 'csk052',  3599.00, 50),   -- Antique Blue-28
-  -- Cremation Oriented
-  ('3605', 'csk053',  1050.00, 51),   -- McConnell  (FL $1,050 vs Victory $999)
-  ('3605', 'csk071',   850.00, 52),   -- Burlington
-  -- Rental
-  ('3605', 'cont001', 1599.00, 53),   -- Brockton Oak Ceremonial
-  ('3605', 'cont002',  850.00, 54);   -- Brockton Oak (1 Hour Rental)
-
--- ─── Urns / Keepsakes / Jewelry ────────────────────────────────────────────
--- Cremation Remembrance Price List — effective April 14, 2026
--- IDs si002105–si002222 (urns), si002223–si002264 (keepsakes), si002265–si002324 (jewelry)
+-- ── Urns (c1000000-0000-0000-0000-000000000009) ───────────────────────────────
 
 insert into service_items (id, funeral_home_id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, sort_order) values
 
-  -- ── URNS ─────────────────────────────────────────────────────────────────────
   -- PREMIUM URNS — Bégin
   ('si002105', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMCBFSZA7',  'Roses Vase',                              'Cast bronze urn adorned with hand sculpted roses. (Urnes Bégin)',                                                                                                        2895.00, NULL, NULL, false,   1),
+
   -- PREMIUM URNS — Granville
   ('si002106', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWACFSJDT',  'Lucinda Blue Horizontal Urn',             'Handcrafted blue-green wood inlaid urn, high-gloss lacquer, peaceful dove with ribbon and flowers. TSA-compliant. (Granville)',                                       1295.00, NULL, NULL, false,   2),
   ('si002107', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWMGFSJDJ',  'Charlotte Horizontal Urn',                'Handcrafted dark and light green wood inlaid urn, high-gloss lacquer, geometric interlocking diagonal pattern. TSA-compliant. (Granville)',                          1295.00, NULL, NULL, false,   3),
   ('si002108', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWMGFSJDP',  'Holden Horizontal Urn',                   'Handcrafted black and jewel tone wood inlaid urn, high-gloss lacquer, yellow and orange flowers with green vines. TSA-compliant. (Granville)',                    1295.00, NULL, NULL, false,   4),
   ('si002109', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWMPFSJDX',  'Stephen Horizontal Urn',                  'Handcrafted natural wood inlaid urn, high-gloss lacquer, refined symmetrical overlapping lines design. (Granville)',                                                1295.00, NULL, NULL, false,   5),
+
   -- CULTURED STONE — Mackenzie
   ('si002110', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOCMFSAE5',  'Classic Carrera Cultured Stone Urn',      'Durable cultured marble urn made from polymer and stone. (Mackenzie)',                                                                                              595.00, NULL, NULL, false,   6),
   ('si002111', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOCMFSAE6',  'Classic Sky Blue Cultured Stone Urn',     'Durable cultured marble urn made from polymer and stone. (Mackenzie)',                                                                                              595.00, NULL, NULL, false,   7),
   ('si002112', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOCMFSAE7',  'Classic Verde Green Cultured Stone Urn',  'Durable cultured marble urn made from polymer and stone. (Mackenzie)',                                                                                              595.00, NULL, NULL, false,   8),
-  -- STONE
+
+  -- STONE — Terrybear / Marble Products
   ('si002113', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOMBFSRMB',  'Eminence Black Marble Urn',               'Natural black marble urn, fully customizable with text, corner designs, glass photo inlay, gemstone embellishments, abalone shell inlay. (Terrybear)',            1295.00, NULL, NULL, false,   9),
   ('si002114', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOMBFSRME',  'Eminence White Marble Urn',               'Natural white marble urn, fully customizable with text, corner designs, glass photo inlay, gemstone embellishments, abalone shell inlay. (Terrybear)',             1295.00, NULL, NULL, false,  10),
   ('si002115', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOMBFSAE4',  'Carrera Marble Vase',                     'Natural stone marble vase from Carrera-inspired marble, polished to a gleaming shine. (Marble Products)',                                                           595.00, NULL, NULL, false,  11),
   ('si002116', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOOXFSAOV',  'Onyx Vase',                               'Marble urn with variations of light green and dark earth tones. (Marble Products)',                                                                                 595.00, NULL, NULL, false,  12),
   ('si002117', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOMBFSAFA',  'Sand Rectangle Marble Urn',               'Sand-colored marble urn with natural accents. Suitable as single or companion. (Marble Products)',                                                                  510.00, NULL, NULL, false,  13),
   ('si002118', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOMBFSAFB',  'Sand Vase Marble Urn',                    'Sand-colored marble vase urn with natural accents. (Marble Products)',                                                                                              495.00, NULL, NULL, false,  14),
-  -- PORCELAIN
+
+  -- PORCELAIN — LoveUrns / Elegante Brass
   ('si002119', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOUOFS5ZF',  'Love Dove Porcelain Urn',                 'Porcelain full size dove shaped urn in white. (LoveUrns)',                                                                                                         695.00, NULL, NULL, false,  15),
   ('si002120', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOPLFS5ZF',  'White Soulful Shell Porcelain Urn',       'Porcelain full size shell shaped urn in white. (LoveUrns)',                                                                                                        595.00, NULL, NULL, false,  16),
   ('si002121', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOPLSB5ZF',  'Yellow Soulful Shell Porcelain Urn',      'Porcelain full size shell shaped urn in yellow. (LoveUrns)',                                                                                                       595.00, NULL, NULL, false,  17),
   ('si002122', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOPLFSAE9',  'Lenox Porcelain Urn',                     'Classic and elegant porcelain vase from genuine Lenox Porcelain with 24 karat gold gilding. (Elegante Brass)',                                                     495.00, NULL, NULL, false,  18),
-  -- CERAMIC
+
+  -- CERAMIC — Terrybear
   ('si002123', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOCRFSARB',  'Rose Bouquet Ceramic Urn',                'Ceramic urn with hand-painted rose bouquet on a pearlescent ivory background. (Terrybear)',                                                                         350.00, NULL, NULL, false,  19),
-  -- METAL — premium bronze
+
+  -- METAL — Urnes Bégin (premium bronze)
   ('si002124', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMZNFSOIL',  'Guardian Angel Bronze Urn',               'Precision casting, 100% solid bronze urn; angel crying over a tomb with two doves in flight. (Urnes Bégin)',                                                      4995.00, NULL, NULL, false,  20),
   ('si002125', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMZNFSOII',  'Fidelity Couple Companion Bronze Urn',    'Precision casting, 100% solid bronze companion urns; man and woman at paradise doors. Sold as pair. (Urnes Bégin)',                                                3895.00, NULL, NULL, false,  21),
   ('si002126', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMZNFSOIJ',  'Fidelity Couple Woman Bronze Urn',        'Precision casting, 100% solid bronze urn; woman figure at paradise doors. (Urnes Bégin)',                                                                          1995.00, NULL, NULL, false,  22),
@@ -414,7 +121,8 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si002194', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMBRACLTE',  'CuddleBear Blue Child Urn',               'Teddy bear shaped child urn in blue finish with crystal. (LoveUrns)',                                                                                                195.00, NULL, NULL, false,  90),
   ('si002195', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMBRACLTP',  'CuddleBear Pink Child Urn',               'Teddy bear shaped child urn in pink finish with crystal. (LoveUrns)',                                                                                                195.00, NULL, NULL, false,  91),
   ('si002196', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMZNACZ88',  'CuddleBear White Child Urn',              'Teddy bear shaped child urn in white finish with crystal. (LoveUrns)',                                                                                               195.00, NULL, NULL, false,  92),
-  -- WOOD
+
+  -- WOOD — Urnes Bégin / Batesville / Terrybear
   ('si002197', '3605', 'c1000000-0000-0000-0000-000000000009', 'UW3QFSGMU',  'Classic Stained Maple Wood Urn',          'Urban grey stained maple urn with customizable front plates. (Urnes Bégin)',                                                                                         895.00, NULL, NULL, false,  93),
   ('si002198', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWMPFSACR',  'Bois Silver Maple Wood Urn',              'Canadian maple wood urn with dark brown stain and contrasting dark walnut inlay stripe. (Urnes Bégin)',                                                               895.00, NULL, NULL, false,  94),
   ('si002199', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWBHFSADF',  'Memento Chest Wood Urn',                  'Mixed hardwoods and burl wood veneer top with wood inlay and high gloss lacquer. Plastic insert, one key. TSA/CATSA-compliant. (Batesville)',                         795.00, NULL, NULL, false,  95),
@@ -425,7 +133,8 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si002204', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWTAFSFME',  'Modern Essential Vintage Wood Urn',       'Acacia hardwood urn, contemporary design in vintage finish, unique woodgrain. TSA-compliant. (Terrybear)',                                                             495.00, NULL, NULL, false, 100),
   ('si002205', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWTAFSFMS',  'Modern Essential Sable Wood Urn',         'Acacia hardwood urn, contemporary design in sable finish, unique woodgrain. TSA/CATSA-compliant. (Terrybear)',                                                         495.00, NULL, NULL, false, 101),
   ('si002206', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOFBFSANO',  'Natural Box Wood Urn',                    'Composite wood with paper wrap providing natural wood grain look, matte polish, sliding bottom. TSA/CATSA-compliant. (Batesville)',                                    200.00, NULL, NULL, false, 102),
-  -- ECO-CONSCIOUS
+
+  -- ECO-CONSCIOUS — BioLife / LoveUrns / Marble Products
   ('si002207', '3605', 'c1000000-0000-0000-0000-000000000009', 'UWXCFSZLT',  'Living Tribute Urn',                      'Handmade wooden urn with vibrant grain, finely sanded; comes with choice of succulent. TSA/CATSA-compliant. (BioLife)',                                                895.00, NULL, NULL, false, 103),
   ('si002208', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOBDFSAFE',  'The Living Urn',                          'Natural fiber biodegradable urn and tree planting system; kit includes urn, RootProtect neutralizing agent, aged wood chips, bamboo case, and tree of choice. TSA-compliant. (BioLife)', 595.00, NULL, NULL, false, 104),
   ('si002209', '3605', 'c1000000-0000-0000-0000-000000000009', 'UORDFSARP',  'Carpel Rock Salt Urn',                    'Full-capacity rock salt urn designed for sea burials; guaranteed to dissolve in four hours. TSA/CATSA-compliant. (Marble Products)',                                   580.00, NULL, NULL, false, 105),
@@ -439,23 +148,37 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si002217', '3605', 'c1000000-0000-0000-0000-000000000009', 'UORPFSUF4',  'Ascending Dove Scattering Tube',          'Biodegradable scattering tube from recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                 195.00, NULL, NULL, false, 113),
   ('si002218', '3605', 'c1000000-0000-0000-0000-000000000009', 'UORPFSUF6',  'Mountain View Scattering Tube',           'Biodegradable scattering tube from recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                 195.00, NULL, NULL, false, 114),
   ('si002219', '3605', 'c1000000-0000-0000-0000-000000000009', 'UORPSB1SU',  'Field of Flowers Scattering Tube',        'Biodegradable scattering tube from recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                 195.00, NULL, NULL, false, 115),
-  -- LEATHER
-  ('si002220', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOLRFSACW',  'Leather Cylinder Urn',                    'Slate brown bonded leather cylinder. TSA/CATSA-compliant. (Batesville)',                                                                                              195.00, NULL, NULL, false, 116),
-  -- MINIMUM CONTAINER
-  ('si002221', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMSTFSAGJ',  'Utility Container',                       '20 gauge carbon steel construction with black semi-gloss finish. (Batesville)',                                                                                       195.00, NULL, NULL, false, 117),
-  ('si002222', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMALFSADA',  'Mailer Container',                        'Composite wood with aluminum-like texture, acceptable to ship through mail courier service. (Batesville)',                                                              125.00, NULL, NULL, false, 118),
 
-  -- ── KEEPSAKES ─────────────────────────────────────────────────────────────────
+  -- LEATHER — Batesville
+  ('si002220', '3605', 'c1000000-0000-0000-0000-000000000009', 'UOLRFSACW',  'Leather Cylinder Urn',                    'Slate brown bonded leather cylinder. TSA/CATSA-compliant. (Batesville)',                                                                                              195.00, NULL, NULL, false, 116),
+
+  -- MINIMUM CONTAINER — Batesville
+  ('si002221', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMSTFSAGJ',  'Utility Container',                       '20 gauge carbon steel construction with black semi-gloss finish. (Batesville)',                                                                                       195.00, NULL, NULL, false, 117),
+  ('si002222', '3605', 'c1000000-0000-0000-0000-000000000009', 'UMALFSADA',  'Mailer Container',                        'Composite wood with aluminum-like texture, acceptable to ship through mail courier service. (Batesville)',                                                              125.00, NULL, NULL, false, 118);
+
+-- ── Keepsakes (c1000000-0000-0000-0000-000000000010) ─────────────────────────
+
+insert into service_items (id, funeral_home_id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, sort_order) values
+
+  -- KEEPSAKE BOXES — Granville
   ('si002223', '3605', 'c1000000-0000-0000-0000-000000000010', 'UWABKSJDK',  'Charlotte Keepsake Box',                  'Handcrafted dark and light green wood inlaid keepsake, high-gloss lacquer, geometric interlocking diagonal pattern. TSA-compliant. (Granville)',                      495.00, NULL, NULL, false,   1),
   ('si002224', '3605', 'c1000000-0000-0000-0000-000000000010', 'UWABKSJDR',  'Holden Keepsake Box',                     'Handcrafted black and jewel tone wood inlaid keepsake, high-gloss lacquer, yellow and orange flowers with green vines. TSA-compliant. (Granville)',               495.00, NULL, NULL, false,   2),
   ('si002225', '3605', 'c1000000-0000-0000-0000-000000000010', 'UWABKSJDU',  'Lucinda Blue Keepsake Box',               'Handcrafted blue-green wood inlaid keepsake, high-gloss lacquer, peaceful dove with ribbon and flowers. TSA-compliant. (Granville)',                               495.00, NULL, NULL, false,   3),
   ('si002226', '3605', 'c1000000-0000-0000-0000-000000000010', 'UWABKSJDY',  'Stephen Keepsake Box',                    'Handcrafted natural wood inlaid keepsake, high-gloss lacquer, refined symmetrical overlapping lines. TSA-compliant. (Granville)',                                  495.00, NULL, NULL, false,   4),
+
+  -- GLASS — Eternity''s Touch
   ('si002227', '3605', 'c1000000-0000-0000-0000-000000000010', 'UCE3UETMEX', 'Water Swirl Tumbler Votive',              'Serenity glass swirl collection; unique soft glass water design. (Eternity''s Touch)',                                                                                365.00, NULL, NULL, false,   5),
   ('si002228', '3605', 'c1000000-0000-0000-0000-000000000010', 'UCE3UETOEX', 'Fire Swirl Tumbler Votive',               'Serenity glass swirl collection; unique soft glass fire design. (Eternity''s Touch)',                                                                                 365.00, NULL, NULL, false,   6),
   ('si002229', '3605', 'c1000000-0000-0000-0000-000000000010', 'UCE3UET5EX', 'Earth Swirl Egg',                         'Serenity glass swirl collection; unique soft glass earth design egg shape. (Eternity''s Touch)',                                                                      345.00, NULL, NULL, false,   7),
   ('si002230', '3605', 'c1000000-0000-0000-0000-000000000010', 'UCE3UET7EX', 'Air Swirl Egg',                           'Serenity glass swirl collection; unique soft glass air design egg shape. (Eternity''s Touch)',                                                                        345.00, NULL, NULL, false,   8),
+
+  -- LAMP — Terrybear
   ('si002231', '3605', 'c1000000-0000-0000-0000-000000000010', 'UOGLKSABL',  'Blue Butterfly Light of Remembrance',     'Tiffany-inspired lamp with butterfly design. (Terrybear)',                                                                                                           255.00, NULL, NULL, false,   9),
+
+  -- ECO — BioLife
   ('si002232', '3605', 'c1000000-0000-0000-0000-000000000010', 'UOALKS1G5',  'Earth Scattering Cylinder Small',         'Hand-made bamboo eco scattering urn (small keepsake size) with natural oil finish and locking birch wood pin. Includes cotton bag. TSA-compliant. (BioLife)',       195.00, NULL, NULL, false,  10),
+
+  -- HEART & CROSS KEEPSAKES — LoveUrns / Terrybear
   ('si002233', '3605', 'c1000000-0000-0000-0000-000000000010', 'UMBRKHAFK',  'Silver Heart Keepsake',                   'Polished antique silver brass heart with gold-tone accents. (Terrybear)',                                                                                            155.00, NULL, NULL, false,  11),
   ('si002234', '3605', 'c1000000-0000-0000-0000-000000000010', 'UMBRKHAME',  'Midnight Pewter Heart Keepsake',          'Concave heart with brushed pewter finish and midnight accents. (LoveUrns)',                                                                                          155.00, NULL, NULL, false,  12),
   ('si002235', '3605', 'c1000000-0000-0000-0000-000000000010', 'UMBRKHDKG',  'Heart Brushed Gold Keepsake',             'Solid brass heart shaped keepsake in brushed gold finish. (LoveUrns)',                                                                                               155.00, NULL, NULL, false,  13),
@@ -485,27 +208,41 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si002259', '3605', 'c1000000-0000-0000-0000-000000000010', 'UMBRFSDFP',  'Art Deco Keepsake',                       'Brass keepsake with classic sleek style and enameled bands. (LoveUrns)',                                                                                             145.00, NULL, NULL, false,  37),
   ('si002260', '3605', 'c1000000-0000-0000-0000-000000000010', 'UMZNKSZSY',  'Simplicity Keepsake',                     'Midnight metal keepsake with silver lid and base. (LoveUrns)',                                                                                                       145.00, NULL, NULL, false,  38),
   ('si002261', '3605', 'c1000000-0000-0000-0000-000000000010', 'UOMBMKAEZ',  'Sand Mini Marble Keepsake',               'Sand-colored marble mini keepsake urn with natural accents. (Marble Products)',                                                                                       145.00, NULL, NULL, false,  39),
+
+  -- MINI SCATTERING TUBES — BioLife
   ('si002262', '3605', 'c1000000-0000-0000-0000-000000000010', 'UORPMK1DR',  'Mini Scattering Tube Sunset',             'Mini sunset scattering tube; recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                    125.00, NULL, NULL, false,  40),
   ('si002263', '3605', 'c1000000-0000-0000-0000-000000000010', 'UORPMK1F4',  'Mini Scattering Tube Ascending',          'Mini ascending scattering tube; recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                  125.00, NULL, NULL, false,  41),
-  ('si002264', '3605', 'c1000000-0000-0000-0000-000000000010', 'UORPMK1FN',  'Mini Scattering Tube Simplicity',         'Mini simplicity scattering tube; recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                 125.00, NULL, NULL, false,  42),
+  ('si002264', '3605', 'c1000000-0000-0000-0000-000000000010', 'UORPMK1FN',  'Mini Scattering Tube Simplicity',         'Mini simplicity scattering tube; recycled paper and cardboard, no metal components. TSA/CATSA-compliant. (BioLife)',                                                 125.00, NULL, NULL, false,  42);
 
-  -- ── JEWELRY ───────────────────────────────────────────────────────────────────
+-- ── Jewelry (c1000000-0000-0000-0000-000000000011) ───────────────────────────
+
+insert into service_items (id, funeral_home_id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, sort_order) values
+
+  -- GOLD JEWELRY — Eternity''s Touch / Batesville
   ('si002265', '3605', 'c1000000-0000-0000-0000-000000000011', 'CEXUY41EX',  '10K Yellow Gold Claddagh Pendant',        'Hand crafted pendant in traditional Claddagh design (love, friendship, loyalty); personalizable. (Eternity''s Touch)',                                               1795.00, NULL, NULL, false,   1),
   ('si002266', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCEVNYAGEX', 'Yellow Gold Oval Keepsake',               '10K yellow gold rimmed oval keepsake with thumbprint; holds loved one''s remains on 10K gold curb chain. (Eternity''s Touch)',                                     950.00, NULL, NULL, false,   2),
   ('si002267', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSD6',    'Yellow Gold Oval Pendant',                '10K yellow gold oval pendant with thumbprint on 10K gold curb chain. (Eternity''s Touch)',                                                                          950.00, NULL, NULL, false,   3),
   ('si002268', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNPUDCOBX', 'Cross Pendant 14KT Gold',                 '14kt gold cross pendant without chain. (Batesville)',                                                                                                               595.00, NULL, NULL, false,   4),
   ('si002269', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSA9',    'Sterling Silver Classic Heart Bracelet',  '.925 sterling silver flat classic heart on 7.5" toggle bracelet with thumbprint. (Eternity''s Touch)',                                                              515.00, NULL, NULL, false,   5),
   ('si002270', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNCWDWNBX', 'Women''s Chain 14KT Gold',                'Rope chain in 14kt gold. (Batesville)',                                                                                                                             395.00, NULL, NULL, false,   6),
+
+  -- LEATHER & CORD BRACELETS — LoveUrns
   ('si002271', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNBMO9FX',  'Black Braided Leather Memento Bracelet',  'Black braided leather memento bracelet with stainless steel bead. (LoveUrns)',                                                                                     375.00, NULL, NULL, false,   7),
   ('si002272', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNBMOZ9FX', 'Cognac Smooth Leather Memento Bracelet',  'Cognac smooth leather memento bracelet with stainless steel bead. (LoveUrns)',                                                                                      375.00, NULL, NULL, false,   8),
   ('si002273', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNBUO7YDX', 'Red-Black Cord Memento Bracelet',         'Red-black cord memento bracelet with stainless steel bead. (LoveUrns)',                                                                                             375.00, NULL, NULL, false,   9),
   ('si002274', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNBUO8YDX', 'Blue-White Cord Memento Bracelet',        'Blue-white cord memento bracelet with stainless steel bead. (LoveUrns)',                                                                                            375.00, NULL, NULL, false,  10),
   ('si002275', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNBUO9YDX', 'Dark Green Cord Memento Bracelet',        'Dark green cord memento bracelet with stainless steel bead. (LoveUrns)',                                                                                            375.00, NULL, NULL, false,  11),
   ('si002276', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCIBMO9LFX', 'Brown Smooth Leather Memento Bracelet',   'Brown smooth leather memento bracelet with stainless steel bead. (LoveUrns)',                                                                                       375.00, NULL, NULL, false,  12),
+
+  -- STERLING SILVER KEEPSAKES — Eternity''s Touch
   ('si002277', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCEVNSAKEX', 'Sterling Silver Oval Keepsake Urn',       '.925 sterling silver oval keepsake with thumbprint; holds remains on sterling silver curb chain. (Eternity''s Touch)',                                              350.00, NULL, NULL, false,  13),
   ('si002278', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCEVNSALEX', 'Sterling Silver Signature Heart Keepsake','.925 sterling silver heart keepsake with thumbprint; holds remains on sterling silver curb chain. (Eternity''s Touch)',                                            350.00, NULL, NULL, false,  14),
   ('si002279', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCEVNSAMEX', 'Sterling Silver Teardrop Keepsake Urn',   '.925 sterling silver teardrop keepsake with thumbprint; holds remains on sterling silver curb chain. (Eternity''s Touch)',                                         350.00, NULL, NULL, false,  15),
+
+  -- BIRTHSTONE PENDANT — BioLife
   ('si002280', '3605', 'c1000000-0000-0000-0000-000000000011', 'UEIHUS19OX', 'Circle of Life Pendant with Birthstone',  '925 sterling silver pendant with birthstone charm on 18" rope chain. (BioLife)',                                                                                    325.00, NULL, NULL, false,  16),
+
+  -- ETERNITY''S TOUCH THUMBPRINT ITEMS
   ('si002281', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBB',    'Titanium Memory Tag',                     'Titanium memory tag with thumbprint on keyring 22" stainless steel ball chain or sterling silver chain. (Eternity''s Touch)',                                       295.00, NULL, NULL, false,  17),
   ('si002282', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBF',    'Buck Knife Memorial',                     'Stainless steel buck knife with thumbprint. (Eternity''s Touch)',                                                                                                   295.00, NULL, NULL, false,  18),
   ('si002283', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBG',    'Zippo Lighter Memorial',                  'Chrome Zippo lighter with thumbprint. (Eternity''s Touch)',                                                                                                         295.00, NULL, NULL, false,  19),
@@ -513,6 +250,8 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si002285', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSSV',    'Sterling Silver Oval Pendant',            '.925 sterling silver oval pendant with thumbprint on sterling silver curb chain. (Eternity''s Touch)',                                                               295.00, NULL, NULL, false,  21),
   ('si002286', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSWA',    'Sterling Silver Flat Heart Pendant',      '.925 sterling silver flat heart pendant with thumbprint on sterling silver curb chain. (Eternity''s Touch)',                                                         295.00, NULL, NULL, false,  22),
   ('si002287', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSA8',    'Stainless Steel Oval Pendant',            'Stainless steel oval pendant with thumbprint on stainless steel curb chain. (Eternity''s Touch)',                                                                    295.00, NULL, NULL, false,  23),
+
+  -- LOVEURN PENDANTS — LoveUrns
   ('si002288', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNUSDWDR', 'Cross Pendant',                           'Cross pendant on 18" sterling silver chain with 2.25" chain extension. (LoveUrns)',                                                                                 255.00, NULL, NULL, false,  24),
   ('si002289', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNWSD6DR', 'Feather Pendant',                         'Feather pendant on 18" sterling silver chain with 2.25" chain extension. (LoveUrns)',                                                                               255.00, NULL, NULL, false,  25),
   ('si002290', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNWSDRDR', 'Infinite Love Pendant',                   'Infinite love pendant on 18" sterling silver chain with 2.25" chain extension. (LoveUrns)',                                                                         255.00, NULL, NULL, false,  26),
@@ -524,29 +263,43 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si002296', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNWSEUDV', 'Love Rose Pendant',                       'Love rose pendant on 18" sterling silver chain with 2.25" chain extension. (LoveUrns)',                                                                              255.00, NULL, NULL, false,  32),
   ('si002297', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNWSEYDG', 'Mother of Pearl Pendant',                 'Mother of pearl pendant on 18" sterling silver chain with 2.25" chain extension. (LoveUrns)',                                                                       255.00, NULL, NULL, false,  33),
   ('si002298', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNWSFYDR', 'Soul Bird Necklace and Pendant',          'Soul bird shaped ashes necklace in shiny silver. (LoveUrns)',                                                                                                       255.00, NULL, NULL, false,  34),
+
+  -- CUFF BRACELETS — BioLife
   ('si002299', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCIBUGVAOX', 'Cuff Cremation Bracelet Gold',            'Gold plated stainless steel cuff bracelet, discreetly holds ashes. (BioLife)',                                                                                      245.00, NULL, NULL, false,  35),
   ('si002300', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCIBULCUOX', 'Cuff Cremation Bracelet Black',           'Black stainless steel cuff bracelet, discreetly holds ashes. (BioLife)',                                                                                             245.00, NULL, NULL, false,  36),
   ('si002301', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCIBUSBROX', 'Cuff Cremation Bracelet Silver',          'Stainless steel cuff bracelet, discreetly holds ashes. (BioLife)',                                                                                                  245.00, NULL, NULL, false,  37),
+
+  -- ETERNITY''S TOUCH — ACCESSORIES
   ('si002302', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBL',    'Stainless Steel Money Clip',              'Stainless steel money clip with thumbprint. (Eternity''s Touch)',                                                                                                   225.00, NULL, NULL, false,  38),
   ('si002303', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSA5',    'Memory Bear',                             'Memory teddy bear with rubber silencer covered stainless steel memory tag with thumbprint. (Eternity''s Touch)',                                                     195.00, NULL, NULL, false,  39),
   ('si002304', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNNULDTBX', 'Dog Tag',                                 'Stainless steel dog tag on 24" stainless steel beaded chain. (Batesville)',                                                                                         195.00, NULL, NULL, false,  40),
+
+  -- CHARMS — LoveUrns
   ('si002305', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSDYDR', 'CuddleBear with Pink Crystal Charm',      'Sterling silver CuddleBear with pink crystal charm. Bracelet sold separately. (LoveUrns)',                                                                          175.00, NULL, NULL, false,  41),
   ('si002306', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSDYFR', 'CuddleBear with Blue Crystal Charm',      'Sterling silver CuddleBear with blue crystal charm. Bracelet sold separately. (LoveUrns)',                                                                          175.00, NULL, NULL, false,  42),
   ('si002307', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSEDDG', 'Glowing Heart Charm',                     'Sterling silver glowing heart charm. Bracelet sold separately. (LoveUrns)',                                                                                         155.00, NULL, NULL, false,  43),
   ('si002308', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSEFDR', 'Heart to Heart with Crystal Charm',       'Sterling silver heart to heart with crystal charm. Bracelet sold separately. (LoveUrns)',                                                                            155.00, NULL, NULL, false,  44),
   ('si002309', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSEYDG', 'Mother of Pearl Charm',                   'Sterling silver mother of pearl charm. Bracelet sold separately. (LoveUrns)',                                                                                        155.00, NULL, NULL, false,  45),
   ('si002310', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSCODR', 'Cross Charm',                             'Sterling silver cross charm. Bracelet sold separately. (LoveUrns)',                                                                                                 155.00, NULL, NULL, false,  46),
+
+  -- ETERNITY''S TOUCH — SIMPLY REMEMBERED
   ('si002311', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSA6',    'Simply Remembered Heart',                 'Stainless steel heart holding ashes, with thumbprint or text, on stainless steel curb chain. (Eternity''s Touch)',                                                  150.00, NULL, NULL, false,  47),
   ('si002312', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBC',    'Simply Remembered Tree of Life',          'Stainless steel tree of life holding ashes, with thumbprint or text, on stainless steel curb chain. (Eternity''s Touch)',                                           150.00, NULL, NULL, false,  48),
   ('si002313', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBJ',    'Simply Remembered Bullet',                'Stainless steel bullet holding ashes, with thumbprint or text, on stainless steel curb chain. (Eternity''s Touch)',                                                 150.00, NULL, NULL, false,  49),
   ('si002314', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSBK',    'Simply Remembered Cylinder',              'Stainless steel cylinder holding ashes, with thumbprint or text, on stainless steel curb chain. (Eternity''s Touch)',                                               150.00, NULL, NULL, false,  50),
   ('si002315', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSA1',    'Simply Remembered Bar',                   'Stainless steel bar holding ashes, with text option, on stainless steel curb chain. (Eternity''s Touch)',                                                           150.00, NULL, NULL, false,  51),
+
+  -- MISC — Eternity''s Touch / LoveUrns
   ('si002316', '3605', 'c1000000-0000-0000-0000-000000000011', 'XFDKSA4',    'High Res Fingerprint',                    'High resolution cropped fingerprint. (Eternity''s Touch)',                                                                                                          125.00, NULL, NULL, false,  52),
   ('si002317', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNBWSBRDR', 'Sterling Silver Bracelet',                'Sterling silver bracelet. (LoveUrns)',                                                                                                                              115.00, NULL, NULL, false,  53),
+
+  -- WINGS OF HOPE CHARMS — LoveUrns
   ('si002318', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSFDDR', 'Wings of Hope Blue Charm',                'Sterling silver Wings of Hope charm in blue. Bracelet sold separately. (LoveUrns)',                                                                                   85.00, NULL, NULL, false,  54),
   ('si002319', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSFGDR', 'Wings of Hope Lavender Charm',            'Sterling silver Wings of Hope charm in lavender. Bracelet sold separately. (LoveUrns)',                                                                                85.00, NULL, NULL, false,  55),
   ('si002320', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWSFIDR', 'Wings of Hope Pearl Charm',               'Sterling silver Wings of Hope charm in pearl. Bracelet sold separately. (LoveUrns)',                                                                                  85.00, NULL, NULL, false,  56),
   ('si002321', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNIWYYEDR', 'Wings of Hope Yellow Charm',              'Sterling silver Wings of Hope charm in yellow. Bracelet sold separately. (LoveUrns)',                                                                                  85.00, NULL, NULL, false,  57),
+
+  -- EARRINGS — LoveUrns
   ('si002322', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNKWSEHDG', 'HeartFelt Earrings',                      'Sterling silver HeartFelt earrings. (LoveUrns)',                                                                                                                     55.00, NULL, NULL, false,  58),
   ('si002323', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNKWSENDR', 'Leaning Heart Earrings',                   'Sterling silver leaning heart earrings. (LoveUrns)',                                                                                                                55.00, NULL, NULL, false,  59),
   ('si002324', '3605', 'c1000000-0000-0000-0000-000000000011', 'UCNKWSEYDG', 'Mother of Pearl Earrings',                 'Sterling silver Mother of Pearl earrings. (LoveUrns)',                                                                                                              55.00, NULL, NULL, false,  60);

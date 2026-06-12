@@ -24,7 +24,9 @@ insert into service_categories (id, name, sort_order) values
   ('c1000000-0000-0000-0000-000000000006', 'Stationery',                            6),
   ('c1000000-0000-0000-0000-000000000007', 'Cash Advances',                         7),
   ('c1000000-0000-0000-0000-000000000008', 'Caskets & Containers',                  8),
-  ('c1000000-0000-0000-0000-000000000009', 'Urns',                                  9);
+  ('c1000000-0000-0000-0000-000000000009', 'Urns',                                  9),
+  ('c1000000-0000-0000-0000-000000000010', 'Keepsakes',                             10),
+  ('c1000000-0000-0000-0000-000000000011', 'Jewelry',                               11);
 
 -- ─── Casket Catalog (global — shared across all funeral homes) ───────────────
 -- Images and descriptions are stored once; pricing is per-home in funeral_home_caskets
