@@ -34,7 +34,12 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
   }).join('')
 }
 
-function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote = {}, gridCols }) {
+const BOX_STYLE = 'background:#f5f5f7;border:1px solid #e5e5e5;border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:12px;'
+const BOX_ROW   = 'display:flex;justify-content:space-between;color:#6b6b6b;'
+const BOX_VAL   = 'font-weight:600;color:#3a3a3c;'
+const BOX_SEP   = 'border-top:1px solid #e5e5e5;padding-top:6px;margin-top:6px;'
+
+function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote = {}, paymentTerms = null, gridCols }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
   return `
     <div style="text-align:center;padding:32px 0 10px;">
@@ -43,11 +48,20 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuo
     <div style="${g}">
       ${shown.map((q) => {
         if (q.total > MONTHLY_THRESHOLD) {
-          const plans = monthlyPlansByQuote[q.id] || getMonthlyPlans(q.total)
+          const plans = monthlyPlansByQuote[q.id] || getMonthlyPlans(q.total, paymentTerms)
           const { downPayment, balance } = plans[0] || {}
           return `
             <div style="padding:6px 24px 24px;">
-              <p style="margin:0 0 8px;font-size:12px;color:#86868b">10% down · ${fmt(downPayment)} · Financed: ${fmt(balance)}</p>
+              <div style="${BOX_STYLE}">
+                <div style="${BOX_ROW}">
+                  <span>Down payment (10%)</span>
+                  <span style="${BOX_VAL}">${fmt(downPayment)}</span>
+                </div>
+                <div style="${BOX_ROW}${BOX_SEP}">
+                  <span>Financed balance</span>
+                  <span style="${BOX_VAL}">${fmt(balance)}</span>
+                </div>
+              </div>
               <table style="width:100%;border-collapse:collapse;">
                 <thead>
                   <tr style="border-bottom:1px solid #e5e5e5;">
@@ -71,15 +85,15 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuo
         }
         const plans = paymentPlansByQuote[q.id] || []
         const age   = calcAge(q.beneficiary_birthdate)
-        const nameHeader = q.beneficiary_birthdate
-          ? `<p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#3a3a3c">${esc(q.deceased_name || 'Beneficiary')} · Age ${age}</p>`
-          : `<p style="margin:0 0 10px;font-size:12px;color:#d1d1d6">Calculation not available without birthdate.</p>`
+        const nameBox = q.beneficiary_birthdate
+          ? `<div style="${BOX_STYLE}"><div style="${BOX_ROW}"><span>Beneficiary</span><span style="${BOX_VAL}">${esc(q.deceased_name || 'Beneficiary')} · Age ${age}</span></div></div>`
+          : `<div style="${BOX_STYLE}"><span style="color:#d1d1d6">Calculation not available without birthdate.</span></div>`
         if (!q.beneficiary_birthdate || plans.length === 0) {
-          return `<div style="padding:6px 24px 24px;">${nameHeader}</div>`
+          return `<div style="padding:6px 24px 24px;">${nameBox}</div>`
         }
         return `
           <div style="padding:6px 24px 24px;">
-            ${nameHeader}
+            ${nameBox}
             <table style="width:100%;border-collapse:collapse;">
               <thead>
                 <tr style="border-bottom:1px solid #e5e5e5;">
@@ -104,7 +118,7 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuo
     </div>`
 }
 
-function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, monthlyPlansByQuote, gridCols, translations = {}, showChinese = true }) {
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, monthlyPlansByQuote, paymentTerms, gridCols, translations = {}, showChinese = true }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
@@ -150,7 +164,7 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
   const caCat    = categoryData.find(c => c.catId === 'ca')
 
   const paymentHTML = showPayment && paymentPlansByQuote
-    ? buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote, gridCols })
+    ? buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote, paymentTerms, gridCols })
     : ''
 
   return `
@@ -228,7 +242,7 @@ const STATUS_CLS = {
   accepted:  'bg-green-50 text-green-600 border-green-200',
 }
 
-export default function ComparisonView({ contactId, currentQuoteId, versionOrder = [], onClose }) {
+export default function ComparisonView({ contactId, currentQuoteId, versionOrder = [], onClose, paymentTerms = null }) {
   const [quotes,           setQuotes]           = useState([])
   const [itemsByQuote,     setItemsByQuote]      = useState({})
   const [categoryMap,      setCategoryMap]       = useState({})
@@ -354,7 +368,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   if (showPayment) {
     shown.forEach(q => {
       if (q.total > MONTHLY_THRESHOLD) {
-        monthlyPlansByQuote[q.id] = getMonthlyPlans(q.total)
+        monthlyPlansByQuote[q.id] = getMonthlyPlans(q.total, paymentTerms)
       } else {
         const age = calcAge(q.beneficiary_birthdate)
         paymentPlansByQuote[q.id] = getPaymentPlans(age, q.total)
@@ -362,7 +376,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     })
   }
 
-  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, monthlyPlansByQuote, translations, showChinese }
+  const sharedProps = { shown, quotes, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showArrangement, showPayment, paymentPlansByQuote, monthlyPlansByQuote, paymentTerms, translations, showChinese }
 
   function handlePrint() {
     const win = window.open('', '_blank')
@@ -604,9 +618,16 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                             const plans = monthlyPlansByQuote[q.id] || []
                             return (
                               <div key={q.id} className="px-6 pb-8 pt-3">
-                                <p className="text-xs text-stone-400 mb-3">
-                                  10% down · {fmt(plans[0]?.downPayment)} · Financed: {fmt(plans[0]?.balance)}
-                                </p>
+                                <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] space-y-1 mb-3">
+                                  <div className="flex justify-between text-stone-500">
+                                    <span>Down payment (10%)</span>
+                                    <span className="font-semibold text-stone-700">{fmt(plans[0]?.downPayment)}</span>
+                                  </div>
+                                  <div className="flex justify-between text-stone-500 border-t border-stone-200 pt-1">
+                                    <span>Financed balance</span>
+                                    <span className="font-semibold text-stone-700">{fmt(plans[0]?.balance)}</span>
+                                  </div>
+                                </div>
                                 <table className="w-full text-sm border-collapse">
                                   <thead>
                                     <tr className="border-b border-stone-100">
@@ -634,15 +655,18 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                           const age   = calcAge(q.beneficiary_birthdate)
                           return (
                             <div key={q.id} className="px-6 pb-8 pt-3">
-                              {q.beneficiary_birthdate ? (
-                                <p className="text-sm font-semibold text-stone-700 mb-3">
-                                  {q.deceased_name || 'Beneficiary'} · Age {age}
-                                </p>
-                              ) : (
-                                <p className="text-xs text-stone-300 mb-3">Calculation not available without birthdate.</p>
-                              )}
+                              <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] mb-3">
+                                {q.beneficiary_birthdate ? (
+                                  <div className="flex justify-between text-stone-500">
+                                    <span>Beneficiary</span>
+                                    <span className="font-semibold text-stone-700">{q.deceased_name || 'Beneficiary'} · Age {age}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-stone-300">Calculation not available without birthdate.</span>
+                                )}
+                              </div>
                               {q.beneficiary_birthdate && plans.length > 0 && (
-                                <table className="w-full text-sm border-collapse mt-3">
+                                <table className="w-full text-sm border-collapse">
                                   <thead>
                                     <tr className="border-b border-stone-100">
                                       <th className="text-left py-1.5 text-xs font-semibold text-stone-400">Plan</th>

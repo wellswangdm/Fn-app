@@ -1004,6 +1004,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
           currentQuoteId={quoteId}
           versionOrder={versions.map(v => v.id)}
           onClose={() => setShowCompare(false)}
+          paymentTerms={paymentTerms}
         />
       )}
 

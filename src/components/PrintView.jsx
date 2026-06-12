@@ -359,10 +359,17 @@ function PrintMonthlyPayment({ total, paymentTerms }) {
   const { downPayment, balance } = plans[0]
   return (
     <div className="pb-6 pt-4 border-t border-stone-100">
-      <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">Payment Options</h3>
-      <p className="text-xs text-stone-500 mb-3">
-        10% down · {fmt(downPayment)} · Financed: {fmt(balance)}
-      </p>
+      <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3">Payment Options</h3>
+      <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-xs space-y-1 mb-3">
+        <div className="flex justify-between text-stone-500">
+          <span>Down payment (10%)</span>
+          <span className="font-semibold text-stone-700">{fmt(downPayment)}</span>
+        </div>
+        <div className="flex justify-between text-stone-500 border-t border-stone-200 pt-1">
+          <span>Financed balance</span>
+          <span className="font-semibold text-stone-700">{fmt(balance)}</span>
+        </div>
+      </div>
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-stone-200">
