@@ -16,33 +16,49 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
   useEffect(() => {
     if (!funeralHomeId) return
     setLoading(true)
-    supabase
-      .from('packages')
-      .select('id, name, total_price, sort_order, pkg_type, package_discount, default_casket_id, casket_catalog(id, name, description, image_url)')
-      .eq('funeral_home_id', funeralHomeId)
-      .order('sort_order')
-      .then(async ({ data }) => {
-        const pkgs = data || []
-        setPackages(pkgs)
-        const ids = pkgs.filter(p => p.default_casket_id).map(p => p.default_casket_id)
-        if (ids.length) {
-          const { data: prices } = await supabase
-            .from('funeral_home_caskets')
-            .select('catalog_id, price')
-            .eq('funeral_home_id', funeralHomeId)
-            .in('catalog_id', ids)
-          setCasketPrices(Object.fromEntries((prices || []).map(r => [r.catalog_id, Number(r.price)])))
-        }
-        setLoading(false)
-      })
+    async function load() {
+      // Try new schema (casket_catalog); fall back to old (caskets) if migration not yet run
+      let { data, error } = await supabase
+        .from('packages')
+        .select('id, name, total_price, sort_order, pkg_type, package_discount, default_casket_id, casket_catalog(id, name, description, image_url)')
+        .eq('funeral_home_id', funeralHomeId)
+        .order('sort_order')
+      if (error) {
+        ;({ data } = await supabase
+          .from('packages')
+          .select('id, name, total_price, sort_order, pkg_type, package_discount, default_casket_id')
+          .eq('funeral_home_id', funeralHomeId)
+          .order('sort_order'))
+      }
+      const pkgs = data || []
+      setPackages(pkgs)
+      const ids = pkgs.filter(p => p.default_casket_id).map(p => p.default_casket_id)
+      if (ids.length) {
+        const { data: prices } = await supabase
+          .from('funeral_home_caskets')
+          .select('catalog_id, price')
+          .eq('funeral_home_id', funeralHomeId)
+          .in('catalog_id', ids)
+        setCasketPrices(Object.fromEntries((prices || []).map(r => [r.catalog_id, Number(r.price)])))
+      }
+      setLoading(false)
+    }
+    load()
   }, [funeralHomeId])
 
   async function loadItems(pkgId) {
     if (itemsMap[pkgId]) return
-    const { data } = await supabase
+    // Try with is_optional column; fall back if migration not yet run
+    let { data, error } = await supabase
       .from('package_items')
       .select('quantity, is_optional, service_items(id, name, price, category_id)')
       .eq('package_id', pkgId)
+    if (error) {
+      ;({ data } = await supabase
+        .from('package_items')
+        .select('quantity, service_items(id, name, price, category_id)')
+        .eq('package_id', pkgId))
+    }
     setItemsMap(m => ({
       ...m,
       [pkgId]: (data || []).map(r => ({
