@@ -249,7 +249,13 @@ export default function QuoteSummary({
 
 // ─── Payment Table ────────────────────────────────────────────────────────────
 
+const MONTHLY_THRESHOLD = 15000
+
 function PaymentTable({ name, birthdate, total }) {
+  if (total > MONTHLY_THRESHOLD) {
+    return <MonthlyPaymentCalculator total={total} />
+  }
+
   const age   = calcAge(birthdate)
   const plans = getPaymentPlans(age, total)
 
@@ -288,6 +294,106 @@ function PaymentTable({ name, birthdate, total }) {
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// ─── Monthly Payment Calculator (total > $15,000) ─────────────────────────────
+
+const TERM_OPTS = [12, 24, 36, 60]
+
+function MonthlyPaymentCalculator({ total }) {
+  const [months,    setMonths]    = useState(12)
+  const [monthsStr, setMonthsStr] = useState('12')
+  const [rateStr,   setRateStr]   = useState('0')
+
+  const rate        = Math.max(0, parseFloat(rateStr) || 0)
+  const downPayment = Math.round(total * 0.10 * 100) / 100
+  const balance     = Math.round((total - downPayment) * 100) / 100
+  const monthlyRate = (rate / 100) / 12
+
+  const monthly = monthlyRate === 0
+    ? Math.round((balance / months) * 100) / 100
+    : Math.round(
+        (balance * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+        (Math.pow(1 + monthlyRate, months) - 1) * 100
+      ) / 100
+
+  const totalFinanced = Math.round(monthly * months * 100) / 100
+  const interest      = Math.max(0, Math.round((totalFinanced - balance) * 100) / 100)
+
+  function commitMonths() {
+    const v = parseInt(monthsStr)
+    if (v >= 1 && v <= 360) setMonths(v)
+    else setMonthsStr(String(months))
+  }
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Down payment + financed balance */}
+      <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] space-y-1">
+        <div className="flex justify-between text-stone-500">
+          <span>Down payment (10%)</span>
+          <span className="font-semibold text-stone-700">{fmt(downPayment)}</span>
+        </div>
+        <div className="flex justify-between text-stone-500 border-t border-stone-200 pt-1">
+          <span>Financed balance</span>
+          <span className="font-semibold text-stone-700">{fmt(balance)}</span>
+        </div>
+      </div>
+
+      {/* Term selector */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[11px] text-stone-500 w-16 shrink-0">Term</span>
+        <div className="flex items-center gap-1 flex-wrap">
+          {TERM_OPTS.map(m => (
+            <button
+              key={m}
+              onClick={() => { setMonths(m); setMonthsStr(String(m)) }}
+              className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold transition-colors ${
+                months === m
+                  ? 'bg-primary-700 text-white border-primary-700'
+                  : 'border-stone-200 text-stone-500 hover:border-stone-300'
+              }`}
+            >
+              {m / 12 >= 1 ? `${m / 12}yr` : `${m}mo`}
+            </button>
+          ))}
+          <input
+            type="number" min="1" max="360"
+            className="input text-[10px] py-0.5 px-1 w-12 text-center"
+            value={monthsStr}
+            onChange={e => setMonthsStr(e.target.value)}
+            onBlur={commitMonths}
+            onKeyDown={e => e.key === 'Enter' && commitMonths()}
+          />
+          <span className="text-[10px] text-stone-400">mo</span>
+        </div>
+      </div>
+
+      {/* Interest rate */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[11px] text-stone-500 w-16 shrink-0">Interest</span>
+        <input
+          type="number" min="0" max="100" step="0.25"
+          className="input text-[10px] py-0.5 px-1.5 w-16 text-right"
+          value={rateStr}
+          onChange={e => setRateStr(e.target.value)}
+        />
+        <span className="text-[10px] text-stone-400">% / yr</span>
+      </div>
+
+      {/* Result */}
+      <div className="bg-primary-50 rounded-lg px-3 py-2.5 border border-primary-100">
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] text-primary-700 font-semibold">Monthly Payment</span>
+          <span className="text-sm font-bold text-primary-800">{fmt(monthly)}</span>
+        </div>
+        <div className="flex justify-between text-[10px] text-stone-400 mt-0.5">
+          <span>{months} payments · {fmt(downPayment)} down</span>
+          <span>Total {fmt(totalFinanced)}{interest > 0 ? ` +${fmt(interest)}` : ''}</span>
+        </div>
+      </div>
     </div>
   )
 }
