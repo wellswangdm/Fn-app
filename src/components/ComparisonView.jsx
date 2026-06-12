@@ -254,8 +254,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
       const cids = [...new Set((items || []).filter(i => i.is_casket_item && i.casket_id).map(i => i.casket_id))]
       let cskMap = {}
       if (cids.length) {
-        const { data: d } = await supabase.from('caskets').select('id, name, price, description, image_url').in('id', cids)
-        ;(d || []).forEach(c => { cskMap[c.id] = { name: c.name, price: Number(c.price), description: c.description, imageUrl: c.image_url } })
+        const { data: d } = await supabase.from('casket_catalog').select('id, name, description, image_url').in('id', cids)
+        ;(d || []).forEach(c => { cskMap[c.id] = { name: c.name, description: c.description, imageUrl: c.image_url } })
       }
 
       // Recalculate totals fresh from items using the current rounding logic

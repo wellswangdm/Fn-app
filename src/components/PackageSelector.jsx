@@ -11,15 +11,30 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
   const [expanded, setExpanded] = useState(null)
   const [itemsMap, setItemsMap] = useState({})
 
+  const [casketPrices, setCasketPrices] = useState({})
+
   useEffect(() => {
     if (!funeralHomeId) return
     setLoading(true)
     supabase
       .from('packages')
-      .select('id, name, total_price, sort_order, pkg_type, package_discount, default_casket_id, caskets(id, name, price, description, image_url)')
+      .select('id, name, total_price, sort_order, pkg_type, package_discount, default_casket_id, casket_catalog(id, name, description, image_url)')
       .eq('funeral_home_id', funeralHomeId)
       .order('sort_order')
-      .then(({ data }) => { setPackages(data || []); setLoading(false) })
+      .then(async ({ data }) => {
+        const pkgs = data || []
+        setPackages(pkgs)
+        const ids = pkgs.filter(p => p.default_casket_id).map(p => p.default_casket_id)
+        if (ids.length) {
+          const { data: prices } = await supabase
+            .from('funeral_home_caskets')
+            .select('catalog_id, price')
+            .eq('funeral_home_id', funeralHomeId)
+            .in('catalog_id', ids)
+          setCasketPrices(Object.fromEntries((prices || []).map(r => [r.catalog_id, Number(r.price)])))
+        }
+        setLoading(false)
+      })
   }, [funeralHomeId])
 
   async function loadItems(pkgId) {
@@ -47,12 +62,13 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 
   async function selectPackage(pkg) {
     if (!itemsMap[pkg.id]) await loadItems(pkg.id)
-    const defaultCasket = pkg.caskets ? {
-      id:          pkg.caskets.id,
-      name:        pkg.caskets.name,
-      price:       Number(pkg.caskets.price || 0),
-      description: pkg.caskets.description || null,
-      imageUrl:    pkg.caskets.image_url || null,
+    const cat = pkg.casket_catalog
+    const defaultCasket = cat ? {
+      id:          cat.id,
+      name:        cat.name,
+      price:       casketPrices[cat.id] ?? 0,
+      description: cat.description || null,
+      imageUrl:    cat.image_url || null,
     } : null
     onSelect(pkg.id, itemsMap[pkg.id] || [], pkg.package_discount || 0, pkg.name, defaultCasket)
     setExpanded(pkg.id)

@@ -36,16 +36,27 @@ create table if not exists service_items (
   created_at      timestamptz default now()
 );
 
--- Caskets & containers — separate from service items, one set per funeral home
-create table if not exists caskets (
-  id              text    primary key,   -- e.g. 'csk001', 'cont001'
+-- Global casket/container product catalog — images and descriptions shared across all funeral homes
+create table if not exists casket_catalog (
+  id           text    primary key,   -- e.g. 'csk001', 'cont001'
+  name         text    not null,
+  description  text,
+  manufacturer text,
+  item_code    text,                  -- manufacturer SKU
+  category     text    default 'wood',  -- 'wood' | 'metal' | 'cremation' | 'rental' | 'container'
+  image_url    text,
+  sort_order   int     default 0,
+  created_at   timestamptz default now()
+);
+
+-- Per-funeral-home casket availability and pricing (price can differ per home)
+create table if not exists funeral_home_caskets (
+  id              uuid    primary key default gen_random_uuid(),
   funeral_home_id text    references funeral_homes on delete cascade,
-  name            text    not null,
-  price           numeric(10,2),
-  description     text,
-  image_url       text,                  -- relative path or Supabase Storage URL
+  catalog_id      text    references casket_catalog,
+  price           numeric(10,2) not null,
   sort_order      int     default 0,
-  created_at      timestamptz default now()
+  unique (funeral_home_id, catalog_id)
 );
 
 -- Service packages (named bundles + à la carte options)
@@ -56,7 +67,7 @@ create table if not exists packages (
   pkg_type          text    default 'alacarte',  -- 'package' | 'alacarte'
   total_price       numeric(10,2) default 0,
   package_discount  numeric(10,2) default 0,
-  default_casket_id text    references caskets,  -- null for à la carte
+  default_casket_id text    references casket_catalog,  -- null for à la carte
   sort_order        int     default 0,
   created_at        timestamptz default now()
 );
@@ -113,7 +124,7 @@ create table if not exists quote_items (
   id              uuid primary key default gen_random_uuid(),
   quote_id        uuid references quotes       on delete cascade,
   service_item_id text references service_items,  -- null for casket rows & custom items
-  casket_id       text references caskets,         -- set only when is_casket_item = true
+  casket_id       text references casket_catalog,   -- set only when is_casket_item = true
   name            text    not null,
   price           numeric(10,2) default 0,
   quantity        int           default 1,
@@ -148,7 +159,8 @@ create trigger quotes_updated_at
 alter table funeral_homes      enable row level security;
 alter table service_categories enable row level security;
 alter table service_items      enable row level security;
-alter table caskets             enable row level security;
+alter table casket_catalog       enable row level security;
+alter table funeral_home_caskets enable row level security;
 alter table packages            enable row level security;
 alter table package_items       enable row level security;
 alter table quotes              enable row level security;
@@ -157,7 +169,8 @@ alter table quote_items         enable row level security;
 create policy "allow_all" on funeral_homes      for all using (true) with check (true);
 create policy "allow_all" on service_categories for all using (true) with check (true);
 create policy "allow_all" on service_items      for all using (true) with check (true);
-create policy "allow_all" on caskets            for all using (true) with check (true);
+create policy "allow_all" on casket_catalog       for all using (true) with check (true);
+create policy "allow_all" on funeral_home_caskets for all using (true) with check (true);
 create policy "allow_all" on packages           for all using (true) with check (true);
 create policy "allow_all" on package_items      for all using (true) with check (true);
 create policy "allow_all" on quotes             for all using (true) with check (true);

@@ -26,73 +26,158 @@ insert into service_categories (id, name, sort_order) values
   ('c1000000-0000-0000-0000-000000000008', 'Caskets & Containers',                  8),
   ('c1000000-0000-0000-0000-000000000009', 'Urns',                                  9);
 
--- ─── Caskets & Containers ─────────────────────────────────────────────────────
--- Full casket price list for Victory Memorial (3745) — effective Feb 20, 2026
+-- ─── Casket Catalog (global — shared across all funeral homes) ───────────────
+-- Images and descriptions are stored once; pricing is per-home in funeral_home_caskets
 
-insert into caskets (id, funeral_home_id, name, price, description, image_url, sort_order) values
+insert into casket_catalog (id, name, description, manufacturer, item_code, category, image_url, sort_order) values
   -- Wood Caskets
-  ('csk017', '3745', '710 President',               16599.00, 'Mahogany casket with a dark brown, Georgetown stained exterior and a silverbeige velvet interior.',                                               NULL,  1),
-  ('csk018', '3745', 'Eloquence Mahogany',           10899.00, 'Solid mahogany casket with a dark mahogany, hand-rubbed, high gloss exterior, and a champagne, Whitehall velvet interior.',                     NULL,  2),
-  ('csk019', '3745', 'Bexley Oak',                    8299.00, 'Solid oak casket with a medium, hand-rubbed, high gloss exterior and a champagne, Whitehall velvet interior.',                                  NULL,  3),
-  ('csk020', '3745', 'Cantonese Red (Full Couch)',    8299.00, 'Solid mahogany casket with a polished cherry exterior, folksau lugs, and pearl velvet interior.',                                               NULL,  4),
-  ('csk016', '3745', 'Regent',                        8299.00, 'Solid mahogany casket with a dark finished exterior and champagne velvet interior.',                                        '/caskets/regent.jpg',  5),
-  ('csk021', '3745', 'Langdon Cherry',                7499.00, 'Solid cherry casket with a dark, satin finished exterior, and a champagne velvet interior.',                                                    NULL,  6),
-  ('csk022', '3745', 'Provincial Maple',              7199.00, 'Solid maple casket with a medium, satin finished exterior and champagne, velvet interior.',                                                     NULL,  7),
-  ('csk023', '3745', 'Chandler',                      6499.00, 'Solid mahogany casket with a dark finished exterior and a champagne velvet interior.',                                                          NULL,  8),
-  ('csk024', '3745', 'Classic Mahogany',              6499.00, 'Solid Mahogany casket with Titian stain and Prestige hand-rubbed satin exterior with Pearl Premium velvet interior.',                          NULL,  9),
-  ('csk025', '3745', 'Jamestown PC',                  6499.00, 'Timeless old world satin finish urn shape casket made of solid American black cherry hardwood with pearl velvet interior - perfection cut.',    NULL, 10),
-  ('csk015', '3745', 'Prominence',                    6499.00, 'Solid maple casket with a dark hand-rubbed, high gloss, cherry stain exterior with a champagne velvet interior.',      '/caskets/prominence.jpg', 11),
-  ('csk026', '3745', 'Warren Oak',                    6499.00, 'Solid oak casket with a dark stain, satin finish exterior and champagne velvet interior.',                                                      NULL, 12),
-  ('csk027', '3745', 'Woodbridge Pecan',              5699.00, 'Solid pecan casket with a medium stained, satin finished exterior and champagne velvet interior.',                                              NULL, 13),
-  ('csk028', '3745', 'St. Thomas Oak',                5199.00, 'Solid Oak casket with Persian Fawn stain and polished exterior with ivory velvet interior.',                                                    NULL, 14),
-  ('csk029', '3745', 'Mansfield-27',                  5099.00, 'Select hardwood oversized casket with a medium pecan gloss finished exterior with rosetan crepe interior.',                                     NULL, 15),
-  ('csk030', '3745', 'Briar Hill',                    4699.00, 'Hardwood casket with beige basket weave interior - perfection cut.',                                                                            NULL, 16),
-  ('csk031', '3745', 'Camden Oak',                    4699.00, 'Solid traditional oak casket with dark finished exterior, and a champagne velvet interior.',                                                    NULL, 17),
-  ('csk032', '3745', 'Cameron Oak',                   4699.00, 'Oak casket with a medium, autumn oak stained finished exterior and champagne velvet interior.',                                                 NULL, 18),
-  ('csk033', '3745', 'Promise',                       4699.00, 'Sustainable select hardwood casket with a mocha brown wash stain exterior and meadowlark natural cotton interior.',                             NULL, 19),
-  ('csk034', '3745', 'Rosette',                       4699.00, 'Select hardwood veneer casket with a dark cherry, hand-rubbed, high gloss exterior and natural batiste interior.',                              NULL, 20),
-  ('csk035', '3745', 'Victoria Cherry',               4699.00, 'Solid Cherry octagon casket with Empire stain and polished exterior with blush pink velvet interior.',                                         NULL, 21),
-  ('csk036', '3745', 'Sincerity',                     4295.00, 'Sustainable select hardwood casket with a driftwood grey wash stain exterior and meadowlark natural cotton interior.',                         NULL, 22),
-  ('csk037', '3745', 'Brexton',                       4099.00, 'Premium oak veneer casket with a chestnut stain and satin finished exterior and a champagne velvet interior.',                                  NULL, 23),
-  ('csk014', '3745', 'Dominion HC Wood Maple Crepe',  4099.00, 'Solid Maple casket with Titian stain and polished exterior with tan crepe interior.',                     '/caskets/dominion-hc-maple.jpg', 24),
-  ('csk004', '3745', 'Eleanor Oak',                   4099.00, 'Oak casket with a chestnut stained, satin finished exterior and pink crepe interior.',                                                         NULL, 25),
-  ('csk003', '3745', 'Fireside',                      4099.00, 'Oak wood casket with medium rustic stain with satin finish exterior and oatmeal duck / camo cloth interior.',                                  NULL, 26),
-  ('csk038', '3745', 'Hadyn',                         4099.00, 'Select hardwood casket with a medium pecan, hand-rubbed high gloss finish exterior and a rosetan crepe interior.',                             NULL, 27),
-  ('csk007', '3745', 'Bailey',                        3599.00, 'Select hardwood veneer casket with medium finish exterior and khaki linwood interior.',                                                         NULL, 28),
-  ('csk008', '3745', 'Hartvic',                       3599.00, 'Solid Hardwood casket veneer sided with Dark Almond Shaded stain and satin exterior with tan crepe interior.',                                 NULL, 29),
-  ('csk039', '3745', 'Sherwood Oak',                  3599.00, 'Solid Oak casket veneer sided with Shaded Persian Fawn stain and polished exterior with tan crepe interior.',                                  NULL, 30),
-  ('csk006', '3745', 'Watson',                        3599.00, 'Hardwood casket with a medium finished exterior with a lugwood corner design and beige linwood interior.',                                     NULL, 31),
-  ('csk009', '3745', 'Coleridge',                     2999.00, 'Hardwood casket with a medium finished exterior and rosetan crepe interior.',                                                                   NULL, 32),
-  ('csk040', '3745', 'Constance',                     2999.00, 'Select hardwood casket with a medium cherry stain, hand-rubbed, gloss finish exterior and moss pink crepe interior.',                         NULL, 33),
-  ('csk011', '3745', 'Heavenly White',                2999.00, 'Solid hardwood casket veneer sided with alpine white stain, polish finished exterior and white crepe interior.',                               '/caskets/heavenly-white.jpg', 34),
-  ('csk010', '3745', 'Montgomery',                    2999.00, 'Select hardwood casket with a medium walnut stain, hand-rubbed high gloss finish exterior and rosetan crepe interior.', '/caskets/montgomery.jpg', 35),
-  ('csk041', '3745', 'White Rose',                    2999.00, 'Solid Hardwood casket with veneer sides with Alpine White stain and polished exterior with blush pink velvet interior.',                      NULL, 36),
-  ('csk012', '3745', 'Winfield',                      2999.00, 'Solid Hardwood casket veneer sided with American Cherry stain and satin exterior with tan crepe interior.',                                   NULL, 37),
-  ('csk042', '3745', 'Carnaby',                       2899.00, 'Hardwood casket with Vantablack satin finish exterior and beige basket weave interior.',                                                       NULL, 38),
-  ('csk043', '3745', 'Atlantic',                      2799.00, 'Solid Hardwood casket veneer sided with Garnet stain and gloss exterior with beige crepe interior.',                                          NULL, 39),
-  ('csk044', '3745', 'Natura',                        2799.00, 'New leaf solid poplar casket with natural finish exterior with 100% natural cotton interior.',                                                 NULL, 40),
-  ('csk045', '3745', 'Oxford',                        2799.00, 'Solid hardwood casket with a light, finished exterior and rosetan crepe interior.',                                                            NULL, 41),
-  ('csk013', '3745', 'Freelton',                      2599.00, 'Select hardwood casket with a medium finished exterior and ivory crepe interior.',                                          '/caskets/freelton.jpg', 42),
-  ('csk046', '3745', 'Schafer',                       2599.00, 'Select hardwood casket with a medium finished exterior and ivory crepe interior.',                                                             NULL, 43),
+  ('csk017', '710 President',               'Mahogany casket with a dark brown, Georgetown stained exterior and a silverbeige velvet interior.',                                             'Batesville',       'CWMYBAPXEJ', 'wood', NULL,  1),
+  ('csk018', 'Eloquence Mahogany',           'Solid mahogany casket with a dark mahogany, hand-rubbed, high gloss exterior, and a champagne, Whitehall velvet interior.',                   'Batesville',       'CWMYBARWBQ', 'wood', NULL,  2),
+  ('csk019', 'Bexley Oak',                   'Solid oak casket with a medium, hand-rubbed, high gloss exterior and a champagne, Whitehall velvet interior.',                                'Batesville',       'CWOKBANPBQ', 'wood', NULL,  3),
+  ('csk020', 'Cantonese Red (Full Couch)',   'Solid mahogany casket with a polished cherry exterior, folksau lugs, and pearl velvet interior.',                                             'Vancouver Casket', 'CWBRVBIPEC', 'wood', '/caskets/cantonese-red.jpg',  4),
+  ('csk016', 'Regent',                       'Solid mahogany casket with a dark finished exterior and champagne velvet interior.',                                                           'Batesville',       'CWMYBAROBQ', 'wood', '/caskets/regent.jpg',  5),
+  ('csk021', 'Langdon Cherry',               'Solid cherry casket with a dark, satin finished exterior, and a champagne velvet interior.',                                                  'Batesville',       'CWCHBAQYBQ', 'wood', NULL,  6),
+  ('csk022', 'Provincial Maple',             'Solid maple casket with a medium, satin finished exterior and champagne, velvet interior.',                                                   NULL,               NULL,         'wood', NULL,  7),
+  ('csk023', 'Chandler',                     'Solid mahogany casket with a dark finished exterior and a champagne velvet interior.',                                                        'Batesville',       'CWMYBARHBQ', 'wood', NULL,  8),
+  ('csk024', 'Classic Mahogany',             'Solid Mahogany casket with Titian stain and Prestige hand-rubbed satin exterior with Pearl Premium velvet interior.',                        'Victoriaville',    'CWMYLBABEJ', 'wood', '/caskets/classic-mahogany.jpg',  9),
+  ('csk025', 'Jamestown PC',                 'Timeless old world satin finish urn shape casket made of solid American black cherry hardwood with pearl velvet interior - perfection cut.', 'Victoriaville',    'CWCHLBAFEJ', 'wood', NULL, 10),
+  ('csk015', 'Prominence',                   'Solid maple casket with a dark hand-rubbed, high gloss, cherry stain exterior with a champagne velvet interior.',                            'Batesville',       'CWMLBDA6BQ', 'wood', '/caskets/prominence.jpg', 11),
+  ('csk026', 'Warren Oak',                   'Solid oak casket with a dark stain, satin finish exterior and champagne velvet interior.',                                                    'Batesville',       'CWOKBAMIBQ', 'wood', NULL, 12),
+  ('csk027', 'Woodbridge Pecan',             'Solid pecan casket with a medium stained, satin finished exterior and champagne velvet interior.',                                            'Batesville',       'CWPNBACMBQ', 'wood', NULL, 13),
+  ('csk028', 'St. Thomas Oak',               'Solid Oak casket with Persian Fawn stain and polished exterior with ivory velvet interior.',                                                  'Victoriaville',    'CWWLBAJDA',  'wood', NULL, 14),
+  ('csk029', 'Mansfield-27',                 'Select hardwood oversized casket with a medium pecan gloss finished exterior with rosetan crepe interior.',                                   'Batesville',       'CWHWBMHHFD', 'wood', NULL, 15),
+  ('csk030', 'Briar Hill',                   'Hardwood casket with beige basket weave interior - perfection cut.',                                                                          'Victoriaville',    'CWMLLBEPBN', 'wood', NULL, 16),
+  ('csk031', 'Camden Oak',                   'Solid traditional oak casket with dark finished exterior, and a champagne velvet interior.',                                                  'Batesville',       'CWOKBFBKBP', 'wood', NULL, 17),
+  ('csk032', 'Cameron Oak',                  'Oak casket with a medium, autumn oak stained finished exterior and champagne velvet interior.',                                               'Batesville',       'CWOKBANVBQ', 'wood', NULL, 18),
+  ('csk033', 'Promise',                      'Sustainable select hardwood casket with a mocha brown wash stain exterior and meadowlark natural cotton interior.',                           'Batesville',       'CWSHBPHCML', 'wood', NULL, 19),
+  ('csk034', 'Rosette',                      'Select hardwood veneer casket with a dark cherry, hand-rubbed, high gloss exterior and natural batiste interior.',                            'Batesville',       'CWHWBRHCDC', 'wood', NULL, 20),
+  ('csk035', 'Victoria Cherry',              'Solid Cherry octagon casket with Empire stain and polished exterior with blush pink velvet interior.',                                        'Victoriaville',    'CWCHLBAKBH', 'wood', NULL, 21),
+  ('csk036', 'Sincerity',                    'Sustainable select hardwood casket with a driftwood grey wash stain exterior and meadowlark natural cotton interior.',                        'Batesville',       'CWSHBSINML', 'wood', NULL, 22),
+  ('csk037', 'Brexton',                      'Premium oak veneer casket with a chestnut stain and satin finished exterior and a champagne velvet interior.',                               'Batesville',       'CWOKBCHDBQ', 'wood', NULL, 23),
+  ('csk014', 'Dominion HC Wood Maple Crepe', 'Solid Maple casket with Titian stain and polished exterior with tan crepe interior.',                                                        'Victoriaville',    'CWMLLBWEGQ', 'wood', '/caskets/dominion-hc-maple.jpg', 24),
+  ('csk004', 'Eleanor Oak',                  'Oak casket with a chestnut stained, satin finished exterior and pink crepe interior.',                                                       'Batesville',       'CWOKBBYAEO', 'wood', NULL, 25),
+  ('csk003', 'Fireside',                     'Oak wood casket with medium rustic stain with satin finish exterior and oatmeal duck / camo cloth interior.',                                'Batesville',       'CWOKBBAVA1', 'wood', NULL, 26),
+  ('csk038', 'Hadyn',                        'Select hardwood casket with a medium pecan, hand-rubbed high gloss finish exterior and a rosetan crepe interior.',                           NULL,               NULL,         'wood', NULL, 27),
+  ('csk007', 'Bailey',                       'Select hardwood veneer casket with medium finish exterior and khaki linwood interior.',                                                       NULL,               NULL,         'wood', NULL, 28),
+  ('csk008', 'Hartvic',                      'Solid Hardwood casket veneer sided with Dark Almond Shaded stain and satin exterior with tan crepe interior.',                               'Victoriaville',    'CWPRLBAEGQ', 'wood', NULL, 29),
+  ('csk039', 'Sherwood Oak',                 'Solid Oak casket veneer sided with Shaded Persian Fawn stain and polished exterior with tan crepe interior.',                                'Victoriaville',    'CWOKLEGZGQ', 'wood', NULL, 30),
+  ('csk006', 'Watson',                       'Hardwood casket with a medium finished exterior with a lugwood corner design and beige linwood interior.',                                   NULL,               NULL,         'wood', NULL, 31),
+  ('csk009', 'Coleridge',                    'Hardwood casket with a medium finished exterior and rosetan crepe interior.',                                                                NULL,               NULL,         'wood', NULL, 32),
+  ('csk040', 'Constance',                    'Select hardwood casket with a medium cherry stain, hand-rubbed, gloss finish exterior and moss pink crepe interior.',                        NULL,               NULL,         'wood', NULL, 33),
+  ('csk011', 'Heavenly White',               'Solid hardwood casket veneer sided with alpine white stain, polish finished exterior and white crepe interior.',                             'Victoriaville',    'CWHWLBA1HB', 'wood', '/caskets/heavenly-white.jpg', 34),
+  ('csk010', 'Montgomery',                   'Select hardwood casket with a medium walnut stain, hand-rubbed high gloss finish exterior and rosetan crepe interior.',                      NULL,               NULL,         'wood', '/caskets/montgomery.jpg', 35),
+  ('csk041', 'White Rose',                   'Solid Hardwood casket with veneer sides with Alpine White stain and polished exterior with blush pink velvet interior.',                     'Victoriaville',    'CWHWLBA1EY', 'wood', NULL, 36),
+  ('csk012', 'Winfield',                     'Solid Hardwood casket veneer sided with American Cherry stain and satin exterior with tan crepe interior.',                                  'Victoriaville',    'CWHWLEYGGQ', 'wood', '/caskets/winfield.jpg', 37),
+  ('csk042', 'Carnaby',                      'Hardwood casket with Vantablack satin finish exterior and beige basket weave interior.',                                                     NULL,               NULL,         'wood', NULL, 38),
+  ('csk043', 'Atlantic',                     'Solid Hardwood casket veneer sided with Garnet stain and gloss exterior with beige crepe interior.',                                         'Victoriaville',    'CWPRLAA3AJ', 'wood', '/caskets/atlantic.jpg', 39),
+  ('csk044', 'Natura',                       'New leaf solid poplar casket with natural finish exterior with 100% natural cotton interior.',                                                'Victoriaville',    'CWPRLDFEAB', 'wood', NULL, 40),
+  ('csk045', 'Oxford',                       'Solid hardwood casket with a light, finished exterior and rosetan crepe interior.',                                                           NULL,               NULL,         'wood', '/caskets/oxford.jpg', 41),
+  ('csk013', 'Freelton',                     'Select hardwood casket with a medium finished exterior and ivory crepe interior.',                                                            NULL,               NULL,         'wood', '/caskets/freelton.jpg', 42),
+  ('csk046', 'Schafer',                      'Select hardwood casket with a medium finished exterior and ivory crepe interior.',                                                            NULL,               NULL,         'wood', '/caskets/schafer.jpg', 43),
   -- Metal Caskets
-  ('csk047', '3745', 'Mediterranean Copper',         12499.00, '32-ounce copper casket with a copper brushed exterior and champagne velvet interior.',                                                         NULL, 44),
-  ('csk048', '3745', 'Aegean Copper',                10899.00, '32 oz. copper casket with a copper brushed exterior and gold accents and a champagne, Sovereign velvet interior.',                              NULL, 45),
-  ('csk049', '3745', 'Golden Granite',                5199.00, '18 gauge steel casket with a dual-tone grey, brushed exterior and a champagne velvet interior.',                                               NULL, 46),
-  ('csk050', '3745', 'Primrose',                      5099.00, '18 gauge steel casket with a white shaded exterior and gold accents and a moss pink crepe interior.',                                          NULL, 47),
-  ('csk051', '3745', 'Merlot-28',                     4299.00, '18-gauge steel oversized casket with a burgundy painted exterior and champagne velvet interior.',                                              NULL, 48),
-  ('csk001', '3745', 'Merlot',                        4099.00, '18-gauge steel casket with a burgundy painted exterior and rosetan, crepe interior.',                                                          NULL, 49),
-  ('csk052', '3745', 'Antique Blue-28',               3599.00, '20-gauge steel oversized casket with a blue shaded exterior and silver accents and a light blue, crepe interior.',                            NULL, 50),
-  ('csk005', '3745', 'Misty Blue',                    3599.00, '20 gauge steel casket with a blue shaded exterior and blue accents, and a light blue crepe interior.',                                        NULL, 51),
+  ('csk047', 'Mediterranean Copper',         '32-ounce copper casket with a copper brushed exterior and champagne velvet interior.',                                                       'Batesville',       'CMC3BEZYBQ', 'metal', NULL, 44),
+  ('csk048', 'Aegean Copper',                '32 oz. copper casket with a copper brushed exterior and gold accents and a champagne, Sovereign velvet interior.',                           'Batesville',       'CMC3BFALBQ', 'metal', NULL, 45),
+  ('csk049', 'Golden Granite',               '18 gauge steel casket with a dual-tone grey, brushed exterior and a champagne velvet interior.',                                             'Batesville',       'CMS8BDJGBQ', 'metal', NULL, 46),
+  ('csk050', 'Primrose',                     '18 gauge steel casket with a white shaded exterior and gold accents and a moss pink crepe interior.',                                        'Batesville',       'CMS8BATBEO', 'metal', NULL, 47),
+  ('csk051', 'Merlot-28',                    '18-gauge steel oversized casket with a burgundy painted exterior and champagne velvet interior.',                                             'Batesville',       'CMS8BDCOBP', 'metal', NULL, 48),
+  ('csk001', 'Merlot',                       '18-gauge steel casket with a burgundy painted exterior and rosetan, crepe interior.',                                                        NULL,               NULL,         'metal', NULL, 49),
+  ('csk052', 'Antique Blue-28',              '20-gauge steel oversized casket with a blue shaded exterior and silver accents and a light blue, crepe interior.',                           'Batesville',       'CMS0BDLPDE', 'metal', NULL, 50),
+  ('csk005', 'Misty Blue',                   '20 gauge steel casket with a blue shaded exterior and blue accents, and a light blue crepe interior.',                                       NULL,               NULL,         'metal', NULL, 51),
   -- Cremation Oriented Caskets
-  ('csk053', '3745', 'McConnell',                      999.00, 'Hollow cored poplar and poplar faced plywood with medium flat stain and tan crepe lining with pillow.',                                        NULL, 52),
-  ('cont004', '3745', 'Plywood Container',              699.00, 'Plywood cremation container cut top.',                                                                                                         NULL, 53),
-  ('cont003', '3745', 'Cypress',                       650.00, 'Hollow cored poplar container with natural finish and white satin mattress and pillow only.',                                                  NULL, 54),
-  ('cont005', '3745', 'Particle Board Container',       350.00, 'Particle board cremation container with two strap handles, and no interior.',                                                                  NULL, 55),
-  -- Alternative Containers
-  ('cont006', '3745', 'Trayview',                       450.00, 'Cardboard container - cremation oriented with a cardboard exterior and crepe paper mattress and pillow.',                                      NULL, 56),
+  ('csk053', 'McConnell',                    'Hollow cored poplar and poplar faced plywood with medium flat stain and tan crepe lining with pillow.',                                      'Vancouver Casket', 'CCVMCCC',    'cremation', '/caskets/mcconnell.jpg', 52),
+  -- Containers
+  ('cont004', 'Plywood Container',           'Plywood cremation container cut top.',                                                                                                       NULL,               NULL,         'container', '/caskets/plywood-container.jpg', 53),
+  ('cont003', 'Cypress',                     'Hollow cored poplar container with natural finish and white satin mattress and pillow only.',                                                NULL,               NULL,         'container', '/caskets/cypress.jpg', 54),
+  ('cont005', 'Particle Board Container',    'Particle board cremation container with two strap handles, and no interior.',                                                                NULL,               NULL,         'container', '/caskets/particle-board-container.jpg', 55),
+  ('cont006', 'Trayview',                    'Cardboard container - cremation oriented with a cardboard exterior and crepe paper mattress and pillow.',                                    NULL,               NULL,         'container', '/caskets/trayview.jpg', 56),
   -- Rental Caskets
-  ('cont001', '3745', 'Brockton Oak Ceremonial',      1599.00, 'Hardwood ceremonial casket with medium, oak stained exterior and rosetan crepe interior.',                                                     NULL, 57),
-  ('cont002', '3745', 'Brockton Oak (1 Hour Rental)',   850.00, 'Hardwood ceremonial casket with medium oak stain finish.',                                                                                    NULL, 58);
+  ('cont001', 'Brockton Oak Ceremonial',     'Hardwood ceremonial casket with medium, oak stained exterior and rosetan crepe interior.',                                                   'Batesville',       'CRBALTF',    'rental', '/caskets/brockton-oak-ceremonial.jpg', 57),
+  ('cont002', 'Brockton Oak (1 Hour Rental)','Hardwood ceremonial casket with medium oak stain finish.',                                                                                   'Batesville',       'CRBBRHC',    'rental', NULL, 58);
+
+-- ─── Forest Lawn (3605) + Victory Memorial (3745) only catalog entries ────────
+
+insert into casket_catalog (id, name, description, manufacturer, item_code, category, sort_order) values
+  ('csk060', 'Dynasty (Full Couch)',                 'Solid mahogany casket with medium mahogany stain exterior and velvet interior.',                                          'Vancouver Casket', 'CWMYVFDLGU',  'wood',      1),
+  ('csk061', 'Emperor',                              'Solid Mahogany casket with hand-carved details and a dark, polished exterior and beige velvet interior.',                 'Vancouver Casket', 'CWMYVBYIAP',  'wood',      3),
+  ('csk062', 'Executive Mahogany',                   'Solid mahogany casket high gloss, polished exterior and coffee velvet interior.',                                         'Vancouver Casket', 'CWMYVBZKBS',  'wood',      4),
+  ('csk063', 'Pieta Maple',                          'Solid maple casket with a dark cherry, hand-rubbed, high gloss exterior and a champagne velvet interior.',               'Batesville',       'CWMLBAGPBQ',  'wood',     10),
+  ('csk064', 'Ho Wan',                               'Hardwood casket with a dark stained, hand-carved detailed exterior and white crepe interior.',                            'Vancouver Casket', 'CWHWVCKDBW',  'wood',     16),
+  ('csk065', 'Shanghai',                             'Hardwood casket with a dark stained, polished exterior and white crepe interior.',                                        'Vancouver Casket', 'CWELVEFYHB',  'wood',     17),
+  ('csk066', 'Woodhaven Pecan',                      'Pecan veneer casket with a medium pecan, satin finish exterior and champagne velvet interior.',                           'Batesville',       'CWPNBADRBQ',  'wood',     20),
+  ('csk072', 'Butler',                               'Select hardwood casket with a medium finished exterior and white barry interior.',                                         'Batesville',       'CWHWBBGWGX',  'wood',     40),
+  ('csk067', 'Promethean (Full Couch)',               '48 oz. semi-precious bronze casket with a hand polished, gold mirrored exterior and Shasta Lily white velvet interior.','Batesville',       'CMB4BFBGFQ',  'metal',    41),
+  ('csk068', 'Venetian Bronze',                      '48-ounce bronze casket with a bronze brushed exterior with gold accents and a champagne velvet interior.',                'Batesville',       'CMB4BFAPBQ',  'metal',    42),
+  ('csk069', 'Classic Mahogany Bronze (Full Couch)', '48 ounce bronze casket with accents and champagne velvet interior.',                                                      'Batesville',       'CMB4BFATBQ',  'metal',    43),
+  ('csk070', 'Sierra',                               '18 gauge steel casket with shaded exterior and black accents; champagne sovereign velvet interior.',                      'Batesville',       'CMS8BASZBQ',  'metal',    47),
+  ('csk071', 'Burlington',                           'Hollow cored poplar container with natural stain finish and white satin lining with pillow.',                             'Vancouver Casket', 'CCVBUCC',     'cremation', 52);
+
+-- ─── Victory Memorial (3745) casket pricing ───────────────────────────────────
+-- Effective Feb 20, 2026
+
+insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order) values
+  -- Wood Caskets
+  ('3745', 'csk017', 16599.00,  1),  -- 710 President
+  ('3745', 'csk018', 10899.00,  2),  -- Eloquence Mahogany
+  ('3745', 'csk019',  8299.00,  3),  -- Bexley Oak
+  ('3745', 'csk020',  8299.00,  4),  -- Cantonese Red (Full Couch)
+  ('3745', 'csk016',  8299.00,  5),  -- Regent
+  ('3745', 'csk021',  7499.00,  6),  -- Langdon Cherry
+  ('3745', 'csk022',  7199.00,  7),  -- Provincial Maple
+  ('3745', 'csk023',  6499.00,  8),  -- Chandler
+  ('3745', 'csk024',  6499.00,  9),  -- Classic Mahogany
+  ('3745', 'csk025',  6499.00, 10),  -- Jamestown PC
+  ('3745', 'csk015',  6499.00, 11),  -- Prominence
+  ('3745', 'csk026',  6499.00, 12),  -- Warren Oak
+  ('3745', 'csk027',  5699.00, 13),  -- Woodbridge Pecan
+  ('3745', 'csk028',  5199.00, 14),  -- St. Thomas Oak
+  ('3745', 'csk029',  5099.00, 15),  -- Mansfield-27
+  ('3745', 'csk030',  4699.00, 16),  -- Briar Hill
+  ('3745', 'csk031',  4699.00, 17),  -- Camden Oak
+  ('3745', 'csk032',  4699.00, 18),  -- Cameron Oak
+  ('3745', 'csk033',  4699.00, 19),  -- Promise
+  ('3745', 'csk034',  4699.00, 20),  -- Rosette
+  ('3745', 'csk035',  4699.00, 21),  -- Victoria Cherry
+  ('3745', 'csk036',  4295.00, 22),  -- Sincerity
+  ('3745', 'csk037',  4099.00, 23),  -- Brexton
+  ('3745', 'csk014',  4099.00, 24),  -- Dominion HC Wood Maple Crepe
+  ('3745', 'csk004',  4099.00, 25),  -- Eleanor Oak
+  ('3745', 'csk003',  4099.00, 26),  -- Fireside
+  ('3745', 'csk038',  4099.00, 27),  -- Hadyn
+  ('3745', 'csk007',  3599.00, 28),  -- Bailey
+  ('3745', 'csk008',  3599.00, 29),  -- Hartvic
+  ('3745', 'csk039',  3599.00, 30),  -- Sherwood Oak
+  ('3745', 'csk006',  3599.00, 31),  -- Watson
+  ('3745', 'csk009',  2999.00, 32),  -- Coleridge
+  ('3745', 'csk040',  2999.00, 33),  -- Constance
+  ('3745', 'csk011',  2999.00, 34),  -- Heavenly White
+  ('3745', 'csk010',  2999.00, 35),  -- Montgomery
+  ('3745', 'csk041',  2999.00, 36),  -- White Rose
+  ('3745', 'csk012',  2999.00, 37),  -- Winfield
+  ('3745', 'csk042',  2899.00, 38),  -- Carnaby
+  ('3745', 'csk043',  2799.00, 39),  -- Atlantic
+  ('3745', 'csk044',  2799.00, 40),  -- Natura
+  ('3745', 'csk045',  2799.00, 41),  -- Oxford
+  ('3745', 'csk013',  2599.00, 42),  -- Freelton
+  ('3745', 'csk046',  2599.00, 43),  -- Schafer
+  -- Metal Caskets
+  ('3745', 'csk047', 12499.00, 44),  -- Mediterranean Copper
+  ('3745', 'csk048', 10899.00, 45),  -- Aegean Copper
+  ('3745', 'csk049',  5199.00, 46),  -- Golden Granite
+  ('3745', 'csk050',  5099.00, 47),  -- Primrose
+  ('3745', 'csk051',  4299.00, 48),  -- Merlot-28
+  ('3745', 'csk001',  4099.00, 49),  -- Merlot
+  ('3745', 'csk052',  3599.00, 50),  -- Antique Blue-28
+  ('3745', 'csk005',  3599.00, 51),  -- Misty Blue
+  -- Cremation Oriented
+  ('3745', 'csk053',   999.00, 52),  -- McConnell
+  -- Containers
+  ('3745', 'cont004',  699.00, 53),  -- Plywood Container
+  ('3745', 'cont003',  650.00, 54),  -- Cypress
+  ('3745', 'cont005',  350.00, 55),  -- Particle Board Container
+  ('3745', 'cont006',  450.00, 56),  -- Trayview
+  -- Rental
+  ('3745', 'cont001', 1599.00, 57),  -- Brockton Oak Ceremonial
+  ('3745', 'cont002',  850.00, 58);  -- Brockton Oak (1 Hour Rental)
 
 -- ─── Service Items ────────────────────────────────────────────────────────────
 

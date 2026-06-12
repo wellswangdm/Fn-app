@@ -366,12 +366,16 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
           ? supabase.from('service_items').select('id, price').in('id', serviceIds)
           : Promise.resolve({ data: [] }),
         casketIds.length
-          ? supabase.from('caskets').select('id, name, price, description, image_url').in('id', casketIds)
+          ? supabase.from('funeral_home_caskets')
+              .select('catalog_id, price, casket_catalog(id, name, description, image_url)')
+              .eq('funeral_home_id', q.funeral_home_id)
+              .in('catalog_id', casketIds)
           : Promise.resolve({ data: [] }),
       ])
-      const currentPrices = Object.fromEntries(
-        [...(siPrices || []), ...(cskPrices || [])].map(r => [r.id, Number(r.price)])
-      )
+      const currentPrices = Object.fromEntries([
+        ...(siPrices  || []).map(r => [r.id,          Number(r.price)]),
+        ...(cskPrices || []).map(r => [r.catalog_id,  Number(r.price)]),
+      ])
       const stale = {}
       items.forEach(i => {
         if (i.serviceItemId && currentPrices[i.serviceItemId] != null &&
@@ -382,13 +386,13 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
       if (Object.keys(stale).length > 0) setPriceMap(stale)
 
       const casketItem = items.find(i => i.isCasketItem)
-      const casketData = (cskPrices || []).find(c => c.id === casketItem?.serviceItemId)
+      const casketData = (cskPrices || []).find(c => c.catalog_id === casketItem?.serviceItemId)
       const selectedCasket = casketData ? {
-        id:          casketData.id,
-        name:        casketData.name,
+        id:          casketData.casket_catalog.id,
+        name:        casketData.casket_catalog.name,
         price:       Number(casketData.price),
-        description: casketData.description || null,
-        imageUrl:    casketData.image_url || null,
+        description: casketData.casket_catalog.description || null,
+        imageUrl:    casketData.casket_catalog.image_url || null,
       } : null
 
       dispatch({

@@ -21,12 +21,18 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
   useEffect(() => {
     if (!funeralHomeId) return
     supabase
-      .from('caskets')
-      .select('id, name, price, description, image_url')
+      .from('funeral_home_caskets')
+      .select('price, sort_order, casket_catalog(id, name, description, image_url)')
       .eq('funeral_home_id', funeralHomeId)
       .order('price', { ascending: false })
       .then(({ data }) => {
-        const rows = data || []
+        const rows = (data || []).map(r => ({
+          id:          r.casket_catalog.id,
+          name:        r.casket_catalog.name,
+          price:       Number(r.price),
+          description: r.casket_catalog.description,
+          image_url:   r.casket_catalog.image_url,
+        }))
         setCaskets(rows)
         setSelected(rows.find(c => c.id === currentCasketId) || null)
         setLoading(false)

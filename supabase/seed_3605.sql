@@ -242,3 +242,68 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk002010', 'si002020', 1), -- Funeral Vehicle (Hearse)                                   395
   ('pk002010', 'si002033', 1), -- Estate Fraud Protection                                    135
   ('pk002010', 'si002046', 1); -- Premium Venue (Larger flexible space)                      595
+
+-- ─── Forest Lawn (3605) Casket Pricing ───────────────────────────────────────
+-- Casket catalog entries (products) live in seed.sql / casket_catalog table.
+-- This section only adds per-home pricing rows for Forest Lawn.
+-- Effective April 14, 2026
+
+insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order) values
+  -- Wood Caskets
+  ('3605', 'csk060', 18588.00,  1),   -- Dynasty (Full Couch)
+  ('3605', 'csk017', 16599.00,  2),   -- 710 President
+  ('3605', 'csk061', 12488.00,  3),   -- Emperor
+  ('3605', 'csk062', 12488.00,  4),   -- Executive Mahogany
+  ('3605', 'csk018', 10899.00,  5),   -- Eloquence Mahogany
+  ('3605', 'csk019',  8299.00,  6),   -- Bexley Oak
+  ('3605', 'csk020',  8299.00,  7),   -- Cantonese Red (Full Couch)
+  ('3605', 'csk016',  8299.00,  8),   -- Regent
+  ('3605', 'csk021',  7499.00,  9),   -- Langdon Cherry
+  ('3605', 'csk063',  7199.00, 10),   -- Pieta Maple
+  ('3605', 'csk023',  6499.00, 11),   -- Chandler
+  ('3605', 'csk024',  6499.00, 12),   -- Classic Mahogany
+  ('3605', 'csk025',  6499.00, 13),   -- Jamestown PC
+  ('3605', 'csk015',  6499.00, 14),   -- Prominence
+  ('3605', 'csk026',  6499.00, 15),   -- Warren Oak
+  ('3605', 'csk064',  5999.00, 16),   -- Ho Wan
+  ('3605', 'csk065',  5999.00, 17),   -- Shanghai
+  ('3605', 'csk027',  5699.00, 18),   -- Woodbridge Pecan
+  ('3605', 'csk028',  5199.00, 19),   -- St. Thomas Oak
+  ('3605', 'csk066',  5199.00, 20),   -- Woodhaven Pecan
+  ('3605', 'csk029',  5099.00, 21),   -- Mansfield-27
+  ('3605', 'csk033',  4799.00, 22),   -- Promise  (FL $4,799 vs Victory $4,699)
+  ('3605', 'csk030',  4699.00, 23),   -- Briar Hill
+  ('3605', 'csk031',  4699.00, 24),   -- Camden Oak
+  ('3605', 'csk032',  4699.00, 25),   -- Cameron Oak
+  ('3605', 'csk034',  4699.00, 26),   -- Rosette
+  ('3605', 'csk035',  4699.00, 27),   -- Victoria Cherry
+  ('3605', 'csk003',  4299.00, 28),   -- Fireside   (FL $4,299 vs Victory $4,099)
+  ('3605', 'csk036',  4295.00, 29),   -- Sincerity
+  ('3605', 'csk037',  4099.00, 30),   -- Brexton
+  ('3605', 'csk014',  4099.00, 31),   -- Dominion HC Wood Maple Crepe
+  ('3605', 'csk004',  4099.00, 32),   -- Eleanor Oak
+  ('3605', 'csk008',  3599.00, 33),   -- Hartvic
+  ('3605', 'csk039',  3599.00, 34),   -- Sherwood Oak
+  ('3605', 'csk011',  2999.00, 35),   -- Heavenly White
+  ('3605', 'csk041',  2999.00, 36),   -- White Rose
+  ('3605', 'csk012',  2999.00, 37),   -- Winfield
+  ('3605', 'csk043',  2799.00, 38),   -- Atlantic
+  ('3605', 'csk044',  2799.00, 39),   -- Natura
+  ('3605', 'csk072',  2099.00, 40),   -- Butler
+  -- Metal Caskets
+  ('3605', 'csk067', 55399.00, 41),   -- Promethean (Full Couch)
+  ('3605', 'csk068', 18399.00, 42),   -- Venetian Bronze
+  ('3605', 'csk069', 18299.00, 43),   -- Classic Mahogany Bronze (Full Couch)
+  ('3605', 'csk047', 12499.00, 44),   -- Mediterranean Copper
+  ('3605', 'csk048', 10899.00, 45),   -- Aegean Copper
+  ('3605', 'csk049',  5199.00, 46),   -- Golden Granite
+  ('3605', 'csk070',  5199.00, 47),   -- Sierra
+  ('3605', 'csk050',  5099.00, 48),   -- Primrose
+  ('3605', 'csk051',  4299.00, 49),   -- Merlot-28
+  ('3605', 'csk052',  3599.00, 50),   -- Antique Blue-28
+  -- Cremation Oriented
+  ('3605', 'csk053',  1050.00, 51),   -- McConnell  (FL $1,050 vs Victory $999)
+  ('3605', 'csk071',   850.00, 52),   -- Burlington
+  -- Rental
+  ('3605', 'cont001', 1599.00, 53),   -- Brockton Oak Ceremonial
+  ('3605', 'cont002',  850.00, 54);   -- Brockton Oak (1 Hour Rental)
