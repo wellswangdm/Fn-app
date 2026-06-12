@@ -15,18 +15,18 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
 
   -- Professional Staff & Services
   ('si001001', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Full Service',               NULL, 3590.00, NULL, NULL, false, 1),
-  ('si001002', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Memorial Service',           NULL, 3590.00, NULL, NULL, false, 2),
+  ('si001002', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Memorial Service',           NULL, 3440.00, NULL, NULL, false, 2),
   ('si001003', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Graveside Service',          NULL, 3590.00, NULL, NULL, false, 3),
   ('si001004', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Gathering Celebrations',     NULL, 3590.00, NULL, NULL, false, 4),
-  ('si001005', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Urn Committal',              NULL, 2695.00, NULL, NULL, false, 5),
-  ('si001006', '3606', 'c1000000-0000-0000-0000-000000000001', 'Basic Service Fees for No Service Option',                  NULL, 1495.00, NULL, NULL, false, 6),
+  ('si001005', '3606', 'c1000000-0000-0000-0000-000000000001', 'Professional Services Fees for Urn Committal',              NULL, 2840.00, NULL, NULL, false, 5),
+  ('si001006', '3606', 'c1000000-0000-0000-0000-000000000001', 'Basic Service Fees for No Service Option',                  NULL, 1345.00, NULL, NULL, false, 6),
   ('si001007', '3606', 'c1000000-0000-0000-0000-000000000001', 'Basic Professional Service Fee when Forwarding Remains',    NULL, 3590.00, NULL, NULL, false, 7),
   ('si001008', '3606', 'c1000000-0000-0000-0000-000000000001', 'Basic Professional Service Fees when Receiving Remains',    NULL, 3590.00, NULL, NULL, false, 8),
   ('si001009', '3606', 'c1000000-0000-0000-0000-000000000001', 'Supervision of Disinterment',                               NULL, 3595.00, NULL, NULL, false, 9),
-  ('si001010', '3606', 'c1000000-0000-0000-0000-000000000001', 'Registration and Documentation',                            'Completion and filing of all documents necessary to carry out services.',  445.00, NULL, NULL, false, 10),
+  ('si001010', '3606', 'c1000000-0000-0000-0000-000000000001', 'Registration and Documentation',                            'Completion and filing of all documents necessary to carry out services.',  495.00, NULL, NULL, false, 10),
   ('si001011', '3606', 'c1000000-0000-0000-0000-000000000001', 'Embalming',                                                 'Sanitation, restoration and temporary preservation of remains.',            625.00, NULL, NULL, false, 11),
-  ('si001012', '3606', 'c1000000-0000-0000-0000-000000000001', 'Other Care and Preparation',                                NULL, 395.00, NULL, NULL, false, 12),
-  ('si001013', '3606', 'c1000000-0000-0000-0000-000000000001', 'Sheltering of Remains',                                     NULL, 395.00, NULL, NULL, false, 13),
+  ('si001012', '3606', 'c1000000-0000-0000-0000-000000000001', 'Other Care and Preparation',                                NULL, 445.00, NULL, NULL, false, 12),
+  ('si001013', '3606', 'c1000000-0000-0000-0000-000000000001', 'Sheltering of Remains',                                     NULL, 445.00, NULL, NULL, false, 13),
 
   -- Facilities and Supervision
   ('si001014', '3606', 'c1000000-0000-0000-0000-000000000002', 'Use of Facilities for Embalming and Preparation',           NULL, 395.00, NULL, NULL, false, 1),
@@ -57,7 +57,7 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
   ('si001035', '3606', 'c1000000-0000-0000-0000-000000000004', 'Cremation Jewellery Bundle',                                'Matching pendant and chain, charm and earrings.',                            295.00, NULL, NULL, false, 7),
 
   -- Miscellaneous Services & Merchandise
-  ('si001036', '3606', 'c1000000-0000-0000-0000-000000000005', 'Crematory Fee',                                             NULL, 795.00, NULL, NULL, false, 1),
+  ('si001036', '3606', 'c1000000-0000-0000-0000-000000000005', 'Crematory Fee',                                             NULL, 995.00, NULL, NULL, false, 1),
   ('si001037', '3606', 'c1000000-0000-0000-0000-000000000005', 'Cremation Expediting Fee',                                  NULL, 695.00, NULL, NULL, false, 2),
   ('si001038', '3606', 'c1000000-0000-0000-0000-000000000005', 'Cremation Witnessing Fee',                                  NULL, 695.00, NULL, NULL, false, 3),
   ('si001039', '3606', 'c1000000-0000-0000-0000-000000000005', 'Witness of Ashes Transfer',                                 'Fee to witness transfer of ashes from one container to another.',            695.00, NULL, NULL, false, 4),
@@ -76,7 +76,7 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
   ('si001052', '3606', 'c1000000-0000-0000-0000-000000000005', 'Dignity Celebrant',                                         'Certified officiant for the service.',                                       395.00, NULL, NULL, false, 17),
   ('si001053', '3606', 'c1000000-0000-0000-0000-000000000005', 'External Celebrant',                                        'Officiant for the service.',                                                  NULL, NULL, NULL, false, 18),
   ('si001054', '3606', 'c1000000-0000-0000-0000-000000000005', 'Tribute Movie',                                             'Treasured photos set to music, viewable at DignityMemorial.com.',            30.00, NULL, NULL, false, 19),
-  ('si001055', '3606', 'c1000000-0000-0000-0000-000000000005', 'Everlasting Memorial',                                      'Life story published to DignityMemorial.com with keepsakes.',               449.00, NULL, NULL, false, 20),
+  ('si001055', '3606', 'c1000000-0000-0000-0000-000000000005', 'Everlasting Memorial',                                      'Life story published to DignityMemorial.com with keepsakes.',               490.00, NULL, NULL, false, 20),
   ('si001056', '3606', 'c1000000-0000-0000-0000-000000000005', 'A Life Remembered Book (Soft Cover)',                        'Biography, photos and guestbook messages.',                                   35.00, NULL, NULL, false, 21),
   ('si001057', '3606', 'c1000000-0000-0000-0000-000000000005', 'A Life Remembered Book (Hardcover)',                         'Biography, photos and guestbook messages in hardcover.',                      50.00, NULL, NULL, false, 22),
   ('si001058', '3606', 'c1000000-0000-0000-0000-000000000005', 'Sheltering of Remains – Per Day',                           NULL, 25.00, NULL, NULL, false, 23),
@@ -87,9 +87,9 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
   ('si001063', '3606', 'c1000000-0000-0000-0000-000000000005', 'Shipping Container',                                        NULL, 399.00, NULL, NULL, false, 28),
   ('si001064', '3606', 'c1000000-0000-0000-0000-000000000005', 'Shipping Crate for Calgary Liner',                          'Plywood crate with 6 metal handles.',                                        299.00, NULL, NULL, false, 29),
   ('si001065', '3606', 'c1000000-0000-0000-0000-000000000005', 'Calgary Liner',                                             'Steel liner with lid and seal.',                                             1599.00, NULL, NULL, false, 30),
-  ('si001066', '3606', 'c1000000-0000-0000-0000-000000000005', 'Casket Medallions',                                         'Memorial keepsake displayed in specific caskets.',                            NULL, 30.00, 75.00, false, 31),
-  ('si001067', '3606', 'c1000000-0000-0000-0000-000000000005', 'Single Small Medallion Case',                               NULL, 45.00, NULL, NULL, false, 32),
-  ('si001068', '3606', 'c1000000-0000-0000-0000-000000000005', 'Triple Small Medallion Case',                               NULL, 75.00, NULL, NULL, false, 33),
+  ('si001066', '3606', 'c1000000-0000-0000-0000-000000000005', 'Casket Medallions',                                         'Memorial keepsake displayed in specific caskets.',                            NULL, 50.00, 295.00, false, 31),
+  ('si001067', '3606', 'c1000000-0000-0000-0000-000000000005', 'Single Small Medallion Case',                               NULL, 65.00, NULL, NULL, false, 32),
+  ('si001068', '3606', 'c1000000-0000-0000-0000-000000000005', 'Triple Small Medallion Case',                               NULL, 95.00, NULL, NULL, false, 33),
   ('si001069', '3606', 'c1000000-0000-0000-0000-000000000005', 'Dignity Leather Presentation Box',                          'Protects and stores keepsakes from the service.',                             50.00, NULL, NULL, false, 34),
 
   -- Stationery
@@ -105,7 +105,7 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
   -- Cash Advances
   ('si001078', '3606', 'c1000000-0000-0000-0000-000000000007', 'Death Certificate (each)',                                  NULL, 27.00, NULL, NULL, true, 1),
   ('si001079', '3606', 'c1000000-0000-0000-0000-000000000007', 'Hostess Fee',                                               NULL, 175.00, NULL, NULL, true, 2),
-  ('si001080', '3606', 'c1000000-0000-0000-0000-000000000007', 'CPBC Fee',                                                  NULL, 40.00, NULL, NULL, true, 3),
+  ('si001080', '3606', 'c1000000-0000-0000-0000-000000000007', 'CPBC Fee',                                                  NULL, 48.00, NULL, NULL, true, 3),
   ('si001081', '3606', 'c1000000-0000-0000-0000-000000000007', 'Clergy Honorarium',                                         NULL, NULL, NULL, NULL, true, 4),
   ('si001082', '3606', 'c1000000-0000-0000-0000-000000000007', 'Organist',                                                  NULL, NULL, NULL, NULL, true, 5),
   ('si001083', '3606', 'c1000000-0000-0000-0000-000000000007', 'Soloist',                                                   NULL, NULL, NULL, NULL, true, 6);
@@ -113,14 +113,24 @@ insert into service_items (id, funeral_home_id, category_id, name, description, 
 -- ─── Packages (a la carte / service offerings from GPL) ───────────────────────
 
 insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_discount, default_casket_id, sort_order) values
-  ('pk001001', '3606', 'Full Service',              'alacarte',  7810.00, 0, NULL, 1),
-  ('pk001002', '3606', 'Service of Remembrance',    'alacarte',  7190.00, 0, NULL, 2),
-  ('pk001003', '3606', 'Graveside Service',          'alacarte',  6195.00, 0, NULL, 3),
-  ('pk001004', '3606', 'Urn Committal',              'alacarte',  5700.00, 0, NULL, 4),
-  ('pk001005', '3606', 'No Service Option',          'alacarte',  4205.00, 0, NULL, 5),
-  ('pk001006', '3606', 'Disinterment',               'alacarte',  4780.00, 0, NULL, 6),
-  ('pk001007', '3606', 'Forwarding of Remains',      'alacarte',  7665.00, 0, NULL, 7),
-  ('pk001008', '3606', 'Receiving of Remains',       'alacarte',  6050.00, 0, NULL, 8);
+  ('pk001001', '3606', 'Full Service',              'alacarte',  7960.00, 0, NULL, 1),
+  ('pk001002', '3606', 'Service of Remembrance',    'alacarte',  7390.00, 0, NULL, 2),
+  ('pk001003', '3606', 'Graveside Service',          'alacarte',  6345.00, 0, NULL, 3),
+  ('pk001004', '3606', 'Urn Committal',              'alacarte',  5900.00, 0, NULL, 4),
+  ('pk001005', '3606', 'No Service Option',          'alacarte',  4405.00, 0, NULL, 5),
+  ('pk001006', '3606', 'Disinterment',               'alacarte',  4880.00, 0, NULL, 6),
+  ('pk001007', '3606', 'Forwarding of Remains',      'alacarte',  7815.00, 0, NULL, 7),
+  ('pk001008', '3606', 'Receiving of Remains',       'alacarte',  6150.00, 0, NULL, 8),
+  ('pk001009', '3606', 'Witness Cremation',          'alacarte',  6500.00, 0, NULL, 9),
+  -- PPL packages
+  ('pk001010', '3606', 'Dignity Memorial Heritage Funeral Service',  'package', 19229.00,  540, 'si001117', 1),
+  ('pk001011', '3606', 'Dignity Memorial Honour Funeral Service',    'package', 16329.00,  460, 'si001118', 2),
+  ('pk001012', '3606', 'Dignity Memorial Tribute Funeral Service',   'package', 14729.00,  435, 'si001119', 3),
+  ('pk001013', '3606', 'Dignity Jade Burial Plan',                   'package', 18239.00,  505, 'si001117', 4),
+  ('pk001014', '3606', 'Dignity Memorial Heritage Cremation Service','package', 16424.00,  465, 'si001120', 5),
+  ('pk001015', '3606', 'Dignity Memorial Honour Cremation Service',  'package', 12510.00,  360, 'si001121', 6),
+  ('pk001016', '3606', 'Dignity Memorial Tribute Cremation Service', 'package',  7640.00,   50, 'si001121', 7),
+  ('pk001017', '3606', 'Dignity Jade Cremation Plan',                'package', 14680.00,  405, 'si001122', 8);
 
 -- ─── Package Items ────────────────────────────────────────────────────────────
 
@@ -159,15 +169,14 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001003', 'si001023', 1), -- Funeral Vehicle (Hearse)                           395
   ('pk001003', 'si001045', 1), -- Estate Fraud Protection                            135
 
-  -- Urn Committal ($5,700)
-  ('pk001004', 'si001005', 1), -- Professional Services Fees for Urn Committal       2695
-  ('pk001004', 'si001010', 1), -- Registration and Documentation                      445
-  ('pk001004', 'si001012', 1), -- Other Care and Preparation                          395
-  ('pk001004', 'si001013', 1), -- Sheltering of Remains                               395
+  -- Urn Committal ($5,900)
+  ('pk001004', 'si001005', 1), -- Professional Services Fees for Urn Committal       2840
+  ('pk001004', 'si001010', 1), -- Registration and Documentation                      495
+  ('pk001004', 'si001012', 1), -- Other Care and Preparation                          445
+  ('pk001004', 'si001013', 1), -- Sheltering of Remains                               445
   ('pk001004', 'si001022', 1), -- Transfer of Remains                                 545
-  ('pk001004', 'si001024', 1), -- Flower Vehicle                                      295
   ('pk001004', 'si001045', 1), -- Estate Fraud Protection                             135
-  ('pk001004', 'si001036', 1), -- Crematory Fee                                       795
+  ('pk001004', 'si001036', 1), -- Crematory Fee                                       995
 
   -- No Service Option ($4,205)
   ('pk001005', 'si001006', 1), -- Basic Service Fees for No Service Option            1495
@@ -203,4 +212,308 @@ insert into package_items (package_id, service_item_id, quantity) values
   ('pk001008', 'si001027', 1), -- Transfer to or from Airport                           545
   ('pk001008', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
   ('pk001008', 'si001045', 1), -- Estate Fraud Protection                               135
-  ('pk001008', 'si001050', 1); -- Premium Venue Service                                 595
+  ('pk001008', 'si001050', 1), -- Premium Venue Service                                 595
+
+  -- Witness Cremation ($6,500)
+  ('pk001009', 'si001084', 1), -- Professional Service Fees for Cremation Witness     3440
+  ('pk001009', 'si001010', 1), -- Registration and Documentation                       495
+  ('pk001009', 'si001012', 1), -- Other Care and Preparation                           445
+  ('pk001009', 'si001013', 1), -- Sheltering of Remains                                445
+  ('pk001009', 'si001022', 1), -- Transfer of Remains from Place of Death              545
+  ('pk001009', 'si001045', 1), -- Estate Fraud Protection                              135
+  ('pk001009', 'si001036', 1), -- Crematory Fee                                        995
+
+  -- Heritage Funeral Service ($19,229 → $18,689 with savings)
+  ('pk001010', 'si001001', 1), -- Professional Services Fees for Full Service          3590
+  ('pk001010', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001010', 'si001011', 1), -- Embalming                                             625
+  ('pk001010', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001010', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001010', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001010', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001010', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
+  ('pk001010', 'si001025', 1), -- Limousine                                             395
+  ('pk001010', 'si001055', 1), -- Everlasting Memorial®                                 490
+  ('pk001010', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001010', 'si001091', 1), -- Dignity Heritage Burial Flowers                       695
+  ('pk001010', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001010', 'si001029', 1), -- Family Support Option (Select 1)                      295
+  ('pk001010', 'si001117', 1), -- Recommended Casket — Heritage/Jade Tier             6499
+  ('pk001010', 'si001098', 1), -- Catered Receptions III                              2495
+  ('pk001010', 'si001100', 1), -- Esteemed Collection                                   795
+
+  -- Honour Funeral Service ($16,329 → $15,869 with savings)
+  ('pk001011', 'si001001', 1), -- Professional Services Fees for Full Service          3590
+  ('pk001011', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001011', 'si001011', 1), -- Embalming                                             625
+  ('pk001011', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001011', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001011', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001011', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001011', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
+  ('pk001011', 'si001025', 1), -- Limousine                                             395
+  ('pk001011', 'si001055', 1), -- Everlasting Memorial®                                 490
+  ('pk001011', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001011', 'si001092', 1), -- Dignity Honour Burial Flowers                         595
+  ('pk001011', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001011', 'si001029', 1), -- Family Support Option (Select 1)                      295
+  ('pk001011', 'si001118', 1), -- Recommended Casket — Honour Tier                    4699
+  ('pk001011', 'si001097', 1), -- Catered Receptions II                               1795
+  ('pk001011', 'si001099', 1), -- Commemorative Collection                              495
+
+  -- Tribute Funeral Service ($14,729 → $14,294 with savings)
+  ('pk001012', 'si001001', 1), -- Professional Services Fees for Full Service          3590
+  ('pk001012', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001012', 'si001011', 1), -- Embalming                                             625
+  ('pk001012', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001012', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001012', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001012', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001012', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
+  ('pk001012', 'si001025', 1), -- Limousine                                             395
+  ('pk001012', 'si001055', 1), -- Everlasting Memorial®                                 490
+  ('pk001012', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001012', 'si001093', 1), -- Dignity Tribute Burial Flowers                        495
+  ('pk001012', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001012', 'si001029', 1), -- Family Support Option (Select 1)                      295
+  ('pk001012', 'si001119', 1), -- Recommended Casket — Tribute Tier                   4099
+  ('pk001012', 'si001096', 1), -- Catered Receptions I                                  995
+  ('pk001012', 'si001101', 1), -- Remembrance Collection                                395
+
+  -- Jade Burial Plan ($18,239 → $17,734 with savings; 2 family support options, no Everlasting Memorial)
+  ('pk001013', 'si001001', 1), -- Professional Services Fees for Full Service          3590
+  ('pk001013', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001013', 'si001011', 1), -- Embalming                                             625
+  ('pk001013', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001013', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001013', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001013', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001013', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
+  ('pk001013', 'si001025', 1), -- Limousine                                             395
+  ('pk001013', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001013', 'si001091', 1), -- Dignity Heritage Burial Flowers                       695
+  ('pk001013', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001013', 'si001029', 1), -- Family Support Option 1 (Select 2 = $590)            295
+  ('pk001013', 'si001030', 1), -- Family Support Option 2                               295
+  ('pk001013', 'si001117', 1), -- Recommended Casket — Heritage/Jade Tier             6499
+  ('pk001013', 'si001098', 1), -- Catered Receptions III                              2495
+
+  -- Heritage Cremation Service ($16,424 → $15,959 with savings)
+  ('pk001014', 'si001001', 1), -- Professional Services Fees for Full Service          3590
+  ('pk001014', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001014', 'si001011', 1), -- Embalming                                             625
+  ('pk001014', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001014', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001014', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001014', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001014', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
+  ('pk001014', 'si001025', 1), -- Limousine                                             395
+  ('pk001014', 'si001055', 1), -- Everlasting Memorial®                                 490
+  ('pk001014', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001014', 'si001094', 1), -- Dignity Heritage Cremation Flowers                    500
+  ('pk001014', 'si001036', 1), -- Crematory Fee                                         995
+  ('pk001014', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001014', 'si001029', 1), -- Family Support Option (Select 1)                      295
+  ('pk001014', 'si001113', 1), -- Memorial Urn Selection — Heritage Tier              1295
+  ('pk001014', 'si001120', 1), -- Batesville Brockton Oak Ceremonial                  1599
+  ('pk001014', 'si001098', 1), -- Catered Receptions III                              2495
+  ('pk001014', 'si001100', 1), -- Esteemed Collection                                   795
+
+  -- Honour Cremation Service ($12,510 → $12,150 with savings)
+  ('pk001015', 'si001002', 1), -- Professional Services Fees for Memorial Service      3440
+  ('pk001015', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001015', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001015', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001015', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001015', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001015', 'si001055', 1), -- Everlasting Memorial®                                 490
+  ('pk001015', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001015', 'si001095', 1), -- Dignity Honour Cremation Flowers                      400
+  ('pk001015', 'si001036', 1), -- Crematory Fee                                         995
+  ('pk001015', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001015', 'si001029', 1), -- Family Support Option (Select 1)                      295
+  ('pk001015', 'si001114', 1), -- Memorial Urn Selection — Honour Tier                  795
+  ('pk001015', 'si001121', 1), -- Vancouver Casket Burlington                           850
+  ('pk001015', 'si001097', 1), -- Catered Receptions II                               1795
+  ('pk001015', 'si001099', 1), -- Commemorative Collection                              495
+
+  -- Tribute Cremation Service ($7,640 → $7,590 with savings)
+  ('pk001016', 'si001005', 1), -- Professional Services Fees for Urn Committal        2840
+  ('pk001016', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001016', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001016', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001016', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001016', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001016', 'si001036', 1), -- Crematory Fee                                         995
+  ('pk001016', 'si001029', 1), -- Family Support Option (Select 1)                      295
+  ('pk001016', 'si001115', 1), -- Memorial Urn Selection — Tribute Tier                 595
+  ('pk001016', 'si001121', 1), -- Vancouver Casket Burlington                           850
+
+  -- Jade Cremation Plan ($14,680 → $14,275 with savings; 2 family support options)
+  ('pk001017', 'si001001', 1), -- Professional Services Fees for Full Service          3590
+  ('pk001017', 'si001010', 1), -- Registration and Documentation                        495
+  ('pk001017', 'si001011', 1), -- Embalming                                             625
+  ('pk001017', 'si001012', 1), -- Other Care and Preparation                            445
+  ('pk001017', 'si001013', 1), -- Sheltering of Remains                                 445
+  ('pk001017', 'si001022', 1), -- Transfer of Remains from Place of Death               545
+  ('pk001017', 'si001024', 1), -- Flower Vehicle                                        295
+  ('pk001017', 'si001023', 1), -- Funeral Vehicle (Hearse)                              395
+  ('pk001017', 'si001025', 1), -- Limousine                                             395
+  ('pk001017', 'si001045', 1), -- Estate Fraud Protection                               135
+  ('pk001017', 'si001091', 1), -- Dignity Heritage Burial Flowers                       695
+  ('pk001017', 'si001036', 1), -- Crematory Fee                                         995
+  ('pk001017', 'si001050', 1), -- Premium Venue Service                                 595
+  ('pk001017', 'si001029', 1), -- Family Support Option 1 (Select 2 = $590)            295
+  ('pk001017', 'si001030', 1), -- Family Support Option 2                               295
+  ('pk001017', 'si001116', 1), -- Memorial Urn Selection — Jade Tier                    895
+  ('pk001017', 'si001122', 1), -- Vancouver Casket McConnell                           1050
+  ('pk001017', 'si001098', 1); -- Catered Receptions III                              2495
+
+-- ─── New Service Items (GPL/PPL update) ──────────────────────────────────────
+
+insert into service_items (id, funeral_home_id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, sort_order) values
+
+  -- Professional Staff & Services
+  ('si001084', '3606', 'c1000000-0000-0000-0000-000000000001', NULL,
+    'Professional Service Fees for Cremation Witness', NULL,
+    3440.00, NULL, NULL, false, 14),
+
+  -- Family Support Options
+  ('si001085', '3606', 'c1000000-0000-0000-0000-000000000004', 'XPARNRY1',
+    'Retractable Table Banner',
+    'Showcases up to 4 pictures with personalized design and optional QR code. 11.75" x 17".',
+    295.00, NULL, NULL, false, 9),
+  ('si001086', '3606', 'c1000000-0000-0000-0000-000000000004', NULL,
+    'Timeless Touch Fingerprint', NULL,
+    295.00, NULL, NULL, false, 10),
+  ('si001087', '3606', 'c1000000-0000-0000-0000-000000000004', NULL,
+    'Medallion Bundle', NULL,
+    295.00, NULL, NULL, false, 11),
+
+  -- Miscellaneous Services & Merchandise
+  ('si001088', '3606', 'c1000000-0000-0000-0000-000000000005', 'XSRAVERT',
+    'Audio Visual Equipment Rental', 'AV equipment rental.',
+    195.00, NULL, NULL, false, 35),
+  ('si001089', '3606', 'c1000000-0000-0000-0000-000000000005', 'XSMCCZ09Z',
+    'Retractable Floor Banner', NULL,
+    395.00, NULL, NULL, false, 36),
+  ('si001090', '3606', 'c1000000-0000-0000-0000-000000000005', 'MEMMALRB',
+    'A Life Remembered Book', 'A Life Remembered Book.',
+    95.00, NULL, NULL, false, 37),
+  ('si001091', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Dignity Heritage Burial Flowers', NULL,
+    695.00, NULL, NULL, false, 38),
+  ('si001092', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Dignity Honour Burial Flowers', NULL,
+    595.00, NULL, NULL, false, 39),
+  ('si001093', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Dignity Tribute Burial Flowers', NULL,
+    495.00, NULL, NULL, false, 40),
+  ('si001094', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Dignity Heritage Cremation Flowers', NULL,
+    500.00, NULL, NULL, false, 41),
+  ('si001095', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Dignity Honour Cremation Flowers', NULL,
+    400.00, NULL, NULL, false, 42),
+  ('si001096', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Catered Receptions I', NULL,
+    995.00, NULL, NULL, false, 43),
+  ('si001097', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Catered Receptions II', NULL,
+    1795.00, NULL, NULL, false, 44),
+  ('si001098', '3606', 'c1000000-0000-0000-0000-000000000005', NULL,
+    'Catered Receptions III', NULL,
+    2495.00, NULL, NULL, false, 45),
+
+  -- Stationery
+  ('si001099', '3606', 'c1000000-0000-0000-0000-000000000006', 'XDPAICV',
+    'Commemorative Collection',
+    'Includes 1 Medium Memory Book, choice of 100 Medium Memory Folders or Cards, choice of 25 Medium Tribute Thank You Cards or Signature Thank You Cards, and 1 Keepsake Box.',
+    495.00, NULL, NULL, false, 9),
+  ('si001100', '3606', 'c1000000-0000-0000-0000-000000000006', 'XDPAIEC',
+    'Esteemed Collection',
+    'Includes 1 Medium Memory Book, choice of 100 Large Memory Booklets or Cards, choice of 25 Medium Tribute Thank You Cards or Signature Thank You Cards, and 1 Keepsake Box.',
+    795.00, NULL, NULL, false, 10),
+  ('si001101', '3606', 'c1000000-0000-0000-0000-000000000006', 'XDPAIRC',
+    'Remembrance Collection',
+    'Includes 1 Medium Memory Book, choice of 100 Small Memory Folders or Cards, choice of 25 Small Tribute Thank You Cards, and 1 Keepsake Box.',
+    395.00, NULL, NULL, false, 11),
+  ('si001102', '3606', 'c1000000-0000-0000-0000-000000000006', 'XDPAIOC',
+    'Our Collection',
+    'Includes 1 Memory Register Book, choice of 100 Our Collection Folders or Prayer Cards, choice of 50 Our Collection Thank You Cards, and 1 Keepsake Box.',
+    395.00, NULL, NULL, false, 12),
+  ('si001103', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMOT1S44',
+    'Our Collection Folders or Prayer Cards (per 100)',
+    'Choose from a selection of themes available on site.',
+    195.00, NULL, NULL, false, 13),
+  ('si001104', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMLG1S3L',
+    'Large Memory Booklets or Memory Cards (per 100)',
+    'Large Memory Booklets feature 8 pages; Large Memory Cards feature soft-touch finish and up to 5 photos.',
+    620.00, NULL, NULL, false, 14),
+  ('si001105', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMMD1S3L',
+    'Medium Memory Cards or Memory Folders (per 100)',
+    'Include up to 4 photos, name, dates, service details, obituary, and choice of poem or verse.',
+    320.00, NULL, NULL, false, 15),
+  ('si001106', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMDF1S3L',
+    'Small Memory Folders or Memory Cards (per 100)',
+    'Include 1 photo, name, dates, service details, obituary, and choice of poem or verse.',
+    220.00, NULL, NULL, false, 16),
+  ('si001107', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMBMBM5F',
+    'Soft Touch Bookmarks (50)', NULL,
+    200.00, NULL, NULL, false, 17),
+  ('si001108', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMAI8M8M',
+    'Memory Register Book', 'Classic ivory guest register printed on site.',
+    75.00, NULL, NULL, false, 18),
+  ('si001109', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMMB1S3L',
+    'Medium Memory Book', 'Elegant ivory or charcoal keepsake book with tone-on-tone pattern.',
+    75.00, NULL, NULL, false, 19),
+  ('si001110', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMKB1S3L',
+    'Keepsake Box', 'Modern keepsake box with magnetic closure. 11.5" x 10" x 3.75".',
+    25.00, NULL, NULL, false, 20),
+  ('si001111', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMEG993L',
+    'Personalized Thank You Cards (per 25)', NULL,
+    75.00, NULL, NULL, false, 21),
+  ('si001112', '3606', 'c1000000-0000-0000-0000-000000000006', 'XSMAX1S5L',
+    'Our Collection Thank You Cards (per 50)', NULL,
+    100.00, NULL, NULL, false, 22),
+
+  -- Urns — PPL memorial urn selection tiers
+  ('si001113', '3606', 'c1000000-0000-0000-0000-000000000009', NULL,
+    'Memorial Urn Selection — Heritage Tier',
+    'Choice of: LoveUrns HeartFelt™ Gold, Terrybear Eminence White Marble Urn, Granville Lucinda Blue Horizontal Urn, or Granville Charlotte Horizontal Urn.',
+    1295.00, NULL, NULL, false, 1),
+  ('si001114', '3606', 'c1000000-0000-0000-0000-000000000009', NULL,
+    'Memorial Urn Selection — Honour Tier',
+    'Choice of: Urnes Bégin Versatile Urn Navy, LoveUrns Laurel Midnight, Terrybear Satori Ocean Pearl, or Batesville Memento Chest.',
+    795.00, NULL, NULL, false, 2),
+  ('si001115', '3606', 'c1000000-0000-0000-0000-000000000009', NULL,
+    'Memorial Urn Selection — Tribute Tier',
+    'Choice of: LoveUrns Laurel Crimson, Urnes Bégin Sky Pewter, Mackenzie Classic Sky Blue, or Batesville Cherry Chest.',
+    595.00, NULL, NULL, false, 3),
+  ('si001116', '3606', 'c1000000-0000-0000-0000-000000000009', NULL,
+    'Memorial Urn Selection — Jade Tier',
+    'Choice of: LoveUrns Elegant Leaf, Urnes Bégin Serenity Tree, Urnes Bégin Bois Silver Maple, or BioLife Living Tribute Urn.',
+    895.00, NULL, NULL, false, 4),
+
+  -- Caskets & Containers — PPL recommended selections
+  ('si001117', '3606', 'c1000000-0000-0000-0000-000000000008', NULL,
+    'Recommended Casket — Heritage/Jade Tier',
+    'Heritage: choice of Batesville Prominence, Batesville Chandler, Victoriaville Classic Mahogany, or Batesville Warren Oak. Jade: Victoriaville Jamestown PC, Batesville Prominence, Batesville Chandler, or Victoriaville Classic Mahogany.',
+    6499.00, NULL, NULL, false, 1),
+  ('si001118', '3606', 'c1000000-0000-0000-0000-000000000008', NULL,
+    'Recommended Casket — Honour Tier',
+    'Choice of: Victoriaville Victoria Cherry, Batesville Rosette, Victoriaville Briar Hill, or Batesville Camden Oak.',
+    4699.00, NULL, NULL, false, 2),
+  ('si001119', '3606', 'c1000000-0000-0000-0000-000000000008', NULL,
+    'Recommended Casket — Tribute Tier',
+    'Choice of: Batesville Merlot, Victoriaville Dominion HC Wood Maple Crepe, Batesville Fireside, or Batesville Eleanor Oak.',
+    4099.00, NULL, NULL, false, 3),
+  ('si001120', '3606', 'c1000000-0000-0000-0000-000000000008', NULL,
+    'Batesville Brockton Oak Ceremonial', 'Ceremonial container for cremation services.',
+    1599.00, NULL, NULL, false, 4),
+  ('si001121', '3606', 'c1000000-0000-0000-0000-000000000008', NULL,
+    'Vancouver Casket Burlington', 'Cremation container.',
+    850.00, NULL, NULL, false, 5),
+  ('si001122', '3606', 'c1000000-0000-0000-0000-000000000008', NULL,
+    'Vancouver Casket McConnell', 'Cremation container.',
+    1050.00, NULL, NULL, false, 6);
