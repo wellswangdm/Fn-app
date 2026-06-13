@@ -273,6 +273,11 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si000092', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Dignity Stationery Package',                                 NULL,  NULL, 395.00, 795.00, false),
   ('si000093', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Cremation Jewellery Bundle',                                 NULL,  295.00, NULL, NULL, false),
   ('si000094', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Casket Medallions',                                          NULL,  NULL,  50.00, 295.00, false),
+  ('si000202', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Burial Flowers',                                             NULL,  695.00, NULL, NULL, false),
+  ('si000203', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Burial Flowers',                                             NULL,  595.00, NULL, NULL, false),
+  ('si000204', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Burial Flowers',                                             NULL,  495.00, NULL, NULL, false),
+  ('si000205', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Cremation Flowers',                                          NULL,  500.00, NULL, NULL, false),
+  ('si000206', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Cremation Flowers',                                          NULL,  400.00, NULL, NULL, false),
   -- Stationery
   ('si000100', '3745', 'c1000000-0000-0000-0000-000000000006', NULL, 'Remembrance Collection',    '1 Medium Memory Book, 100 Small Memory Folders or Memory Cards, 25 Small Tribute Thank You Cards, 1 Keepsake Box.',                         395.00, NULL, NULL, false),
   ('si000101', '3745', 'c1000000-0000-0000-0000-000000000006', NULL, 'Our Collection',            '1 Memory Register Book, 100 Our Collection Folders or Prayer Cards, 50 Our Collection Thank You Cards, 1 Keepsake Box.',                    395.00, NULL, NULL, false),
@@ -289,6 +294,10 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si000117', '3745', 'c1000000-0000-0000-0000-000000000007', NULL, 'Outside Funeral Director Expense',   NULL,  NULL, NULL, NULL, true),
   ('si000118', '3745', 'c1000000-0000-0000-0000-000000000007', NULL, 'Cemetery Fees',                      NULL,  NULL, NULL, NULL, true),
   ('si000119', '3745', 'c1000000-0000-0000-0000-000000000007', NULL, 'Public Transportation',              NULL,  NULL, NULL, NULL, true),
+  -- PPL package components (catered reception tiers)
+  ('si000207', '3745', 'c1000000-0000-0000-0000-000000000002', NULL, 'Catered Reception III',              NULL, 2150.00, NULL, NULL, false),
+  ('si000208', '3745', 'c1000000-0000-0000-0000-000000000002', NULL, 'Catered Reception II',               NULL, 1980.00, NULL, NULL, false),
+  ('si000209', '3745', 'c1000000-0000-0000-0000-000000000002', NULL, 'Catered Reception I',                NULL, 1350.00, NULL, NULL, false),
   -- Urns
   ('si000213', '3745', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection', 'LoveUrns HeartFelt Gold, Terrybear Eminence White Marble Urn, Granville Lucinda Blue Horizontal Urn, Granville Charlotte Horizontal Urn', 1295.00, NULL, NULL, false),
   ('si000214', '3745', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection', 'Urnes Bégin Versatile Urn Navy, LoveUrns Laurel Midnight, Terrybear Satori Ocean Pearl, Batesville Memento Chest',                         795.00, NULL, NULL, false),
@@ -356,36 +365,37 @@ insert into package_items (package_id, service_item_id) values
   ('pk000010','si000001'),('pk000010','si000010'),('pk000010','si000011'),
   ('pk000010','si000013'),('pk000010','si000012'),('pk000010','si000040'),
   ('pk000010','si000041'),('pk000010','si000042'),('pk000010','si000059'),
-  ('pk000010','si000058'),('pk000010','si000088'),
+  ('pk000010','si000058'),('pk000010','si000088'),('pk000010','si000202'),
   ('pk000010','si000023'),('pk000010','si000050'),
-  ('pk000010','si000103'),
+  ('pk000010','si000207'),('pk000010','si000103'),
   -- Honour Funeral Service (pk000011)
   ('pk000011','si000001'),('pk000011','si000010'),('pk000011','si000011'),
   ('pk000011','si000013'),('pk000011','si000012'),('pk000011','si000040'),
   ('pk000011','si000041'),('pk000011','si000042'),('pk000011','si000059'),
-  ('pk000011','si000058'),('pk000011','si000088'),
+  ('pk000011','si000058'),('pk000011','si000088'),('pk000011','si000203'),
   ('pk000011','si000023'),('pk000011','si000050'),
-  ('pk000011','si000102'),
+  ('pk000011','si000208'),('pk000011','si000102'),
   -- Tribute Funeral Service (pk000012)
   ('pk000012','si000001'),('pk000012','si000010'),('pk000012','si000011'),
   ('pk000012','si000013'),('pk000012','si000012'),('pk000012','si000040'),
   ('pk000012','si000041'),('pk000012','si000059'),
-  ('pk000012','si000058'),('pk000012','si000088'),
+  ('pk000012','si000058'),('pk000012','si000088'),('pk000012','si000204'),
   ('pk000012','si000023'),('pk000012','si000050'),
-  ('pk000012','si000100'),
+  ('pk000012','si000209'),('pk000012','si000100'),
   -- Heritage Cremation Service (pk000013)
   ('pk000013','si000001'),('pk000013','si000010'),('pk000013','si000011'),
   ('pk000013','si000013'),('pk000013','si000012'),('pk000013','si000040'),
   ('pk000013','si000042'),('pk000013','si000059'),
-  ('pk000013','si000058'),('pk000013','si000088'),
+  ('pk000013','si000058'),('pk000013','si000088'),('pk000013','si000205'),
   ('pk000013','si000076'),('pk000013','si000023'),('pk000013','si000050'),
-  ('pk000013','si000213'),('pk000013','si000103'),
+  ('pk000013','si000213'),('pk000013','si000207'),('pk000013','si000103'),
   -- Honour Cremation Service (pk000014)
   ('pk000014','si000002'),('pk000014','si000010'),
   ('pk000014','si000013'),('pk000014','si000012'),('pk000014','si000040'),
   ('pk000014','si000059'),('pk000014','si000058'),('pk000014','si000088'),
-  ('pk000014','si000076'),('pk000014','si000023'),('pk000014','si000050'),
-  ('pk000014','si000214'),('pk000014','si000102'),
+  ('pk000014','si000206'),('pk000014','si000076'),('pk000014','si000023'),
+  ('pk000014','si000050'),('pk000014','si000214'),
+  ('pk000014','si000208'),('pk000014','si000102'),
   -- Tribute Cremation Service (pk000015)
   ('pk000015','si000009'),('pk000015','si000010'),('pk000015','si000013'),
   ('pk000015','si000026'),('pk000015','si000012'),('pk000015','si000040'),
@@ -395,8 +405,9 @@ insert into package_items (package_id, service_item_id) values
 -- Mark optional add-on items within Victory Memorial packages
 update package_items set is_optional = true
 where service_item_id in (
-  'si000042',                    -- Limousine
-  'si000088',                    -- Reception and Hostess
+  'si000042',                          -- Limousine
+  'si000088',                          -- Reception and Hostess
+  'si000207', 'si000208', 'si000209',  -- Catered Reception III / II / I
   'si000213', 'si000214', 'si000215',  -- Memorial Urn Selection (tiers 1–3)
-  'si000050'                     -- FSO trigger
+  'si000050'                           -- FSO trigger
 );
