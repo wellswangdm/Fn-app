@@ -73,8 +73,12 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
     // If the package includes any Family Support Option item, replace all FSO
     // entries with the complete FSO catalog for this funeral home so the picker
     // shows every available option (not just the ones listed in package_items).
-    const hasFso = mapped.some(i => i.categoryId === FSO_CATEGORY)
+    // The number of FSO rows in package_items tells us how many the family gets
+    // to select (e.g. 1 for most plans, 2 for Jade plans).
+    const fsoInPkg = mapped.filter(i => i.categoryId === FSO_CATEGORY)
+    const hasFso   = fsoInPkg.length > 0
     if (hasFso) {
+      const fsoCount = fsoInPkg.length
       const { data: fsoData } = await supabase
         .from('service_items')
         .select('id, name, price')
@@ -88,6 +92,7 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
         quantity:      1,
         categoryId:    FSO_CATEGORY,
         isOptional:    true,
+        fsoCount,
       }))
       setItemsMap(m => ({
         ...m,
@@ -187,6 +192,18 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 }
 
 function PackageRow({ pkg, isSelected, isExpanded, items, onSelect, onToggle }) {
+  const fsoItems     = (items || []).filter(i => i.categoryId === FSO_CATEGORY)
+  const nonFsoItems  = (items || []).filter(i => i.categoryId !== FSO_CATEGORY)
+  const fsoCount     = fsoItems[0]?.fsoCount ?? 0
+  const displayItems = [
+    ...nonFsoItems,
+    ...(fsoCount > 0 ? [{
+      name:       `Family Support Option (select ${fsoCount})`,
+      price:      fsoItems[0]?.price ?? 0,
+      isOptional: true,
+    }] : []),
+  ]
+
   return (
     <div
       className={`rounded-lg border overflow-hidden transition-colors ${
@@ -230,9 +247,9 @@ function PackageRow({ pkg, isSelected, isExpanded, items, onSelect, onToggle }) 
             <p className="text-xs text-stone-400">Loading…</p>
           ) : (
             <ul className="space-y-1.5">
-              {items.map((item, i) => (
+              {displayItems.map((item, i) => (
                 <li key={i} className="flex justify-between text-xs">
-                  <span className="text-stone-600">{item.name}</span>
+                  <span className={item.isOptional ? 'text-stone-400 italic' : 'text-stone-600'}>{item.name}</span>
                   <span className="text-stone-400 ml-4 shrink-0">{fmt(item.price)}</span>
                 </li>
               ))}

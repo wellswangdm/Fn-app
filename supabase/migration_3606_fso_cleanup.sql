@@ -17,16 +17,18 @@ and service_item_id in (
   where category_id = 'c1000000-0000-0000-0000-000000000004'
 );
 
--- Re-insert a single FSO trigger item per package (is_optional = true)
--- The item used here is arbitrary — the UI will load the full FSO catalog.
--- Jade plans (pk001013, pk001017) include 2 FSO selections per the PPL;
--- the director should manually add the second FSO after using the picker.
+-- Re-insert FSO trigger rows per package (is_optional = true).
+-- The specific item is arbitrary — the UI loads the full FSO catalog regardless.
+-- Row count determines how many selections the picker prompts for
+-- (1 row = "select 1", 2 rows = "select 2" for Jade plans).
 insert into package_items (package_id, service_item_id, quantity, is_optional) values
   ('pk001010', 'si001029', 1, true),  -- Heritage Funeral         (select 1 FSO)
   ('pk001011', 'si001029', 1, true),  -- Honour Funeral           (select 1 FSO)
   ('pk001012', 'si001029', 1, true),  -- Tribute Funeral          (select 1 FSO)
-  ('pk001013', 'si001029', 1, true),  -- Jade Burial              (select 2 FSO — add 2nd manually)
+  ('pk001013', 'si001029', 1, true),  -- Jade Burial              (select 2 FSO — row 1)
+  ('pk001013', 'si001029', 1, true),  -- Jade Burial              (select 2 FSO — row 2)
   ('pk001014', 'si001029', 1, true),  -- Heritage Cremation       (select 1 FSO)
   ('pk001015', 'si001029', 1, true),  -- Honour Cremation         (select 1 FSO)
   ('pk001016', 'si001029', 1, true),  -- Tribute Cremation        (select 1 FSO)
-  ('pk001017', 'si001029', 1, true);  -- Jade Cremation           (select 2 FSO — add 2nd manually)
+  ('pk001017', 'si001029', 1, true),  -- Jade Cremation           (select 2 FSO — row 1)
+  ('pk001017', 'si001029', 1, true);  -- Jade Cremation           (select 2 FSO — row 2)

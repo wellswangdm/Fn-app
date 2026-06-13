@@ -18,11 +18,12 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
   const [caskets,          setCaskets]          = useState([])
   const [loading,          setLoading]          = useState(true)
   const [selected,         setSelected]         = useState(null)
-  const [selectedFso,      setSelectedFso]      = useState(null)
+  const [checkedFso,       setCheckedFso]       = useState(new Set())
   const [checkedOptionals, setCheckedOptionals] = useState(new Set())
 
-  const fsoItems      = optionalItems.filter(i => i.categoryId === FSO_CATEGORY)
+  const fsoItems       = optionalItems.filter(i => i.categoryId === FSO_CATEGORY)
   const otherOptionals = optionalItems.filter(i => i.categoryId !== FSO_CATEGORY)
+  const fsoCount       = fsoItems[0]?.fsoCount ?? 1
 
   useEffect(() => {
     if (!funeralHomeId) return
@@ -53,9 +54,17 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
     })
   }
 
+  function toggleFso(id) {
+    setCheckedFso(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
   function confirm() {
     const selectedOptionals = [
-      ...(selectedFso ? [selectedFso] : []),
+      ...fsoItems.filter(i => checkedFso.has(i.serviceItemId)),
       ...otherOptionals.filter(i => checkedOptionals.has(i.serviceItemId)),
     ]
     onSelect(selected ? { ...selected, imageUrl: selected.image_url || null } : null, selectedOptionals)
@@ -76,20 +85,19 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
 
-          {/* Family Support Option — radio select (one per package) */}
+          {/* Family Support Option — checkbox select with count hint */}
           {fsoItems.length > 0 && (
             <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
               <p className="text-xs font-semibold text-sky-800 mb-2">
-                Family Support Option — select one
+                Family Support Option — select {fsoCount}
               </p>
               <div className="space-y-2">
                 {fsoItems.map(item => (
                   <label key={item.serviceItemId} className="flex items-center gap-3 cursor-pointer group">
                     <input
-                      type="radio"
-                      name="fso"
-                      checked={selectedFso?.serviceItemId === item.serviceItemId}
-                      onChange={() => setSelectedFso(item)}
+                      type="checkbox"
+                      checked={checkedFso.has(item.serviceItemId)}
+                      onChange={() => toggleFso(item.serviceItemId)}
                       className="w-4 h-4 accent-primary-700 cursor-pointer"
                     />
                     <span className="flex-1 text-sm text-stone-700 group-hover:text-stone-900">{item.name}</span>
