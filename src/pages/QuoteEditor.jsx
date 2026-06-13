@@ -116,6 +116,7 @@ function reducer(state, action) {
         ? state.selectedCasket
         : (action.defaultCasket || null)
       return { ...state, packageId: action.id, packageDiscount: pkgDisc, packageName: pkgName,
+               allPackageItems: action.allPackageItems || [],
                items, sections: state.sections, selectedCasket,
                ...calcTotals(items, pkgDisc, state.discountType, state.discountValue) }
     }
@@ -123,7 +124,8 @@ function reducer(state, action) {
     case 'CLEAR_PACKAGE': {
       const items = state.items.filter(i => !i.isFromPackage)
       return { ...state, packageId: null, packageDiscount: 0, packageName: '', items,
-               selectedCasket: null, ...calcTotals(items, 0, state.discountType, state.discountValue) }
+               allPackageItems: [], selectedCasket: null,
+               ...calcTotals(items, 0, state.discountType, state.discountValue) }
     }
 
     case 'ADD_ITEM': {
@@ -132,7 +134,43 @@ function reducer(state, action) {
         : state.items.find(i => !i.isCustom && i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false, pst: defaultPst(action.item, state.arrangementType) }, 'sec-extra')]
+        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false, pst: defaultPst(action.item, state.arrangementType) }, 'sec-main')]
+      return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
+    }
+
+    case 'CONFIRM_OPTIONALS': {
+      // Rebuild sec-main package items in original package order,
+      // inserting selected optionals at their correct positions.
+      const selectedSet = new Set(action.selectedOptionals.map(i => i.serviceItemId))
+      const usedIds = new Set()
+      const orderedPkgItems = []
+
+      for (const item of state.allPackageItems) {
+        if (!item.isOptional) {
+          const existing = state.items.find(si =>
+            si.serviceItemId === item.serviceItemId &&
+            si.isFromPackage &&
+            !si.isCasketItem &&
+            !usedIds.has(si.id)
+          )
+          if (existing) {
+            usedIds.add(existing.id)
+            orderedPkgItems.push(existing)
+          }
+        } else if (selectedSet.has(item.serviceItemId)) {
+          const optData = action.selectedOptionals.find(o => o.serviceItemId === item.serviceItemId)
+          if (optData) {
+            orderedPkgItems.push(freshItem({
+              ...optData, isFromPackage: true,
+              pst: defaultPst(optData, state.arrangementType),
+            }, 'sec-main'))
+          }
+        }
+      }
+
+      // Non-package items (casket, auto-adds, individual items) keep their positions
+      const otherItems = state.items.filter(i => !i.isFromPackage || i.isCasketItem)
+      const items = [...orderedPkgItems, ...otherItems]
       return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
@@ -238,6 +276,7 @@ const INIT = {
   loaded:              false,
   funeralHomeId:       null,
   packageId:           null,
+  allPackageItems:     [],
   contactId:           null,
   quoteNumber:         '',
   beneficiaryName:     '',
@@ -440,10 +479,10 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   function handlePackageSelect(id, allItems, pkgDisc, pkgName, defaultCasket) {
     const optionals    = allItems.filter(i => i.isOptional)
     const regularItems = allItems.filter(i => !i.isOptional)
-    const hasCremFee     = regularItems.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+    const hasCremFee      = regularItems.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
     const addCrematoryFee = state.arrangementType === 'cremation' && !hasCremFee
     dispatch({ type: 'SET_PACKAGE', id, items: regularItems, packageDiscount: pkgDisc,
-               packageName: pkgName, defaultCasket, addCrematoryFee })
+               packageName: pkgName, defaultCasket, addCrematoryFee, allPackageItems: allItems })
     setPendingOptionals(optionals)
     if (defaultCasket || optionals.length > 0) setCasketPickerOpen(true)
   }
@@ -1015,7 +1054,10 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
           optionalItems={pendingOptionals}
           onSelect={(casket, selectedOptionals) => {
             if (casket) dispatch({ type: 'PICK_CASKET', casket })
-            selectedOptionals.forEach(item => dispatch({ type: 'ADD_ITEM', item }))
+            if (pendingOptionals.length > 0) {
+              // Package selection flow: insert optionals at their correct package positions
+              dispatch({ type: 'CONFIRM_OPTIONALS', selectedOptionals })
+            }
           }}
           onClose={() => { setCasketPickerOpen(false); setPendingOptionals([]) }}
         />
