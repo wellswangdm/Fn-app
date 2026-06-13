@@ -27,6 +27,11 @@ where service_item_id in ('si000200','si000201');
 delete from package_items
 where service_item_id in ('si002101','si002102','si002103','si002104');
 
+-- Remove any existing si002024 trigger rows to avoid duplicates on re-run
+delete from package_items
+where package_id in ('pk002011','pk002012','pk002013','pk002014','pk002015','pk002016','pk002017','pk002018')
+  and service_item_id = 'si002024';
+
 insert into package_items (package_id, service_item_id, quantity, is_optional) values
   ('pk002011', 'si002024', 1, true),  -- Heritage Funeral         (select 1)
   ('pk002012', 'si002024', 1, true),  -- Honour Funeral           (select 1)
@@ -45,6 +50,11 @@ delete from service_items where id in ('si002101','si002102','si002103','si00210
 
 delete from package_items
 where service_item_id in ('si000200','si000201');
+
+-- Remove any existing si000050 trigger rows to avoid duplicates on re-run
+delete from package_items
+where package_id in ('pk000010','pk000011','pk000012','pk000013','pk000014','pk000015')
+  and service_item_id = 'si000050';
 
 insert into package_items (package_id, service_item_id, quantity, is_optional) values
   ('pk000010', 'si000050', 1, true),  -- Heritage Funeral
