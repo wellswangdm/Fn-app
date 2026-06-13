@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 
+const FSO_CATEGORY = 'c1000000-0000-0000-0000-000000000004'
+
 function fmt(n) {
   return `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
@@ -59,17 +61,41 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
         .select('quantity, service_items(id, name, price, category_id)')
         .eq('package_id', pkgId))
     }
-    setItemsMap(m => ({
-      ...m,
-      [pkgId]: (data || []).map(r => ({
-        serviceItemId: r.service_items.id,
-        name:          r.service_items.name,
-        price:         Number(r.service_items.price || 0),
-        quantity:      r.quantity,
-        categoryId:    r.service_items.category_id,
-        isOptional:    r.is_optional || false,
-      })),
+    const mapped = (data || []).map(r => ({
+      serviceItemId: r.service_items.id,
+      name:          r.service_items.name,
+      price:         Number(r.service_items.price || 0),
+      quantity:      r.quantity,
+      categoryId:    r.service_items.category_id,
+      isOptional:    r.is_optional || false,
     }))
+
+    // If the package includes any Family Support Option item, replace all FSO
+    // entries with the complete FSO catalog for this funeral home so the picker
+    // shows every available option (not just the ones listed in package_items).
+    const hasFso = mapped.some(i => i.categoryId === FSO_CATEGORY)
+    if (hasFso) {
+      const { data: fsoData } = await supabase
+        .from('service_items')
+        .select('id, name, price')
+        .eq('funeral_home_id', funeralHomeId)
+        .eq('category_id', FSO_CATEGORY)
+        .order('sort_order')
+      const allFso = (fsoData || []).map(si => ({
+        serviceItemId: si.id,
+        name:          si.name,
+        price:         Number(si.price || 0),
+        quantity:      1,
+        categoryId:    FSO_CATEGORY,
+        isOptional:    true,
+      }))
+      setItemsMap(m => ({
+        ...m,
+        [pkgId]: [...mapped.filter(i => i.categoryId !== FSO_CATEGORY), ...allFso],
+      }))
+    } else {
+      setItemsMap(m => ({ ...m, [pkgId]: mapped }))
+    }
   }
 
   function toggle(pkgId) {
