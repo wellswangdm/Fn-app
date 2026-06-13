@@ -1014,7 +1014,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
           currentCasketId={state.selectedCasket?.id}
           optionalItems={pendingOptionals}
           onSelect={(casket, selectedOptionals) => {
-            dispatch({ type: 'PICK_CASKET', casket })
+            if (casket) dispatch({ type: 'PICK_CASKET', casket })
             selectedOptionals.forEach(item => dispatch({ type: 'ADD_ITEM', item }))
           }}
           onClose={() => { setCasketPickerOpen(false); setPendingOptionals([]) }}

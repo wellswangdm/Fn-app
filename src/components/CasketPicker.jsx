@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 
+const FSO_CATEGORY = 'c1000000-0000-0000-0000-000000000004'
+
 function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
@@ -13,10 +15,14 @@ const TIERS = [
 ]
 
 export default function CasketPicker({ funeralHomeId, currentCasketId, optionalItems = [], onSelect, onClose }) {
-  const [caskets,   setCaskets]   = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [selected,  setSelected]  = useState(null)
+  const [caskets,          setCaskets]          = useState([])
+  const [loading,          setLoading]          = useState(true)
+  const [selected,         setSelected]         = useState(null)
+  const [selectedFso,      setSelectedFso]      = useState(null)
   const [checkedOptionals, setCheckedOptionals] = useState(new Set())
+
+  const fsoItems      = optionalItems.filter(i => i.categoryId === FSO_CATEGORY)
+  const otherOptionals = optionalItems.filter(i => i.categoryId !== FSO_CATEGORY)
 
   useEffect(() => {
     if (!funeralHomeId) return
@@ -48,10 +54,11 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
   }
 
   function confirm() {
-    if (selected) {
-      const selectedOptionals = optionalItems.filter(i => checkedOptionals.has(i.serviceItemId))
-      onSelect({ ...selected, imageUrl: selected.image_url || null }, selectedOptionals)
-    }
+    const selectedOptionals = [
+      ...(selectedFso ? [selectedFso] : []),
+      ...otherOptionals.filter(i => checkedOptionals.has(i.serviceItemId)),
+    ]
+    onSelect(selected ? { ...selected, imageUrl: selected.image_url || null } : null, selectedOptionals)
     onClose()
   }
 
@@ -69,14 +76,38 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
 
-          {/* Optional add-ons */}
-          {optionalItems.length > 0 && (
+          {/* Family Support Option — radio select (one per package) */}
+          {fsoItems.length > 0 && (
+            <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+              <p className="text-xs font-semibold text-sky-800 mb-2">
+                Family Support Option — select one
+              </p>
+              <div className="space-y-2">
+                {fsoItems.map(item => (
+                  <label key={item.serviceItemId} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="fso"
+                      checked={selectedFso?.serviceItemId === item.serviceItemId}
+                      onChange={() => setSelectedFso(item)}
+                      className="w-4 h-4 accent-primary-700 cursor-pointer"
+                    />
+                    <span className="flex-1 text-sm text-stone-700 group-hover:text-stone-900">{item.name}</span>
+                    <span className="text-sm font-semibold text-stone-500">{fmt(item.price)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Other optional add-ons — checkbox multi-select */}
+          {otherOptionals.length > 0 && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
               <p className="text-xs font-semibold text-amber-800 mb-2">
                 Optional add-ons included in this package
               </p>
               <div className="space-y-2">
-                {optionalItems.map(item => (
+                {otherOptionals.map(item => (
                   <label key={item.serviceItemId} className="flex items-center gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
@@ -165,11 +196,7 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
           </p>
           <div className="flex gap-2">
             <button onClick={onClose} className="btn-secondary text-xs py-1.5">Cancel</button>
-            <button
-              onClick={confirm}
-              disabled={!selected}
-              className="btn-primary text-xs py-1.5 disabled:opacity-40"
-            >
+            <button onClick={confirm} className="btn-primary text-xs py-1.5">
               Confirm Selection
             </button>
           </div>
