@@ -1,0 +1,20 @@
+category,item_code,name,description,price,price_min,price_max,is_cash_advance,gst,pst,no_disc
+Professional Staff & Services,,Professional Services Fees for Full Service,,4695,,,,Y,N,N
+Professional Staff & Services,,Registration and Documentation,,495,,,,Y,N,N
+Professional Staff & Services,,Embalming,,625,,,,Y,N,N
+Professional Staff & Services,,Other Care and Preparation,,445,,,,Y,N,N
+Professional Staff & Services,,Sheltering of Remains,,445,,,,Y,N,N
+Facilities and Supervision,,Use of Facilities for Preparation,,445,,,,Y,N,N
+Facilities and Supervision,,Reception Room,,495,,,,Y,N,N
+Transportation,,Transfer of Remains from Place of Death,,545,,,,Y,N,N
+Transportation,,Funeral Vehicle (Hearse),,395,,,,Y,N,N
+Transportation,,Flower Vehicle,,295,,,,Y,N,N
+Transportation,,Limousine,,395,,,,Y,N,N
+Family Support Options,,Funeral Webcasting,,295,,,,Y,N,N
+Family Support Options,,Legal Service Plan,,295,,,,Y,N,N
+Miscellaneous Services & Merchandise,,Everlasting Memorial,,490,,,,Y,N,N
+Miscellaneous Services & Merchandise,,Estate Fraud Protection,,135,,,,Y,N,N
+Cash Advances,,Crematory Fee,Charged by third-party crematorium,,,995,1200,Y,N,N,N
+Stationery,,Death Certificate (each),,27,,,,,N,N,Y
+Caskets & Containers,,Cremation Container,,1599,,,,Y,N,N
+Urns,,Memorial Urn,,395,,,,Y,N,N
