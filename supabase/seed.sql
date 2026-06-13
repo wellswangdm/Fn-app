@@ -247,8 +247,6 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si000058', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Estate Fraud Protection',                                    NULL,  135.00, NULL, NULL, false),
   ('si000059', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Everlasting Memorial',                                       NULL,  490.00, NULL, NULL, false),
   ('si000060', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Traditional Ritual Washing',                                 NULL,  395.00, NULL, NULL, false),
-  ('si000200', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Plan Support Option',                                        NULL,  295.00, NULL, NULL, false),
-  ('si000201', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Cremation Plan Support Option',                              NULL,  295.00, NULL, NULL, false),
   -- Miscellaneous Services & Merchandise
   ('si000070', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Standard Text Personalization',                              NULL,   50.00, NULL, NULL, false),
   ('si000071', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Custom Service Folders (100)',                               NULL,  250.00, NULL, NULL, false),
