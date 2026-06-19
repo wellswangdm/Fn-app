@@ -25,6 +25,13 @@ const AUTO_ADD = [
 
 const CREMATORY_FEE = { serviceItemId: 'si000076', name: 'Crematory Fee', price: 995.00 }
 
+// Each funeral home has its own Crematory Fee service_item with a different
+// id, so dedup must match by name rather than CREMATORY_FEE.serviceItemId
+// (which only matches the item added by the cremation-arrangement auto-add).
+function isCremFee(item) {
+  return (item.name || '').trim().toLowerCase() === 'crematory fee'
+}
+
 const STATIONERY_CATEGORY_ID = 'c1000000-0000-0000-0000-000000000006'
 const URN_ITEM_IDS = new Set(['si000213', 'si000214', 'si000215'])
 
@@ -69,7 +76,7 @@ function reducer(state, action) {
         i.isCasketItem ? { ...i, pst: newType === 'burial' } : i
       )
       if (newType === 'cremation') {
-        const hasCremFee = items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+        const hasCremFee = items.some(isCremFee)
         if (!hasCremFee) {
           items = [...items, freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')]
         }
@@ -81,10 +88,10 @@ function reducer(state, action) {
       const pkgDisc = action.packageDiscount || 0
       const pkgName = action.packageName || 'Package Services'
       const keep    = state.items.filter(i => !i.isFromPackage)
-      const hasCremFee = action.items.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+      const hasCremFee = action.items.some(isCremFee)
       // If package has crematory fee, remove any standalone crematory fee from keep to prevent duplicate
       const cleanKeep = hasCremFee
-        ? keep.filter(k => k.serviceItemId !== CREMATORY_FEE.serviceItemId)
+        ? keep.filter(k => !isCremFee(k))
         : keep
       const autoToAdd = AUTO_ADD
         .filter(ai => !cleanKeep.some(k => k.serviceItemId === ai.serviceItemId))
@@ -93,7 +100,7 @@ function reducer(state, action) {
         ...i, isFromPackage: true,
         pst: i.pst !== undefined ? i.pst : defaultPst(i, state.arrangementType),
       }, 'sec-main'))
-      const cremItem = (action.addCrematoryFee && !hasCremFee && !cleanKeep.some(k => k.serviceItemId === CREMATORY_FEE.serviceItemId))
+      const cremItem = (action.addCrematoryFee && !hasCremFee && !cleanKeep.some(isCremFee))
         ? freshItem({ ...CREMATORY_FEE, quantity: 1, isFromPackage: false }, 'sec-main')
         : null
       const casketItem = action.defaultCasket ? freshItem({
@@ -479,7 +486,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   function handlePackageSelect(id, allItems, pkgDisc, pkgName, defaultCasket) {
     const optionals    = allItems.filter(i => i.isOptional)
     const regularItems = allItems.filter(i => !i.isOptional)
-    const hasCremFee      = regularItems.some(i => i.serviceItemId === CREMATORY_FEE.serviceItemId)
+    const hasCremFee      = regularItems.some(isCremFee)
     const addCrematoryFee = state.arrangementType === 'cremation' && !hasCremFee
     dispatch({ type: 'SET_PACKAGE', id, items: regularItems, packageDiscount: pkgDisc,
                packageName: pkgName, defaultCasket, addCrematoryFee, allPackageItems: allItems })
