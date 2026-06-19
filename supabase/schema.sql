@@ -180,3 +180,27 @@ create policy "allow_all" on packages           for all using (true) with check 
 create policy "allow_all" on package_items      for all using (true) with check (true);
 create policy "allow_all" on quotes             for all using (true) with check (true);
 create policy "allow_all" on quote_items        for all using (true) with check (true);
+
+-- ─── Default optional package items (all funeral homes, current and future) ──
+-- Any package_items row linked to a service_item whose name contains
+-- "cater", "reception", or "limousine" is automatically flagged
+-- is_optional = true on insert/update, regardless of funeral home — so the
+-- rule applies to every home without needing per-seed edits or manual re-runs.
+
+create or replace function set_package_item_optional_flag()
+returns trigger as $$
+declare
+  item_name text;
+begin
+  select name into item_name from service_items where id = new.service_item_id;
+  if item_name ilike '%cater%' or item_name ilike '%reception%' or item_name ilike '%limousine%' then
+    new.is_optional := true;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_package_item_optional_flag on package_items;
+create trigger trg_package_item_optional_flag
+  before insert or update on package_items
+  for each row execute function set_package_item_optional_flag();

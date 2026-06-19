@@ -454,7 +454,7 @@ insert into package_items (package_id, service_item_id, quantity, sort_order, is
   ('pk003009', 'si003013', 1, 6, false), -- Sheltering of Remains  445
   ('pk003009', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
   ('pk003009', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003009', 'si003021', 1, 9, false), -- Limousine  395
+  ('pk003009', 'si003021', 1, 9, true), -- Limousine  395
   ('pk003009', 'si003060', 1, 10, false), -- Everlasting Memorial®  490
   ('pk003009', 'si003061', 1, 11, false), -- Estate Fraud Protection  135
   ('pk003009', 'si003062', 1, 12, false), -- Dignity Heritage Burial Flowers  695
@@ -472,7 +472,7 @@ insert into package_items (package_id, service_item_id, quantity, sort_order, is
   ('pk003010', 'si003013', 1, 6, false), -- Sheltering of Remains  445
   ('pk003010', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
   ('pk003010', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003010', 'si003021', 1, 9, false), -- Limousine  395
+  ('pk003010', 'si003021', 1, 9, true), -- Limousine  395
   ('pk003010', 'si003060', 1, 10, false), -- Everlasting Memorial®  490
   ('pk003010', 'si003061', 1, 11, false), -- Estate Fraud Protection  135
   ('pk003010', 'si003063', 1, 12, false), -- Dignity Honour Burial Flowers  495
@@ -506,7 +506,7 @@ insert into package_items (package_id, service_item_id, quantity, sort_order, is
   ('pk003012', 'si003013', 1, 6, false), -- Sheltering of Remains  445
   ('pk003012', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
   ('pk003012', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003012', 'si003021', 1, 9, false), -- Limousine  395
+  ('pk003012', 'si003021', 1, 9, true), -- Limousine  395
   ('pk003012', 'si003060', 1, 10, false), -- Everlasting Memorial®  490
   ('pk003012', 'si003061', 1, 11, false), -- Estate Fraud Protection  135
   ('pk003012', 'si003064', 1, 12, false), -- Dignity Heritage Cremation Flowers  500
