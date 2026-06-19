@@ -50,11 +50,12 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 
   async function loadItems(pkgId) {
     if (itemsMap[pkgId]) return
-    // Try with is_optional column; fall back if migration not yet run
+    // Try with is_optional/sort_order columns; fall back if migration not yet run
     let { data, error } = await supabase
       .from('package_items')
-      .select('quantity, is_optional, service_items(id, name, price, category_id)')
+      .select('quantity, is_optional, sort_order, service_items(id, name, price, category_id)')
       .eq('package_id', pkgId)
+      .order('sort_order')
     if (error) {
       ;({ data } = await supabase
         .from('package_items')

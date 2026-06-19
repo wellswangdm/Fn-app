@@ -81,7 +81,8 @@ create table if not exists package_items (
   package_id      text references packages    on delete cascade,
   service_item_id text references service_items,
   quantity        int  default 1,
-  is_optional     boolean default false
+  is_optional     boolean default false,
+  sort_order      int  default 0
 );
 
 -- Quotes

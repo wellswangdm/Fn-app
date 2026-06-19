@@ -381,171 +381,171 @@ insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_
 
 -- ─── Package Items ────────────────────────────────────────────────────────────
 
-insert into package_items (package_id, service_item_id, quantity) values
+insert into package_items (package_id, service_item_id, quantity, sort_order, is_optional) values
   -- Full Service ($5,835)
-  ('pk003001', 'si003002', 1), -- Professional Services Fees for Full Service  2255
-  ('pk003001', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003001', 'si003012', 1), -- Embalming  625
-  ('pk003001', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003001', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003001', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003001', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003001', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003001', 'si003044', 1), -- Premium Venue  595
+  ('pk003001', 'si003002', 1, 1, false), -- Professional Services Fees for Full Service  2255
+  ('pk003001', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003001', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003001', 'si003014', 1, 4, false), -- Other Care and Preparation  445
+  ('pk003001', 'si003013', 1, 5, false), -- Sheltering of Remains  445
+  ('pk003001', 'si003019', 1, 6, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003001', 'si003020', 1, 7, false), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003001', 'si003061', 1, 8, false), -- Estate Fraud Protection  135
+  ('pk003001', 'si003044', 1, 9, false), -- Premium Venue  595
   -- Witness Cremation ($4,835)
-  ('pk003002', 'si003005', 1), -- Professional Service Fees of Funeral Director and Staff for Cremation Witness  1875
-  ('pk003002', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003002', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003002', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003002', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003002', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003002', 'si003041', 1), -- Crematory Fee  995
+  ('pk003002', 'si003005', 1, 1, false), -- Professional Service Fees of Funeral Director and Staff for Cremation Witness  1875
+  ('pk003002', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003002', 'si003014', 1, 3, false), -- Other Care and Preparation  445
+  ('pk003002', 'si003013', 1, 4, false), -- Sheltering of Remains  445
+  ('pk003002', 'si003019', 1, 5, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003002', 'si003061', 1, 6, false), -- Estate Fraud Protection  135
+  ('pk003002', 'si003041', 1, 7, false), -- Crematory Fee  995
   -- Service of Remembrance ($5,660)
-  ('pk003003', 'si003003', 1), -- Professional Services Fees for Memorial Service  2105
-  ('pk003003', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003003', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003003', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003003', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003003', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003003', 'si003041', 1), -- Crematory Fee  995
-  ('pk003003', 'si003044', 1), -- Premium Venue  595
+  ('pk003003', 'si003003', 1, 1, false), -- Professional Services Fees for Memorial Service  2105
+  ('pk003003', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003003', 'si003014', 1, 3, false), -- Other Care and Preparation  445
+  ('pk003003', 'si003013', 1, 4, false), -- Sheltering of Remains  445
+  ('pk003003', 'si003019', 1, 5, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003003', 'si003061', 1, 6, false), -- Estate Fraud Protection  135
+  ('pk003003', 'si003041', 1, 7, false), -- Crematory Fee  995
+  ('pk003003', 'si003044', 1, 8, false), -- Premium Venue  595
   -- Graveside Service ($5,010)
-  ('pk003004', 'si003004', 1), -- Professional Services Fees for Graveside Service  2025
-  ('pk003004', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003004', 'si003012', 1), -- Embalming  625
-  ('pk003004', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003004', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003004', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003004', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003004', 'si003061', 1), -- Estate Fraud Protection  135
+  ('pk003004', 'si003004', 1, 1, false), -- Professional Services Fees for Graveside Service  2025
+  ('pk003004', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003004', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003004', 'si003014', 1, 4, false), -- Other Care and Preparation  445
+  ('pk003004', 'si003013', 1, 5, false), -- Sheltering of Remains  445
+  ('pk003004', 'si003019', 1, 6, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003004', 'si003020', 1, 7, false), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003004', 'si003061', 1, 8, false), -- Estate Fraud Protection  135
   -- Urn Committal Option ($3,910)
-  ('pk003005', 'si003008', 1), -- Professional Services Fees for Urn Committal  600
-  ('pk003005', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003005', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003005', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003005', 'si003009', 1), -- Staff Services for Urn Committal  350
-  ('pk003005', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003005', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003005', 'si003041', 1), -- Crematory Fee  995
+  ('pk003005', 'si003008', 1, 1, false), -- Professional Services Fees for Urn Committal  600
+  ('pk003005', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003005', 'si003014', 1, 3, false), -- Other Care and Preparation  445
+  ('pk003005', 'si003013', 1, 4, false), -- Sheltering of Remains  445
+  ('pk003005', 'si003009', 1, 5, false), -- Staff Services for Urn Committal  350
+  ('pk003005', 'si003019', 1, 6, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003005', 'si003061', 1, 7, false), -- Estate Fraud Protection  135
+  ('pk003005', 'si003041', 1, 8, false), -- Crematory Fee  995
   -- No Service Option ($3,215)
-  ('pk003006', 'si003010', 1), -- Basic Service Fees for No Service Option  255
-  ('pk003006', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003006', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003006', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003006', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003006', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003006', 'si003041', 1), -- Crematory Fee  995
+  ('pk003006', 'si003010', 1, 1, false), -- Basic Service Fees for No Service Option  255
+  ('pk003006', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003006', 'si003014', 1, 3, false), -- Other Care and Preparation  445
+  ('pk003006', 'si003013', 1, 4, false), -- Sheltering of Remains  445
+  ('pk003006', 'si003019', 1, 5, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003006', 'si003061', 1, 6, false), -- Estate Fraud Protection  135
+  ('pk003006', 'si003041', 1, 7, false), -- Crematory Fee  995
   -- Forwarding of Remains to Another Funeral Home ($3,455)
-  ('pk003007', 'si003006', 1), -- Basic Professional Service Fee when Forwarding Remains  1495
-  ('pk003007', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003007', 'si003012', 1), -- Embalming  625
-  ('pk003007', 'si003022', 1), -- Transfer to or from Airport  395
-  ('pk003007', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003007', 'si003006', 1, 1, false), -- Basic Professional Service Fee when Forwarding Remains  1495
+  ('pk003007', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003007', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003007', 'si003022', 1, 4, false), -- Transfer to or from Airport  395
+  ('pk003007', 'si003019', 1, 5, false), -- Transfer of Remains from Place of Death to Funeral Home  495
   -- Receiving of Remains from Another Funeral Home ($2,285)
-  ('pk003008', 'si003007', 1), -- Basic Professional Service Fees when Receiving Remains  1495
-  ('pk003008', 'si003022', 1), -- Transfer to or from Airport  395
-  ('pk003008', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003008', 'si003007', 1, 1, false), -- Basic Professional Service Fees when Receiving Remains  1495
+  ('pk003008', 'si003022', 1, 2, false), -- Transfer to or from Airport  395
+  ('pk003008', 'si003020', 1, 3, false), -- Funeral Vehicle (e.g. Hearse)  395
   -- Dignity Memorial Heritage Funeral Service ($14,398)
-  ('pk003009', 'si003002', 1), -- Professional Services Fees for Full Service  2255
-  ('pk003009', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003009', 'si003012', 1), -- Embalming  625
-  ('pk003009', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003009', 'si003051', 1), -- Reception Room  599
-  ('pk003009', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003009', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003009', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003009', 'si003021', 1), -- Limousine  395
-  ('pk003009', 'si003060', 1), -- Everlasting Memorial®  490
-  ('pk003009', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003009', 'si003062', 1), -- Dignity Heritage Burial Flowers  695
-  ('pk003009', 'si003044', 1), -- Premium Venue  595
-  ('pk003009', 'si003023', 1), -- Legal Service Plan  295
-  ('pk003009', 'si003093', 1), -- Recommended Casket — Heritage Tier  4099
-  ('pk003009', 'si003068', 1), -- Catered Receptions III  1195
-  ('pk003009', 'si003069', 1), -- Esteemed Collection  795
+  ('pk003009', 'si003002', 1, 1, false), -- Professional Services Fees for Full Service  2255
+  ('pk003009', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003009', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003009', 'si003014', 1, 4, false), -- Other Care and Preparation  445
+  ('pk003009', 'si003051', 1, 5, true), -- Reception Room  599
+  ('pk003009', 'si003013', 1, 6, false), -- Sheltering of Remains  445
+  ('pk003009', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003009', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003009', 'si003021', 1, 9, false), -- Limousine  395
+  ('pk003009', 'si003060', 1, 10, false), -- Everlasting Memorial®  490
+  ('pk003009', 'si003061', 1, 11, false), -- Estate Fraud Protection  135
+  ('pk003009', 'si003062', 1, 12, false), -- Dignity Heritage Burial Flowers  695
+  ('pk003009', 'si003044', 1, 13, false), -- Premium Venue  595
+  ('pk003009', 'si003023', 1, 14, false), -- Legal Service Plan  295
+  ('pk003009', 'si003093', 1, 15, false), -- Recommended Casket — Heritage Tier  4099
+  ('pk003009', 'si003068', 1, 16, true), -- Catered Receptions III  1195
+  ('pk003009', 'si003069', 1, 17, false), -- Esteemed Collection  795
   -- Dignity Memorial Honour Funeral Service ($13,198)
-  ('pk003010', 'si003002', 1), -- Professional Services Fees for Full Service  2255
-  ('pk003010', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003010', 'si003012', 1), -- Embalming  625
-  ('pk003010', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003010', 'si003051', 1), -- Reception Room  599
-  ('pk003010', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003010', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003010', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003010', 'si003021', 1), -- Limousine  395
-  ('pk003010', 'si003060', 1), -- Everlasting Memorial®  490
-  ('pk003010', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003010', 'si003063', 1), -- Dignity Honour Burial Flowers  495
-  ('pk003010', 'si003044', 1), -- Premium Venue  595
-  ('pk003010', 'si003023', 1), -- Legal Service Plan  295
-  ('pk003010', 'si003094', 1), -- Recommended Casket — Honour Tier  3599
-  ('pk003010', 'si003067', 1), -- Catered Receptions II  995
-  ('pk003010', 'si003070', 1), -- Commemorative Collection  495
+  ('pk003010', 'si003002', 1, 1, false), -- Professional Services Fees for Full Service  2255
+  ('pk003010', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003010', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003010', 'si003014', 1, 4, false), -- Other Care and Preparation  445
+  ('pk003010', 'si003051', 1, 5, true), -- Reception Room  599
+  ('pk003010', 'si003013', 1, 6, false), -- Sheltering of Remains  445
+  ('pk003010', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003010', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003010', 'si003021', 1, 9, false), -- Limousine  395
+  ('pk003010', 'si003060', 1, 10, false), -- Everlasting Memorial®  490
+  ('pk003010', 'si003061', 1, 11, false), -- Estate Fraud Protection  135
+  ('pk003010', 'si003063', 1, 12, false), -- Dignity Honour Burial Flowers  495
+  ('pk003010', 'si003044', 1, 13, false), -- Premium Venue  595
+  ('pk003010', 'si003023', 1, 14, false), -- Legal Service Plan  295
+  ('pk003010', 'si003094', 1, 15, false), -- Recommended Casket — Honour Tier  3599
+  ('pk003010', 'si003067', 1, 16, true), -- Catered Receptions II  995
+  ('pk003010', 'si003070', 1, 17, false), -- Commemorative Collection  495
   -- Dignity Memorial Tribute Funeral Service ($11,308)
-  ('pk003011', 'si003002', 1), -- Professional Services Fees for Full Service  2255
-  ('pk003011', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003011', 'si003012', 1), -- Embalming  625
-  ('pk003011', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003011', 'si003051', 1), -- Reception Room  599
-  ('pk003011', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003011', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003011', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003011', 'si003060', 1), -- Everlasting Memorial®  490
-  ('pk003011', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003011', 'si003043', 1), -- Standard Venue  495
-  ('pk003011', 'si003023', 1), -- Legal Service Plan  295
-  ('pk003011', 'si003095', 1), -- Recommended Casket — Tribute Tier  2999
-  ('pk003011', 'si003066', 1), -- Catered Receptions I  795
-  ('pk003011', 'si003071', 1), -- Remembrance Collection  395
+  ('pk003011', 'si003002', 1, 1, false), -- Professional Services Fees for Full Service  2255
+  ('pk003011', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003011', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003011', 'si003014', 1, 4, false), -- Other Care and Preparation  445
+  ('pk003011', 'si003051', 1, 5, true), -- Reception Room  599
+  ('pk003011', 'si003013', 1, 6, false), -- Sheltering of Remains  445
+  ('pk003011', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003011', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003011', 'si003060', 1, 9, false), -- Everlasting Memorial®  490
+  ('pk003011', 'si003061', 1, 10, false), -- Estate Fraud Protection  135
+  ('pk003011', 'si003043', 1, 11, false), -- Standard Venue  495
+  ('pk003011', 'si003023', 1, 12, false), -- Legal Service Plan  295
+  ('pk003011', 'si003095', 1, 13, false), -- Recommended Casket — Tribute Tier  2999
+  ('pk003011', 'si003066', 1, 14, true), -- Catered Receptions I  795
+  ('pk003011', 'si003071', 1, 15, false), -- Remembrance Collection  395
   -- Dignity Memorial Heritage Cremation Service ($13,793)
-  ('pk003012', 'si003002', 1), -- Professional Services Fees for Full Service  2255
-  ('pk003012', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003012', 'si003012', 1), -- Embalming  625
-  ('pk003012', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003012', 'si003051', 1), -- Reception Room  599
-  ('pk003012', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003012', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003012', 'si003020', 1), -- Funeral Vehicle (e.g. Hearse)  395
-  ('pk003012', 'si003021', 1), -- Limousine  395
-  ('pk003012', 'si003060', 1), -- Everlasting Memorial®  490
-  ('pk003012', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003012', 'si003064', 1), -- Dignity Heritage Cremation Flowers  500
-  ('pk003012', 'si003041', 1), -- Crematory Fee  995
-  ('pk003012', 'si003044', 1), -- Premium Venue  595
-  ('pk003012', 'si003023', 1), -- Legal Service Plan  295
-  ('pk003012', 'si003099', 1), -- Memorial Urn Selection — Heritage Tier  1295
-  ('pk003012', 'si003096', 1), -- Batesville Brockton Oak Ceremonial  1599
-  ('pk003012', 'si003067', 1), -- Catered Receptions II  995
-  ('pk003012', 'si003069', 1), -- Esteemed Collection  795
+  ('pk003012', 'si003002', 1, 1, false), -- Professional Services Fees for Full Service  2255
+  ('pk003012', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003012', 'si003012', 1, 3, false), -- Embalming  625
+  ('pk003012', 'si003014', 1, 4, false), -- Other Care and Preparation  445
+  ('pk003012', 'si003051', 1, 5, true), -- Reception Room  599
+  ('pk003012', 'si003013', 1, 6, false), -- Sheltering of Remains  445
+  ('pk003012', 'si003019', 1, 7, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003012', 'si003020', 1, 8, false), -- Funeral Vehicle (e.g. Hearse)  395
+  ('pk003012', 'si003021', 1, 9, false), -- Limousine  395
+  ('pk003012', 'si003060', 1, 10, false), -- Everlasting Memorial®  490
+  ('pk003012', 'si003061', 1, 11, false), -- Estate Fraud Protection  135
+  ('pk003012', 'si003064', 1, 12, false), -- Dignity Heritage Cremation Flowers  500
+  ('pk003012', 'si003041', 1, 13, false), -- Crematory Fee  995
+  ('pk003012', 'si003044', 1, 14, false), -- Premium Venue  595
+  ('pk003012', 'si003023', 1, 15, false), -- Legal Service Plan  295
+  ('pk003012', 'si003099', 1, 16, false), -- Memorial Urn Selection — Heritage Tier  1295
+  ('pk003012', 'si003096', 1, 17, false), -- Batesville Brockton Oak Ceremonial  1599
+  ('pk003012', 'si003067', 1, 18, true), -- Catered Receptions II  995
+  ('pk003012', 'si003069', 1, 19, false), -- Esteemed Collection  795
   -- Dignity Memorial Honour Cremation Service ($10,379)
-  ('pk003013', 'si003003', 1), -- Professional Services Fees for Memorial Service  2105
-  ('pk003013', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003013', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003013', 'si003051', 1), -- Reception Room  599
-  ('pk003013', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003013', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003013', 'si003060', 1), -- Everlasting Memorial®  490
-  ('pk003013', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003013', 'si003065', 1), -- Dignity Honour Cremation Flowers  400
-  ('pk003013', 'si003041', 1), -- Crematory Fee  995
-  ('pk003013', 'si003044', 1), -- Premium Venue  595
-  ('pk003013', 'si003023', 1), -- Legal Service Plan  295
-  ('pk003013', 'si003100', 1), -- Memorial Urn Selection — Honour Tier  795
-  ('pk003013', 'si003097', 1), -- Batesville Brockton Oak (1 Hour Rental)  850
-  ('pk003013', 'si003066', 1), -- Catered Receptions I  795
-  ('pk003013', 'si003070', 1), -- Commemorative Collection  495
+  ('pk003013', 'si003003', 1, 1, false), -- Professional Services Fees for Memorial Service  2105
+  ('pk003013', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003013', 'si003014', 1, 3, false), -- Other Care and Preparation  445
+  ('pk003013', 'si003051', 1, 4, true), -- Reception Room  599
+  ('pk003013', 'si003013', 1, 5, false), -- Sheltering of Remains  445
+  ('pk003013', 'si003019', 1, 6, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003013', 'si003060', 1, 7, false), -- Everlasting Memorial®  490
+  ('pk003013', 'si003061', 1, 8, false), -- Estate Fraud Protection  135
+  ('pk003013', 'si003065', 1, 9, false), -- Dignity Honour Cremation Flowers  400
+  ('pk003013', 'si003041', 1, 10, false), -- Crematory Fee  995
+  ('pk003013', 'si003044', 1, 11, false), -- Premium Venue  595
+  ('pk003013', 'si003023', 1, 12, false), -- Legal Service Plan  295
+  ('pk003013', 'si003100', 1, 13, false), -- Memorial Urn Selection — Honour Tier  795
+  ('pk003013', 'si003097', 1, 14, false), -- Batesville Brockton Oak (1 Hour Rental)  850
+  ('pk003013', 'si003066', 1, 15, true), -- Catered Receptions I  795
+  ('pk003013', 'si003070', 1, 16, false), -- Commemorative Collection  495
   -- Dignity Memorial Tribute Cremation Service ($5,295)
-  ('pk003014', 'si003010', 1), -- Basic Service Fees for No Service Option  255
-  ('pk003014', 'si003011', 1), -- Registration and Documentation  445
-  ('pk003014', 'si003014', 1), -- Other Care and Preparation  445
-  ('pk003014', 'si003059', 1), -- Venue and Staff Services to coordinate a Simple Gathering  595
-  ('pk003014', 'si003013', 1), -- Sheltering of Remains  445
-  ('pk003014', 'si003019', 1), -- Transfer of Remains from Place of Death to Funeral Home  495
-  ('pk003014', 'si003061', 1), -- Estate Fraud Protection  135
-  ('pk003014', 'si003041', 1), -- Crematory Fee  995
-  ('pk003014', 'si003023', 1), -- Legal Service Plan  295
-  ('pk003014', 'si003101', 1), -- Memorial Urn Selection — Tribute Tier  595
-  ('pk003014', 'si003098', 1); -- Vancouver Casket Cypress  595
+  ('pk003014', 'si003010', 1, 1, false), -- Basic Service Fees for No Service Option  255
+  ('pk003014', 'si003011', 1, 2, false), -- Registration and Documentation  445
+  ('pk003014', 'si003014', 1, 3, false), -- Other Care and Preparation  445
+  ('pk003014', 'si003059', 1, 4, false), -- Venue and Staff Services to coordinate a Simple Gathering  595
+  ('pk003014', 'si003013', 1, 5, false), -- Sheltering of Remains  445
+  ('pk003014', 'si003019', 1, 6, false), -- Transfer of Remains from Place of Death to Funeral Home  495
+  ('pk003014', 'si003061', 1, 7, false), -- Estate Fraud Protection  135
+  ('pk003014', 'si003041', 1, 8, false), -- Crematory Fee  995
+  ('pk003014', 'si003023', 1, 9, false), -- Legal Service Plan  295
+  ('pk003014', 'si003101', 1, 10, false), -- Memorial Urn Selection — Tribute Tier  595
+  ('pk003014', 'si003098', 1, 11, false); -- Vancouver Casket Cypress  595
 
 -- ─── New Casket / Container / Vault Catalog Entries ───────────────────────────
 -- Adds category: 'vault' (Outer Burial Containers)
