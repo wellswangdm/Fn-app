@@ -50,12 +50,20 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 
   async function loadItems(pkgId) {
     if (itemsMap[pkgId]) return
-    // Try with is_optional/sort_order columns; fall back if migration not yet run
+    // Try with is_optional + sort_order columns; fall back in stages if the
+    // sort_order migration hasn't been run yet (must not drop is_optional —
+    // that flag drives the optional add-on checkboxes for every funeral home).
     let { data, error } = await supabase
       .from('package_items')
       .select('quantity, is_optional, sort_order, service_items(id, name, price, category_id)')
       .eq('package_id', pkgId)
       .order('sort_order')
+    if (error) {
+      ;({ data, error } = await supabase
+        .from('package_items')
+        .select('quantity, is_optional, service_items(id, name, price, category_id)')
+        .eq('package_id', pkgId))
+    }
     if (error) {
       ;({ data } = await supabase
         .from('package_items')
