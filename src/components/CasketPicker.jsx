@@ -7,13 +7,6 @@ function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
 
-const TIERS = [
-  { label: 'Premium',   min: 4000 },
-  { label: 'Standard',  min: 3000 },
-  { label: 'Value',     min: 2500 },
-  { label: 'Container', min: 0    },
-]
-
 export default function CasketPicker({ funeralHomeId, currentCasketId, optionalItems = [], onSelect, onClose }) {
   const [caskets,          setCaskets]          = useState([])
   const [loading,          setLoading]          = useState(true)
@@ -134,67 +127,55 @@ export default function CasketPicker({ funeralHomeId, currentCasketId, optionalI
           {loading ? (
             <p className="text-xs text-stone-400 text-center py-10">Loading caskets…</p>
           ) : (
-            TIERS.map(tier => {
-              const group = caskets.filter(c => c.price >= tier.min &&
-                (tier === TIERS[TIERS.length - 1] || c.price < TIERS[TIERS.indexOf(tier) - 1]?.min))
-              if (!group.length) return null
-              return (
-                <div key={tier.label}>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 mb-2 px-1">
-                    {tier.label}
-                  </p>
-                  <div className="space-y-1.5">
-                    {group.map(c => (
-                      <button
-                        key={c.id}
-                        onClick={() => setSelected(c)}
-                        className={`w-full text-left rounded-xl border px-4 py-3 transition-colors ${
-                          selected?.id === c.id
-                            ? 'border-primary-400 bg-primary-50'
-                            : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {c.image_url ? (
-                            <img
-                              src={c.image_url}
-                              alt={c.name}
-                              className="w-20 h-14 object-cover rounded-lg shrink-0 border border-stone-200"
-                            />
-                          ) : (
-                            <div className="w-20 h-14 rounded-lg shrink-0 border border-stone-200 bg-stone-100 flex items-center justify-center">
-                              <span className="text-stone-300 text-xl">⬜</span>
-                            </div>
+            <div className="space-y-1.5">
+              {caskets.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelected(c)}
+                  className={`w-full text-left rounded-xl border px-4 py-3 transition-colors ${
+                    selected?.id === c.id
+                      ? 'border-primary-400 bg-primary-50'
+                      : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {c.image_url ? (
+                      <img
+                        src={c.image_url}
+                        alt={c.name}
+                        className="w-20 h-14 object-cover rounded-lg shrink-0 border border-stone-200"
+                      />
+                    ) : (
+                      <div className="w-20 h-14 rounded-lg shrink-0 border border-stone-200 bg-stone-100 flex items-center justify-center">
+                        <span className="text-stone-300 text-xl">⬜</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {selected?.id === c.id && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary-600 shrink-0" />
                           )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                {selected?.id === c.id && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-primary-600 shrink-0" />
-                                )}
-                                <p className={`text-sm font-semibold ${selected?.id === c.id ? 'text-primary-800' : 'text-stone-800'}`}>
-                                  {c.name}
-                                </p>
-                              </div>
-                              <span className={`text-sm font-bold shrink-0 ${
-                                selected?.id === c.id ? 'text-primary-700' : 'text-stone-600'
-                              }`}>
-                                {fmt(c.price)}
-                              </span>
-                            </div>
-                            {c.description && (
-                              <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                                {c.description}
-                              </p>
-                            )}
-                          </div>
+                          <p className={`text-sm font-semibold ${selected?.id === c.id ? 'text-primary-800' : 'text-stone-800'}`}>
+                            {c.name}
+                          </p>
                         </div>
-                      </button>
-                    ))}
+                        <span className={`text-sm font-bold shrink-0 ${
+                          selected?.id === c.id ? 'text-primary-700' : 'text-stone-600'
+                        }`}>
+                          {fmt(c.price)}
+                        </span>
+                      </div>
+                      {c.description && (
+                        <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                          {c.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
-            })
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
