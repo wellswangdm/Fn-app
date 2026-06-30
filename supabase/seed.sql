@@ -126,6 +126,16 @@ insert into casket_catalog (id, name, description, manufacturer, item_code, cate
   ('csk080', 'Hadley Cremation Container', 'Wood composite with a dark finish and an ivory crepe interior.',                                                               'Batesville',       'CCBHCRC',    'cremation',  8),
   ('csk081', 'Novato Cremation Container', 'Wood composite container with a printed woodgrain finish exterior and an ivory crepe interior.',                               'Batesville',       'CCBNVTO',    'container',  9);
 
+-- ─── Custom caskets (NOT on any casket price list — preserve across updates) ──
+-- These are added manually and must NOT be removed/overwritten when a funeral
+-- home's casket price list is re-uploaded. They use a distinct 'cskx' id
+-- namespace so the sequential 'csk0NN' ids generated from price lists never
+-- collide with them. (Grey Malet already exists as csk079 in the global
+-- catalog, so it is reused rather than duplicated.)
+insert into casket_catalog (id, name, description, manufacturer, item_code, category, sort_order) values
+  ('cskx01', 'Blue Lowton', NULL, NULL, 'CCCLLBLCH',  'container', 100),
+  ('cskx02', 'Navy Tabor',  NULL, NULL, 'CCCLIDFHHB', 'container', 101);
+
 -- ─── Victory Memorial (3745) casket pricing ───────────────────────────────────
 -- Effective Feb 20, 2026
 
@@ -192,7 +202,11 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   ('3745', 'cont006',  450.00, 56),  -- Trayview
   -- Rental
   ('3745', 'cont001', 1599.00, 57),  -- Brockton Oak Ceremonial
-  ('3745', 'cont002',  850.00, 58);  -- Brockton Oak (1 Hour Rental)
+  ('3745', 'cont002',  850.00, 58),  -- Brockton Oak (1 Hour Rental)
+  -- Custom caskets (not on the price list — preserve across price-list updates)
+  ('3745', 'csk079',  1099.00, 59),  -- Grey Malet  (reuses existing global catalog entry)
+  ('3745', 'cskx01',  1599.00, 60),  -- Blue Lowton
+  ('3745', 'cskx02',  2299.00, 61);  -- Navy Tabor
 
 -- ─── Service Items ────────────────────────────────────────────────────────────
 
