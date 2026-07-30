@@ -13,6 +13,7 @@
 
 -- ─── À la carte service-item price changes ──────────────────────────────────
 update service_items set price = 4220.00 where id = 'si000001' and funeral_home_id = '3745'; -- Full Service prof. fees (was 4070)
+update service_items set price = 4070.00 where id = 'si000002' and funeral_home_id = '3745'; -- Gathering Celebrations prof. fees (was 3920) — missed in original update, matches Memorial Service
 update service_items set price = 4070.00 where id = 'si000003' and funeral_home_id = '3745'; -- Memorial Service prof. fees (was 3920)
 update service_items set price = 3895.00 where id = 'si000004' and funeral_home_id = '3745'; -- Graveside Service prof. fees (was 3795)
 update service_items set price =  345.00 where id = 'si000028' and funeral_home_id = '3745'; -- Private Family Moment (was 295)

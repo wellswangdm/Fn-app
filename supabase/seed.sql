@@ -213,7 +213,7 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
 insert into service_items (id, funeral_home_id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance) values
   -- Professional Staff & Services
   ('si000001', '3745', 'c1000000-0000-0000-0000-000000000001', NULL, 'Professional Services Fees for Full Service',                NULL, 4220.00, NULL, NULL, false),
-  ('si000002', '3745', 'c1000000-0000-0000-0000-000000000001', NULL, 'Professional Services Fees for Gathering Celebrations',      NULL, 3920.00, NULL, NULL, false),
+  ('si000002', '3745', 'c1000000-0000-0000-0000-000000000001', NULL, 'Professional Services Fees for Gathering Celebrations',      NULL, 4070.00, NULL, NULL, false),
   ('si000003', '3745', 'c1000000-0000-0000-0000-000000000001', NULL, 'Professional Services Fees for Memorial Service',            NULL, 4070.00, NULL, NULL, false),
   ('si000004', '3745', 'c1000000-0000-0000-0000-000000000001', NULL, 'Professional Services Fees for Graveside Service',           NULL, 3895.00, NULL, NULL, false),
   ('si000005', '3745', 'c1000000-0000-0000-0000-000000000001', NULL, 'Professional Service Fees for Cremation Witness',            NULL, 3645.00, NULL, NULL, false),
