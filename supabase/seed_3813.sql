@@ -104,9 +104,6 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   ('3813', 'csk071',  850.00, 48),  -- Burlington
   ('3813', 'cont003', 650.00, 49),  -- Cypress
   ('3813', 'csk086',  525.00, 50),  -- Universal Basic Container (new)
-  ('3813', 'cont005', 350.00, 51),  -- Particle Board Container
-  -- Alternative Containers
-  ('3813', 'cont006', 450.00, 52),  -- Trayview
   -- Rental Caskets
   ('3813', 'cont001', 1599.00, 53), -- Brockton Oak Ceremonial
   ('3813', 'cont002',  850.00, 54)  -- Brockton Oak (1 Hour Rental)

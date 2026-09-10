@@ -591,9 +591,6 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   ('3606', 'csk071',    850.00, 63),  -- Burlington
   ('3606', 'cont004',   699.00, 64),  -- Plywood Container
   ('3606', 'cont003',   650.00, 65),  -- Cypress
-  ('3606', 'cont005',   350.00, 66),  -- Particle Board Container
-  -- Alternative Containers
-  ('3606', 'cont006',   450.00, 67),  -- Trayview
   -- Rental Caskets
   ('3606', 'cont001',  1599.00, 68),  -- Brockton Oak Ceremonial
   ('3606', 'cont002',   850.00, 69);  -- Brockton Oak (1 Hour Rental)
