@@ -36,19 +36,19 @@ insert into service_categories (id, name, sort_order) values
   on conflict (id) do nothing;
 
 -- ─── New casket_catalog entries (only those NOT already in the shared catalog) ─
--- These 5 caskets are on the 3813 casket price list but not yet in the global
--- catalog. No image_url (no shared photo). All other 3813 caskets reuse
--- existing catalog entries (and their images) via funeral_home_caskets below.
+-- Only Pearson Cherry and Homeward are genuinely new. Brandon (csk082),
+-- Lambert (csk083) and Universal Basic Container (cont007) already exist in the
+-- shared catalog (from the 3150 seed) and are reused below — do NOT reassign
+-- their ids. No image_url (no shared photo) for the two new wood caskets.
 insert into casket_catalog (id, name, description, manufacturer, item_code, category, sort_order) values
-  ('csk082', 'Pearson Cherry',            'Cherry casket with a medium cherry stain, hand-rubbed, gloss finish exterior and champagne velvet interior.', 'Batesville',       'CWCHBAQUBQ', 'wood',      82),
-  ('csk083', 'Brandon',                   'Select hardwood casket with a medium finished exterior and a rosetan crepe interior.',                        'Batesville',       'CWHWBBENFD', 'wood',      83),
-  ('csk084', 'Homeward',                  'Solid hardwood casket veneer sided with Titian polished exterior and tan crepe interior.',                    'Victoriaville',    'CWHWLCKJGQ', 'wood',      84),
-  ('csk085', 'Lambert',                   'Select hardwood casket with a medium finished exterior and rosetan crepe interior.',                          'Batesville',       'CWHWBCRDFD', 'wood',      85),
-  ('csk086', 'Universal Basic Container', 'Cremation container with interior.',                                                                          'Vancouver Casket', 'CCVUBCC',    'container', 86)
+  ('csk090', 'Pearson Cherry', 'Cherry casket with a medium cherry stain, hand-rubbed, gloss finish exterior and champagne velvet interior.', 'Batesville',    'CWCHBAQUBQ', 'wood', 90),
+  ('csk091', 'Homeward',       'Solid hardwood casket veneer sided with Titian polished exterior and tan crepe interior.',                    'Victoriaville', 'CWHWLCKJGQ', 'wood', 91)
   on conflict (id) do nothing;
 
 -- ─── 3813 casket pricing ──────────────────────────────────────────────────────
 -- Effective Aug 12, 2026. catalog_id reuses shared entries so photos are common.
+-- Rebuild from scratch so a re-run corrects any earlier (mis-mapped) rows.
+delete from funeral_home_caskets where funeral_home_id = '3813';
 insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order) values
   -- Wood Caskets
   ('3813', 'csk063', 7199.00,  1),  -- Pieta Maple
@@ -58,7 +58,7 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   ('3813', 'csk027', 5699.00,  5),  -- Woodbridge Pecan
   ('3813', 'csk028', 5199.00,  6),  -- St. Thomas Oak
   ('3813', 'csk029', 5099.00,  7),  -- Mansfield-27
-  ('3813', 'csk082', 5099.00,  8),  -- Pearson Cherry (new)
+  ('3813', 'csk090', 5099.00,  8),  -- Pearson Cherry (new)
   ('3813', 'csk030', 4699.00,  9),  -- Briar Hill
   ('3813', 'csk031', 4699.00, 10),  -- Camden Oak
   ('3813', 'csk032', 4699.00, 11),  -- Cameron Oak
@@ -80,10 +80,10 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   ('3813', 'csk076', 2999.00, 27),  -- Westcott
   ('3813', 'csk041', 2999.00, 28),  -- White Rose
   ('3813', 'csk012', 2999.00, 29),  -- Winfield
-  ('3813', 'csk083', 2899.00, 30),  -- Brandon (new)
+  ('3813', 'csk082', 2899.00, 30),  -- Brandon (shared catalog)
   ('3813', 'csk042', 2899.00, 31),  -- Carnaby
-  ('3813', 'csk084', 2899.00, 32),  -- Homeward (new)
-  ('3813', 'csk085', 2899.00, 33),  -- Lambert (new)
+  ('3813', 'csk091', 2899.00, 32),  -- Homeward (new)
+  ('3813', 'csk083', 2899.00, 33),  -- Lambert (shared catalog)
   ('3813', 'csk043', 2799.00, 34),  -- Atlantic
   ('3813', 'csk044', 2799.00, 35),  -- Natura
   ('3813', 'csk045', 2799.00, 36),  -- Oxford
@@ -103,7 +103,7 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   ('3813', 'csk053', 1050.00, 47),  -- McConnell
   ('3813', 'csk071',  850.00, 48),  -- Burlington
   ('3813', 'cont003', 650.00, 49),  -- Cypress
-  ('3813', 'csk086',  525.00, 50),  -- Universal Basic Container (new)
+  ('3813', 'cont007', 525.00, 50),  -- Universal Basic Container (shared catalog)
   -- Rental Caskets
   ('3813', 'cont001', 1599.00, 53), -- Brockton Oak Ceremonial
   ('3813', 'cont002',  850.00, 54)  -- Brockton Oak (1 Hour Rental)
@@ -228,7 +228,7 @@ insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_
   ('pk005012', '3813', 'Tribute Funeral Service',    'package', 12704.00, 380.00, 'csk009',  12),
   ('pk005013', '3813', 'Heritage Cremation Service', 'package', 14799.00, 440.00, 'cont001', 13),
   ('pk005014', '3813', 'Honour Cremation Service',   'package', 11330.00, 340.00, 'cont003', 14),
-  ('pk005015', '3813', 'Tribute Cremation Service',  'package',  5605.00,  50.00, 'csk086',  15),
+  ('pk005015', '3813', 'Tribute Cremation Service',  'package',  5605.00,  50.00, 'cont007', 15),
   -- A la carte service offerings (General Price List)
   ('pk005001', '3813', 'Full Service',           'alacarte', 6540.00, 0.00, NULL, 1),
   ('pk005002', '3813', 'Witness Cremation',      'alacarte', 5015.00, 0.00, NULL, 2),
@@ -298,7 +298,7 @@ insert into package_items (package_id, service_item_id, quantity, sort_order, is
   ('pk005014','si005058',1,7,false),('pk005014','si005083',1,8,true),('pk005014','si005206',1,9,false),
   ('pk005014','si005076',1,10,false),('pk005014','si005023',1,11,false),('pk005014','si005050',1,12,true),
   ('pk005014','si005301',1,13,true),('pk005014','si005208',1,14,true),('pk005014','si005102',1,15,false),
-  -- Tribute Cremation Service (pk005015) — container csk086
+  -- Tribute Cremation Service (pk005015) — container cont007
   ('pk005015','si005009',1,1,false),('pk005015','si005010',1,2,false),('pk005015','si005013',1,3,false),
   ('pk005015','si005026',1,4,false),('pk005015','si005012',1,5,false),('pk005015','si005040',1,6,false),
   ('pk005015','si005058',1,7,false),('pk005015','si005076',1,8,false),('pk005015','si005050',1,9,true),

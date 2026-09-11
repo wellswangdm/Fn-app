@@ -136,10 +136,12 @@ insert into casket_catalog (id, name, description, manufacturer, item_code, cate
   ('cskx01', 'Blue Lowton', NULL, NULL, 'CCCLLBLCH',  'container', 100),
   ('cskx02', 'Navy Tabor',  NULL, NULL, 'CCCLIDFHHB', 'container', 101);
 
--- Containers added Sept 10, 2026 (shared catalog, image-less)
+-- Shared container catalog entries (also referenced by 3150/3730/3813).
+-- Defined here in the base catalog so any home can reference them; the
+-- per-home seeds insert the same rows with `on conflict (id) do nothing`.
 insert into casket_catalog (id, name, description, manufacturer, item_code, category, sort_order) values
-  ('csk086', 'Universal Basic Container', 'Cremation container with interior.',                              'Vancouver Casket', 'CCVUBCC', 'container', 86),
-  ('csk087', 'OSB Cremation Container',   'OSB cremation-oriented container with handles and basic interior.','Vancouver Casket', 'CCVOSCC', 'container', 87)
+  ('cont007', 'Universal Basic Container', 'Cremation container with Interior.',                                         'Vancouver Casket', 'CCVUBCC', 'container', 56),
+  ('cont008', 'OSB Cremation Container',   'OSB cremation-oriented container (Oversize) with handles and basic interior.','Vancouver Casket', 'CCVOSCC', 'container', 57)
   on conflict (id) do nothing;
 
 -- ─── Victory Memorial (3745) casket pricing ───────────────────────────────────
@@ -199,8 +201,8 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   -- Cremation Oriented
   ('3745', 'csk053',  1050.00, 49),  -- McConnell (was 999)
   ('3745', 'cont003',  650.00, 50),  -- Cypress
-  ('3745', 'csk086',   525.00, 51),  -- Universal Basic Container
-  ('3745', 'csk087',   395.00, 52),  -- OSB Cremation Container
+  ('3745', 'cont007',  525.00, 51),  -- Universal Basic Container
+  ('3745', 'cont008',  395.00, 52),  -- OSB Cremation Container
   -- Rental
   ('3745', 'cont001', 1599.00, 53),  -- Brockton Oak Ceremonial
   ('3745', 'cont002',  850.00, 54),  -- Brockton Oak (1 Hour Rental)

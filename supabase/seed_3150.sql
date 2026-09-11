@@ -570,7 +570,8 @@ insert into casket_catalog (id, name, description, manufacturer, item_code, cate
   ('vlt007', 'Monticello Vault', 'Entry-level single-reinforced burial vault; concrete exterior with a plastic-reinforced cover and base. Strentex inner lining.', 'Wilbert', 'OSCWBGMST', 'vault', 7),
   ('vlt008', 'Monarch Vault', 'Reinforced concrete vault. Reinforced dome-shaped concrete vault with no inner liner.', 'Wilbert', 'OSCWBGKST', 'vault', 8),
   ('vlt009', 'Venetian Urn Vault', 'Finest single-reinforced burial vault; high-strength concrete with high-impact plastic and a reinforced cover and base; rich look of polished marble; personalization choices available. Strentex interior liner.', 'Wilbert', 'OUCWBQ3ST', 'vault', 9),
-  ('vlt010', 'Monticello Urn Vault', 'Entry-level single-reinforced burial vault; concrete exterior with a plastic-reinforced cover and base. Strentex inner liner.', 'Wilbert', 'OUCWBGLST', 'vault', 10);
+  ('vlt010', 'Monticello Urn Vault', 'Entry-level single-reinforced burial vault; concrete exterior with a plastic-reinforced cover and base. Strentex inner liner.', 'Wilbert', 'OUCWBGLST', 'vault', 10)
+  on conflict (id) do nothing;
 
 -- ─── Casket / Container / Vault Pricing ────────────────────────────────────────
 

@@ -26,10 +26,14 @@ begin;
 -- are intentionally kept so historical quotes referencing them stay valid.
 delete from funeral_home_caskets where catalog_id in ('cont005', 'cont006');
 
--- ─── 2. New / ensured casket_catalog entries (shared, image-less) ─────────────
+-- ─── 2. Ensure the shared container entries exist (defined once, reused) ─────
+-- Universal Basic Container (cont007) and OSB Cremation Container (cont008)
+-- already exist in the shared catalog (from the 3150/3730 seeds). This is a
+-- defensive no-op if the DB already has them. NOTE: csk086/csk087 are NOT used
+-- for these — those ids belong to 3150's "Basic Pine" caskets.
 insert into casket_catalog (id, name, description, manufacturer, item_code, category, sort_order) values
-  ('csk086', 'Universal Basic Container', 'Cremation container with interior.',                              'Vancouver Casket', 'CCVUBCC', 'container', 86),
-  ('csk087', 'OSB Cremation Container',   'OSB cremation-oriented container with handles and basic interior.','Vancouver Casket', 'CCVOSCC', 'container', 87)
+  ('cont007', 'Universal Basic Container', 'Cremation container with Interior.',                                         'Vancouver Casket', 'CCVUBCC', 'container', 56),
+  ('cont008', 'OSB Cremation Container',   'OSB cremation-oriented container (Oversize) with handles and basic interior.','Vancouver Casket', 'CCVOSCC', 'container', 57)
   on conflict (id) do nothing;
 
 -- ─── 3. GPL service-item price changes ───────────────────────────────────────
@@ -108,8 +112,8 @@ insert into funeral_home_caskets (funeral_home_id, catalog_id, price, sort_order
   -- Cremation Oriented
   ('3745', 'csk053',  1050.00, 49),  -- McConnell (was 999)
   ('3745', 'cont003',  650.00, 50),  -- Cypress
-  ('3745', 'csk086',   525.00, 51),  -- Universal Basic Container
-  ('3745', 'csk087',   395.00, 52),  -- OSB Cremation Container (new)
+  ('3745', 'cont007',  525.00, 51),  -- Universal Basic Container
+  ('3745', 'cont008',  395.00, 52),  -- OSB Cremation Container
   -- Rental
   ('3745', 'cont001', 1599.00, 53),  -- Brockton Oak Ceremonial
   ('3745', 'cont002',  850.00, 54),  -- Brockton Oak (1 Hour Rental)
