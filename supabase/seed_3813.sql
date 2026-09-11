@@ -214,7 +214,8 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   -- Urns — Memorial Urn Selection tiers (individual urn catalog appended below)
   ('si005300', '3813', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection — Heritage Tier', 'Choice of: LoveUrns Elegant Leaf, Urnes Bégin Serenity Tree, RK Productions In Flight, or Urnes Bégin Classic Stained Maple.', 995.00, NULL, NULL, false, 1),
   ('si005301', '3813', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection — Honour Tier',   'Choice of: Urnes Bégin Versatile Urn Navy, LoveUrns Laurel Midnight, Terrybear Satori Ocean Pearl, or Batesville Memento Chest.', 795.00, NULL, NULL, false, 2),
-  ('si005302', '3813', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection — Tribute Tier',  'Choice of: LoveUrns Laurel Crimson, Urnes Bégin Sky Pewter, Mackenzie Classic Sky Blue, or Batesville Cherry Chest.', 595.00, NULL, NULL, false, 3);
+  ('si005302', '3813', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection — Tribute Tier',  'Choice of: LoveUrns Laurel Crimson, Urnes Bégin Sky Pewter, Mackenzie Classic Sky Blue, or Batesville Cherry Chest.', 595.00, NULL, NULL, false, 3)
+  on conflict (id) do nothing;
 
 -- NOTE: the full individual urn catalog (si005303+) is in the
 -- "Individual Urn Catalog" section at the end of this file.
@@ -236,10 +237,16 @@ insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_
   ('pk005004', '3813', 'Graveside Service',      'alacarte', 5270.00, 0.00, NULL, 4),
   ('pk005006', '3813', 'No Service Option',      'alacarte', 3395.00, 0.00, NULL, 6),
   ('pk005007', '3813', 'Forwarding of Remains',  'alacarte', 4100.00, 0.00, NULL, 7),
-  ('pk005008', '3813', 'Receiving of Remains',   'alacarte', 2930.00, 0.00, NULL, 8);
+  ('pk005008', '3813', 'Receiving of Remains',   'alacarte', 2930.00, 0.00, NULL, 8)
+  on conflict (id) do update set
+    name = excluded.name, pkg_type = excluded.pkg_type, total_price = excluded.total_price,
+    package_discount = excluded.package_discount, default_casket_id = excluded.default_casket_id,
+    sort_order = excluded.sort_order;
 
 -- ─── Package Items ────────────────────────────────────────────────────────────
 
+-- Rebuild package items so a re-run doesn't duplicate them (no natural unique key).
+delete from package_items where package_id in (select id from packages where funeral_home_id = '3813');
 insert into package_items (package_id, service_item_id, quantity, sort_order, is_optional) values
   -- Full Service (pk005001)
   ('pk005001','si005001',1,1,false),('pk005001','si005010',1,2,false),('pk005001','si005011',1,3,false),
@@ -437,5 +444,6 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si005429', '3813', 'c1000000-0000-0000-0000-000000000009', 'UOBDFSADR', 'Ocean Sunset Scattering Tube', 'Scattering tube is designed to simplify the scattering process. Durable, dignified, easy-to-use container created from recycled paper and cardboard with no metal components. TSA/CATSA-compliant (BioLife)', 195.00, NULL, NULL, false, 130),
   ('si005430', '3813', 'c1000000-0000-0000-0000-000000000009', 'UOLRFSACW', 'Leather Cylinder', 'Slate brown bonded leather cylinder. TSA/CATSA-compliant. (Batesville)', 195.00, NULL, NULL, false, 131),
   ('si005431', '3813', 'c1000000-0000-0000-0000-000000000009', 'UMSTFSAGJ', 'Utility', '20 gauge carbon steel construction with black semi-gloss finish. (Batesville)', 295.00, NULL, NULL, false, 132),
-  ('si005432', '3813', 'c1000000-0000-0000-0000-000000000009', 'UMALFSADA', 'Mailer', 'Composite wood with aluminum like texture, acceptable to ship through the mail courier service. (Batesville)', 190.00, NULL, NULL, false, 133);
+  ('si005432', '3813', 'c1000000-0000-0000-0000-000000000009', 'UMALFSADA', 'Mailer', 'Composite wood with aluminum like texture, acceptable to ship through the mail courier service. (Batesville)', 190.00, NULL, NULL, false, 133)
+  on conflict (id) do nothing;
 
