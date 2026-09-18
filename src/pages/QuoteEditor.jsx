@@ -35,6 +35,17 @@ function isCremFee(item) {
 const STATIONERY_CATEGORY_ID = 'c1000000-0000-0000-0000-000000000006'
 const URN_ITEM_IDS = new Set(['si000213', 'si000214', 'si000215'])
 
+// Rental caskets are always charged PST — even for cremation — because they are
+// a rented good rather than part of the disposition. cont001 (Brockton Oak
+// Ceremonial) and cont002 (Brockton Oak, 1 Hour Rental) are the only
+// rental-category caskets in the shared casket_catalog, so PST defaults on for
+// them regardless of arrangement type. Add ids here if more rentals are added.
+const RENTAL_CASKET_IDS = new Set(['cont001', 'cont002'])
+const isRentalCasketId = id => RENTAL_CASKET_IDS.has(id)
+// PST default for a casket: rentals are always true; otherwise burial-only.
+const casketPst = (casketId, arrangementType) =>
+  isRentalCasketId(casketId) ? true : arrangementType === 'burial'
+
 // Optional item detection is driven by package_items.is_optional (set per funeral home in the DB)
 
 const INIT_SECTIONS = [
@@ -46,7 +57,7 @@ const INIT_SECTIONS = [
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
 function defaultPst(item, arrangementType) {
-  if (item.isCasketItem) return arrangementType === 'burial'
+  if (item.isCasketItem) return casketPst(item.serviceItemId, arrangementType)
   if (URN_ITEM_IDS.has(item.serviceItemId)) return true
   if (item.categoryId === STATIONERY_CATEGORY_ID) return true
   const name = (item.name || '').toLowerCase()
@@ -73,7 +84,7 @@ function reducer(state, action) {
       const newType = action.value
       // Update casket PST based on new arrangement type
       let items = state.items.map(i =>
-        i.isCasketItem ? { ...i, pst: newType === 'burial' } : i
+        i.isCasketItem ? { ...i, pst: casketPst(i.serviceItemId, newType) } : i
       )
       if (newType === 'cremation') {
         const hasCremFee = items.some(isCremFee)
@@ -108,7 +119,7 @@ function reducer(state, action) {
         name:          action.defaultCasket.name,
         price:         action.defaultCasket.price,
         quantity:      1,
-        pst:           state.arrangementType === 'burial',
+        pst:           casketPst(action.defaultCasket.id, state.arrangementType),
         isCasketItem:  true,
         isFromPackage: true,
       }, 'sec-main') : null
@@ -246,7 +257,7 @@ function reducer(state, action) {
       const items = hasCasketItem
         ? state.items.map(i =>
             i.isCasketItem
-              ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price, pst: state.arrangementType === 'burial' }
+              ? { ...i, serviceItemId: casket.id, name: casket.name, price: casket.price, pst: casketPst(casket.id, state.arrangementType) }
               : i
           )
         : [...state.items, freshItem({
@@ -254,7 +265,7 @@ function reducer(state, action) {
             name:          casket.name,
             price:         casket.price,
             quantity:      1,
-            pst:           state.arrangementType === 'burial',
+            pst:           casketPst(casket.id, state.arrangementType),
             isCasketItem:  true,
             isFromPackage: false,
           }, 'sec-main')]
