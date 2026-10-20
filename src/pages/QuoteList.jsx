@@ -17,7 +17,7 @@ const STATUS = {
   accepted:  { label: 'Accepted',  cls: 'bg-green-50 text-green-600 border-green-200'  },
 }
 
-export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
+export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, userId, user }) {
   const [quotes,      setQuotes]      = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
@@ -177,6 +177,11 @@ export default function QuoteList({ onNew, onEdit, onSignOut, userId, user }) {
             <button onClick={onNew} className="text-sm font-medium bg-white text-primary-800 px-4 py-2 rounded-lg hover:bg-stone-100 transition-colors shadow-sm">
               + New Quote
             </button>
+            {onSwitchPortal && (
+              <button onClick={onSwitchPortal} className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+                Switch portal
+              </button>
+            )}
             <button onClick={onSignOut} className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
               Sign out
             </button>

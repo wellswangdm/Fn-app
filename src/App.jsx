@@ -5,6 +5,8 @@ import QuoteEditor from './pages/QuoteEditor.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import SetPasswordPage from './pages/SetPasswordPage.jsx'
 import ShareView from './pages/ShareView.jsx'
+import PortalSelect from './pages/PortalSelect.jsx'
+import CemeteryPortal from './pages/CemeteryPortal.jsx'
 
 // Capture invite/recovery flag before Supabase strips the URL hash
 const hashParams    = new URLSearchParams(window.location.hash.replace('#', ''))
@@ -16,6 +18,7 @@ export default function App() {
   if (SHARE_ID) return <ShareView id={SHARE_ID} />
   const [session,        setSession]       = useState(undefined) // undefined = still loading
   const [needsPassword,  setNeedsPassword] = useState(NEEDS_PW_FLAG)
+  const [portal,         setPortal]        = useState(null)      // null = portal chooser
   const [view,           setView]          = useState('list')
   const [editingQuoteId, setEditingQuoteId] = useState(null)
 
@@ -28,7 +31,10 @@ export default function App() {
   function openNew()    { setEditingQuoteId(null); setView('new') }
   function openEdit(id) { setEditingQuoteId(id);   setView('edit') }
   function backToList() { setView('list'); setEditingQuoteId(null) }
-  function signOut()    { supabase.auth.signOut() }
+  function signOut()    { setPortal(null); supabase.auth.signOut() }
+
+  function selectPortal(id) { setView('list'); setEditingQuoteId(null); setPortal(id) }
+  function switchPortal()   { setView('list'); setEditingQuoteId(null); setPortal(null) }
 
   if (session === undefined) return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center">
@@ -39,8 +45,18 @@ export default function App() {
   if (!session)       return <LoginPage />
   if (needsPassword)  return <SetPasswordPage onDone={() => setNeedsPassword(false)} />
 
+  // After sign-in, pick a portal before entering an app
+  if (!portal) return (
+    <PortalSelect user={session.user} onSelect={selectPortal} onSignOut={signOut} />
+  )
+
+  if (portal === 'cemetery') return (
+    <CemeteryPortal user={session.user} userId={session.user.id}
+                    onSwitchPortal={switchPortal} onSignOut={signOut} />
+  )
+
   if (view === 'list') {
-    return <QuoteList onNew={openNew} onEdit={openEdit} onSignOut={signOut} userId={session.user.id} user={session.user} />
+    return <QuoteList onNew={openNew} onEdit={openEdit} onSignOut={signOut} onSwitchPortal={switchPortal} userId={session.user.id} user={session.user} />
   }
 
   return (
