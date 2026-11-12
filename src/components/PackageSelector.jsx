@@ -88,12 +88,22 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
     const hasFso   = fsoInPkg.length > 0
     if (hasFso) {
       const fsoCount = fsoInPkg.length
-      const { data: fsoData } = await supabase
+      // Retired items are hidden; fall back if the `active` column isn't there yet
+      let { data: fsoData, error: fsoErr } = await supabase
         .from('service_items')
         .select('id, name, price')
         .eq('funeral_home_id', funeralHomeId)
         .eq('category_id', FSO_CATEGORY)
+        .eq('active', true)
         .order('sort_order')
+      if (fsoErr) {
+        ;({ data: fsoData } = await supabase
+          .from('service_items')
+          .select('id, name, price')
+          .eq('funeral_home_id', funeralHomeId)
+          .eq('category_id', FSO_CATEGORY)
+          .order('sort_order'))
+      }
       const allFso = (fsoData || []).map(si => ({
         serviceItemId: si.id,
         name:          si.name,

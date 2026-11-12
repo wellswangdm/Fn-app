@@ -254,21 +254,19 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si000045', '3745', 'c1000000-0000-0000-0000-000000000003', NULL, 'Shipping Administration',                                 'Administration duties required to coordinate shipping of remains.',                         495.00, NULL, NULL, false),
   ('si000046', '3745', 'c1000000-0000-0000-0000-000000000003', NULL, 'Handling and Transfer of Ashes',                           NULL, 195.00, NULL, NULL, false),
   -- Family Support Options
-  ('si000050', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Medallion Bundle',                                           NULL,  295.00, NULL, NULL, false),
-  ('si000051', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Timeless Touch Fingerprint',                                 NULL,  295.00, NULL, NULL, false),
-  ('si000052', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Funeral Webcasting',                                         NULL,  295.00, NULL, NULL, false),
-  ('si000053', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Retractable Table Banner',                                   NULL,  295.00, NULL, NULL, false),
-  ('si000054', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Legal Service Plan',                                         NULL,  295.00, NULL, NULL, false),
-  ('si000055', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Memory Portrait - 10x15 Framed Canvas Portrait',             NULL,  295.00, NULL, NULL, false),
-  ('si000056', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Treasure Kits',                                              NULL,  295.00, NULL, NULL, false),
-  ('si000057', '3745', 'c1000000-0000-0000-0000-000000000004', NULL, 'Family Estate Manager',                                      NULL,  295.00, NULL, NULL, false),
+  ('si000050', '3745', 'c1000000-0000-0000-0000-000000000004', 'XAIMNLS',  'Medallion Bundle',                     NULL,  345.00, NULL, NULL, false),
+  ('si000051', '3745', 'c1000000-0000-0000-0000-000000000004', 'XFDKSTE',  'Timeless Touch Fingerprint Selection', NULL,  345.00, NULL, NULL, false),
+  ('si000054', '3745', 'c1000000-0000-0000-0000-000000000004', 'XSRDMLSP', 'Legal Service Plan',                   NULL,  345.00, NULL, NULL, false),
+  ('si000056', '3745', 'c1000000-0000-0000-0000-000000000004', 'XOTAMAZ',  'Treasure Kits',                        NULL,  345.00, NULL, NULL, false),
+  -- Funeral Webcasting is no longer a Family Support Option (Misc, still $295)
+  ('si000052', '3745', 'c1000000-0000-0000-0000-000000000005', 'DGSWEBCS', 'Funeral Webcasting',                   NULL,  295.00, NULL, NULL, false),
   ('si000058', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Estate Fraud Protection',                                    NULL,  145.00, NULL, NULL, false),
   ('si000059', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Everlasting Memorial',                                       NULL,  490.00, NULL, NULL, false),
   ('si000060', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Traditional Ritual Washing',                                 NULL,  395.00, NULL, NULL, false),
   -- Miscellaneous Services & Merchandise
   ('si000070', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Standard Text Personalization',                              NULL,   50.00, NULL, NULL, false),
   ('si000071', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Custom Service Folders (100)',                               NULL,  250.00, NULL, NULL, false),
-  ('si000072', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Sterling Silver Oval Pendant',                               NULL,  295.00, NULL, NULL, false),
+  ('si000072', '3745', 'c1000000-0000-0000-0000-000000000005', 'XFDKSSV', 'Sterling Silver Oval Pendant',                        NULL,  345.00, NULL, NULL, false),
   ('si000073', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'A Life Remembered Book',                                     NULL,   95.00, NULL, NULL, false),
   ('si000074', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Cremation Expediting Fee',                                   NULL,  495.00, NULL, NULL, false),
   ('si000075', '3745', 'c1000000-0000-0000-0000-000000000005', NULL, 'Cremation Witnessing Fee',                                   NULL,  595.00, NULL, NULL, false),
@@ -321,24 +319,31 @@ insert into service_items (id, funeral_home_id, category_id, item_code, name, de
   ('si000214', '3745', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection', 'Urnes Bégin Versatile Urn Navy, LoveUrns Laurel Midnight, Terrybear Satori Ocean Pearl, Batesville Memento Chest',                         795.00, NULL, NULL, false),
   ('si000215', '3745', 'c1000000-0000-0000-0000-000000000009', NULL, 'Memorial Urn Selection', 'LoveUrns Laurel Crimson, Urnes Bégin Sky Pewter, Mackenzie Classic Sky Blue, Batesville Cherry Chest',                                    595.00, NULL, NULL, false);
 
--- New GPL items (effective Sept 10, 2026)
+-- GPL items effective Oct 30, 2026 — Family Support Options line-up ($345)
 insert into service_items (id, funeral_home_id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance) values
-  ('si000216', '3745', 'c1000000-0000-0000-0000-000000000004', 'XOTAMBE',  'Chinese Funeral Custom Items', NULL, 590.00, NULL, NULL, false),
-  ('si000217', '3745', 'c1000000-0000-0000-0000-000000000005', 'XPARBMZA', 'Star Gaze Frame Gold 11x14',  'A custom framed print of a star chart depicting the night sky from a specific date and location. 11x14 gold champagne frame matted to 8x10.', 295.00, NULL, NULL, false),
-  ('si000218', '3745', 'c1000000-0000-0000-0000-000000000005', 'XFDPFZA',  'Star Gaze Frame 16x20',      'A custom framed print of a star chart depicting the night sky from a specific date and location. 16x20 black shadowbox matted to 11x14.', 295.00, NULL, NULL, false);
+  ('si000216', '3745', 'c1000000-0000-0000-0000-000000000004', 'XOTAMBE',  'Chinese Funeral Custom Items', NULL, 690.00, NULL, NULL, false),
+  ('si000219', '3745', 'c1000000-0000-0000-0000-000000000004', 'XPRPF0A',  '8x10 or 10x15 Metal or Canvas Memory Portrait', 'Turn a favourite photo into a lasting tribute, beautifully reproduced on metal or canvas with multiple frames to choose from.', 345.00, NULL, NULL, false),
+  ('si000220', '3745', 'c1000000-0000-0000-0000-000000000004', 'XFDABTR',  'Serenity Swirl Orbs',           'Select 1 of 5 colour options that incorporate a loved one''s ashes in a solid hand-blown glass keepsake.', 345.00, NULL, NULL, false),
+  ('si000221', '3745', 'c1000000-0000-0000-0000-000000000004', 'XOTBRA1',  'Personalized Banner',           'Stand-up banner featuring personal photos and customized wording. Durable vinyl, 24"(w) x 64"(h).', 345.00, NULL, NULL, false),
+  ('si000222', '3745', 'c1000000-0000-0000-0000-000000000004', 'XFDLSL3',  'Living Stones - 3 Stones',      'Smooth stones naturally handcrafted from a loved one''s ashes and natural minerals. Three-stone option.', 345.00, NULL, NULL, false),
+  ('si000223', '3745', 'c1000000-0000-0000-0000-000000000004', 'XPARBMAC', 'Star Gaze Frames',              'Custom framed star chart of the night sky from a specific date and location. Presented in a 16x20 black shadowbox matted to 11x14, or an 11x14 gold champagne frame matted to 8x10.', 345.00, NULL, NULL, false),
+  ('si000224', '3745', 'c1000000-0000-0000-0000-000000000004', 'XCIMARB',  'Marble Tealight Keepsake',      'Engravable natural marble tealight keepsake with a discreet compartment for mementos or a small portion of ashes. Available in Sand, Carerra, Ebony, Fossil Stone and King Gold.', 345.00, NULL, NULL, false),
+  ('si000225', '3745', 'c1000000-0000-0000-0000-000000000004', 'MEMFSOBB', 'A Life Remembered Book Bundle', 'Four additional premium-quality 10x9-inch hardcover books including photos, obituary and messages gathered from family and friends.', 345.00, NULL, NULL, false),
+  ('si000226', '3745', 'c1000000-0000-0000-0000-000000000004', 'XFDSGGK',  'Stained Glass Keepsake',        'Hand-laid stained glass keepsake with a concealed compartment for a small portion of cremated remains or a meaningful memento, and an engravable base.', 345.00, NULL, NULL, false),
+  ('si000227', '3745', 'c1000000-0000-0000-0000-000000000004', 'XOTSJ1A',  'Signature Pendants',            'Bar or round pendant in gold vermeil or sterling silver that transforms a loved one''s handwritten signature into a keepsake. Includes a choice of 16", 18" or 20" chain.', 345.00, NULL, NULL, false);
 
 -- ─── Packages ─────────────────────────────────────────────────────────────────
 
 insert into packages (id, funeral_home_id, name, pkg_type, total_price, package_discount, default_casket_id, sort_order) values
-  -- Named packages (effective Sept 10, 2026)
-  ('pk000010', '3745', 'Heritage Funeral Service',   'package',  17679.00, 515.00, 'csk001',  10),
-  ('pk000011', '3745', 'Honour Funeral Service',     'package',  16609.00, 485.00, 'csk005',  11),
-  ('pk000012', '3745', 'Tribute Funeral Service',    'package',  14829.00, 435.00, 'csk009',  12),
-  ('pk000013', '3745', 'Heritage Cremation Service', 'package',  16679.00, 510.00, 'cont001', 13),
-  ('pk000014', '3745', 'Honour Cremation Service',   'package',  14035.00, 410.00, 'cont002', 14),
-  ('pk000015', '3745', 'Tribute Cremation Service',  'package',   6175.00,  50.00, 'cont003', 15),
-  ('pk000016', '3745', 'JADE Burial Plan',           'package',  15994.00, 500.00, 'csk001',  16),
-  ('pk000017', '3745', 'JADE Cremation Plan',        'package',  15339.00, 460.00, 'cont001', 17),
+  -- Named packages (FSO line at $345 — GPL effective Oct 30, 2026)
+  ('pk000010', '3745', 'Heritage Funeral Service',   'package',  17729.00, 515.00, 'csk001',  10),
+  ('pk000011', '3745', 'Honour Funeral Service',     'package',  16659.00, 485.00, 'csk005',  11),
+  ('pk000012', '3745', 'Tribute Funeral Service',    'package',  14879.00, 435.00, 'csk009',  12),
+  ('pk000013', '3745', 'Heritage Cremation Service', 'package',  16729.00, 510.00, 'cont001', 13),
+  ('pk000014', '3745', 'Honour Cremation Service',   'package',  14085.00, 410.00, 'cont002', 14),
+  ('pk000015', '3745', 'Tribute Cremation Service',  'package',   6225.00,  50.00, 'cont003', 15),
+  ('pk000016', '3745', 'JADE Burial Plan',           'package',  16094.00, 500.00, 'csk001',  16),
+  ('pk000017', '3745', 'JADE Cremation Plan',        'package',  15439.00, 460.00, 'cont001', 17),
   -- A la carte
   ('pk000001', '3745', 'Full Service',           'alacarte',  7810.00, 0.00, NULL, 1),
   ('pk000002', '3745', 'Witness Cremation',      'alacarte',  7110.00, 0.00, NULL, 2),

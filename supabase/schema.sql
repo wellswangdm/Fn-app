@@ -32,6 +32,7 @@ create table if not exists service_items (
   price_min       numeric(10,2),
   price_max       numeric(10,2),
   is_cash_advance boolean default false,
+  active          boolean not null default true,  -- false = retired; hidden from new quotes, kept for existing ones
   default_gst     boolean not null default true,
   default_pst     boolean not null default false,
   default_no_disc boolean not null default false,

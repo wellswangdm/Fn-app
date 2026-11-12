@@ -43,6 +43,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
           .from('service_items')
           .select('id, category_id, item_code, name, description, price, price_min, price_max, is_cash_advance, default_gst, default_no_disc, service_categories(name)')
           .eq('funeral_home_id', funeralHomeId)
+          .eq('active', true)
           .order('name'),
       ])
       setCategories(cats || [])
