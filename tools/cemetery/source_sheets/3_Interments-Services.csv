@@ -1,0 +1,44 @@
+ITEM DESCRIPTION,CHI,HMIS CODE,PRICE,SERIES
+Signature Entombment,下葬費 (Mon-Fri 10:30AM - 2:30PM),ENTST,3195,Opening and Closing Services
+Signature Ground Interment,下葬費 (Mon-Fri 10:30AM - 2:30PM),INTST,3195,Opening and Closing Services
+Standard Entombment,下葬費 (Mon-Fri 10:30AM - 2:30PM),ENTSD,2695,Opening and Closing Services
+Standard Ground Interment,下葬費 (Mon-Fri 10:30AM - 2:30PM),INTSD,2695,Opening and Closing Services
+Basic Entombment,下葬費 (Mon-Fri 10:30AM - 2:30PM),ENTBT,2195,Opening and Closing Services
+Basic Ground Interment,下葬費 (Mon-Fri 10:30AM - 2:30PM),INTBG,2195,Opening and Closing Services
+Basic Ground Inurnment,上位費 (Mon-Fri 10:30AM - 2:30PM),INUBI,1295,Opening and Closing Services
+Basic Niche Inurnment,上位費 (Mon-Fri 10:30AM - 2:30PM),INUNI,1295,Opening and Closing Services
+Double Inurnment,上位費 (Mon-Fri 10:30AM - 2:30PM),INUPA,1595,Opening and Closing Services
+Interment-Youth,下葬費 (Mon-Fri 10:30AM - 2:30PM),INTYT,995,Opening and Closing Services
+Ossuary-Adult,撒骨灰費用,OSSAD,995,Opening and Closing Services
+Interment-Baby,下葬費 (Mon-Fri 10:30AM - 2:30PM),INTBB,995,Opening and Closing Services
+Inurnment-Youth,下葬費 (Mon-Fri 10:30AM - 2:30PM),INUYT,995,Opening and Closing Services
+Additional Charges - Holiday Entombment,下葬費 (週末、節假日額外收費),ADDHE,2495,Additional Weekend & Holiday Services
+Additional Charges - Holiday Interment,下葬費 (週末、節假日額外收費),ADDHI,2495,Additional Weekend & Holiday Services
+Additional Charges - Saturday Interment,下葬費 (週末、節假日額外收費),ADDSD,2495,Additional Weekend & Holiday Services
+Additional Charges - Sunday Entombment,下葬費 (週末、節假日額外收費),ADDSE,2495,Additional Weekend & Holiday Services
+Additional Charges - Sunday Interment,下葬費 (週末、節假日額外收費),ADDSI,2495,Additional Weekend & Holiday Services
+Additional Charges - Saturday Entombment,下葬費 (週末、節假日額外收費),ADDST,2495,Additional Weekend & Holiday Services
+Additional Charges - Holiday Inurnment,下葬費 (週末、節假日額外收費),ADDHU,1495,Additional Weekend & Holiday Services
+Additional Charges - Sunday Inurnment,下葬費 (週末、節假日額外收費),ADDIN,1495,Additional Weekend & Holiday Services
+Additional Charges - Saturday Inurnment,下葬費 (週末、節假日額外收費),ADDSN,1495,Additional Weekend & Holiday Services
+Additional Charges - After Hours,非工作時間額外收費,ADDAH,1295,Additional Weekend & Holiday Services
+Disentombment-Adult,棺木取出費用 - 土葬,DENAD,8995,Disinterment Services
+Disinterment-Adult,棺木取出費用 - 雲石陵,DNTAD,8995,Disinterment Services
+Disinurnment-Adult,骨灰取出費用,DURAD,2190,Disinterment Services
+Marker Refinishing Companion-3rd Party,第三方墓碑清潔費-大,SMRC3P,1750,Miscellaneous Services
+Marker Refinishing Single-3rd Party,第三方墓碑清潔費-小,SMR3PY,1195,Miscellaneous Services
+Interment Right Transfer Fee,地契轉讓費用,DOCDETNS,1995,Additional Document Services
+Deed Replacement Fee,地契更換費用,XSRMSRVC,85,Additional Document Services
+Processing Fee,手續費,DOCPROCF,50,Additional Document Services
+Companion Marker Installation - Upright,墓碑安裝費,SIMCMIU,2495,Memorial Installation Services
+Ledger Installation,墓碑安裝費,SIMLGIN,2495,Memorial Installation Services
+Single Marker Installation - Upright,墓碑安裝費,SIMSMIU,1495,Memorial Installation Services
+Bench Installation,墓碑安裝費,SIMBHIN,550,Memorial Installation Services
+Companion Marker Installation-Flush,墓碑安裝費,SIMCOM,550,Memorial Installation Services
+Single Marker Installation-Flush,墓碑安裝費,SIMSNG,550,Memorial Installation Services
+Mausoleum Plaque Installation,墓碑安裝費,SIMMPI,550,Memorial Installation Services
+Marker Inspection Fee,墓碑查驗費,XSRMRINFE,450,Memorial Installation Services
+Marker Removal Fee,墓碑移除費,XSRMRREFE,395,Memorial Installation Services
+Niche Plaque Installation,墓碑安裝費,SIMMNPI,350,Memorial Installation Services
+Vase Installation,花瓶安裝費,SIMVSIN,195,Memorial Installation Services
+Marker Installation,墓碑安裝費,SIMMRI,195,Memorial Installation Services
