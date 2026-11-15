@@ -2,8 +2,7 @@
 // whatever is listed (an icon for the id must exist in PortalSelect's ICONS map).
 //
 // `ready: false` marks a portal as a placeholder: it still opens, but lands on a
-// stub page instead of a real app. Flip Cemetery to `ready: true` once the
-// cemetery quote app has been migrated in.
+// stub page instead of a real app.
 
 export const PORTALS = [
   {
@@ -15,8 +14,8 @@ export const PORTALS = [
   {
     id:          'cemetery',
     name:        'Cemetery Services',
-    description: 'Plots, interment rights and cemetery product quotes.',
-    ready:       false,
+    description: 'Interment rights, memorials and cemetery service quotes.',
+    ready:       true,
   },
 ]
 
