@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import CemeteryCatalog   from '../components/cemetery/CemeteryCatalog.jsx'
 import CemeteryLineTable from '../components/cemetery/CemeteryLineTable.jsx'
 import CemeteryReview    from '../components/cemetery/CemeteryReview.jsx'
-import { fetchCatalog, fetchQuote, saveQuote, fromDbQuote } from '../lib/cemetery.js'
+import {
+  fetchCatalog, fetchQuote, saveQuote, fromDbQuote,
+  addOptionToFamily, saveAsTemplate,
+} from '../lib/cemetery.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
 import {
   calcCemeteryTotals, linesForProperty, linesForProduct, linesForService,
@@ -17,11 +20,12 @@ function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
 
-export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, onSaved, onCompare }) {
+export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, onSaved, onCompare, onOpenQuote }) {
   const [catalog, setCatalog] = useState({ properties: [], products: [], services: [] })
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [saving,  setSaving]  = useState(false)
+  const [notice,  setNotice]  = useState('')
   const [review,  setReview]  = useState(false)
   const [showHmis, setShowHmis] = useState(false)
 
@@ -49,6 +53,9 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     imageUrl: null,
     imageHeight: 320,
     status: 'draft',
+    contactId: null,
+    versionLabel: '',
+    sortOrder: 0,
     isTemplate: false,
     templateName: '',
   }))
@@ -115,6 +122,10 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     interestRate: q.interestRate, paymentMonths: q.paymentMonths,
   })
 
+  // An option is named after the property on it unless the advisor renames it.
+  const propertyName = lines.find(l => l.section === 'Property' && !l.parentItemId)?.name || ''
+  const effectiveLabel = q.versionLabel || propertyName
+
   // ── Line operations ───────────────────────────────────────────────────────
   const add = next => setLines(ls => [...ls, ...next])
 
@@ -150,29 +161,56 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   }
 
   // ── Save ──────────────────────────────────────────────────────────────────
-  async function save({ asTemplate = false } = {}) {
-    let templateName = q.templateName
-    if (asTemplate) {
-      templateName = window.prompt('Name for this template:', templateName || q.clientName || '')
-      if (!templateName) return
-    }
+  async function save() {
     setSaving(true); setError('')
     try {
       const id = await saveQuote({
         ...q,
+        versionLabel: effectiveLabel,
+        contactId: q.contactId || crypto.randomUUID(),
         depositAmount: deposit,
         monthlyPaymentAmount: monthly,
         totals,
-        isTemplate: asTemplate || q.isTemplate,
-        templateName,
       }, lines, advisor?.userId)
-      setQ(p => ({ ...p, id, isTemplate: asTemplate || p.isTemplate, templateName }))
+      setQ(p => ({ ...p, id, versionLabel: effectiveLabel,
+                   contactId: p.contactId || undefined }))
       onSaved?.(id)
+      setNotice(showChinese ? '已儲存' : 'Saved')
     } catch (e) {
       setError(e.message || String(e))
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
+  }
+
+  /** Save a COPY as a template. The quote stays a quote. */
+  async function saveTemplate() {
+    const name = window.prompt('Name for this template:', propertyName || '')
+    if (!name) return
+    setSaving(true); setError('')
+    try {
+      await saveAsTemplate({ ...q, depositAmount: deposit, totals }, lines, advisor?.userId, name)
+      setNotice(showChinese ? `已另存為範本「${name}」` : `Saved a template called "${name}"`)
+    } catch (e) {
+      setError(e.message || String(e))
+    } finally { setSaving(false) }
+  }
+
+  /** Another option for the same family — what a comparison compares. */
+  async function addOption() {
+    setSaving(true); setError('')
+    try {
+      let id = q.id
+      if (!id) {
+        id = await saveQuote({
+          ...q, versionLabel: effectiveLabel,
+          contactId: q.contactId || crypto.randomUUID(),
+          depositAmount: deposit, monthlyPaymentAmount: monthly, totals,
+        }, lines, advisor?.userId)
+      }
+      const newId = await addOptionToFamily(id, advisor?.userId)
+      onOpenQuote?.(newId)
+    } catch (e) {
+      setError(e.message || String(e))
+    } finally { setSaving(false) }
   }
 
   if (review) {
@@ -218,8 +256,11 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
               {showChinese ? '對比' : 'Compare'}
             </button>
           )}
-          <button onClick={() => save({ asTemplate: true })} disabled={saving} className="btn-secondary text-xs">
-            {showChinese ? '儲存為範本' : 'Save as template'}
+          <button onClick={addOption} disabled={saving} className="btn-secondary text-xs">
+            {showChinese ? '新增方案' : 'Add option'}
+          </button>
+          <button onClick={saveTemplate} disabled={saving} className="btn-secondary text-xs">
+            {showChinese ? '另存為範本' : 'Save as template'}
           </button>
           <button onClick={() => save()} disabled={saving} className="btn-primary text-xs">
             {saving ? (showChinese ? '儲存中…' : 'Saving…') : (showChinese ? '儲存報價' : 'Save quote')}
@@ -230,6 +271,12 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
       {error && (
         <div className="card p-3 border-red-200 bg-red-50">
           <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+      {notice && !error && (
+        <div className="card p-3 border-emerald-200 bg-emerald-50 flex items-center gap-3">
+          <p className="text-sm text-emerald-800 flex-1">{notice}</p>
+          <button onClick={() => setNotice('')} className="text-emerald-600 text-lg leading-none">×</button>
         </div>
       )}
 
@@ -256,7 +303,21 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           {/* ── Quote ── */}
           <div className="space-y-5 min-w-0">
 
-            {/* Client */}
+            {/* Option name — the heading above this option's column in a
+                comparison. Defaults to the property on the quote. */}
+            <div className="card p-4">
+              <label className="label">{showChinese ? '方案名稱' : 'Option name'}</label>
+              <input className="input text-sm" value={q.versionLabel}
+                     placeholder={propertyName || (showChinese ? '例如：企碑地' : 'e.g. Royal Plateau (Upright)')}
+                     onChange={e => setQ(p => ({ ...p, versionLabel: e.target.value }))} />
+              <p className="text-[11px] text-stone-400 mt-1">
+                {showChinese
+                  ? '留空則使用墓地名稱。此名稱只在對比時顯示。'
+                  : 'Leave blank to use the property name. Shown as the column heading when comparing.'}
+              </p>
+            </div>
+
+            {/* Client — kept for finding the quote later; not printed */}
             <div className="card p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="label">{showChinese ? '客戶姓名' : 'Client name'}</label>

@@ -5,7 +5,8 @@ import path from 'node:path'
 const ROOT     = '/home/user/Fn-app'
 const HARNESS  = path.join(ROOT, 'tools/cemetery/harness')
 const REAL     = path.join(ROOT, 'src/lib/supabase.js')
-const MOCK     = path.join(HARNESS, 'mockSupabase.js')
+const MOCK     = path.join(HARNESS, 'mockSupabase.js')      // always errors (schema card)
+const MOCK_ROWS= path.join(HARNESS, 'mockSupabaseRows.js')  // serves quote rows
 
 // Resolve the import first, then swap it — the app imports supabase.js by
 // several different relative specifiers, so matching on the specifier alone
@@ -15,8 +16,10 @@ const mockSupabase = {
   enforce: 'pre',
   async resolveId(source, importer, options) {
     if (source.includes('mockSupabase')) return null
+    this._wantRows = this._wantRows || new Set()
     const r = await this.resolve(source, importer, { ...options, skipSelf: true })
-    return r && path.resolve(r.id.split('?')[0]) === REAL ? MOCK : null
+    if (!r || path.resolve(r.id.split('?')[0]) !== REAL) return null
+    return process.env.HARNESS_ROWS === '1' ? MOCK_ROWS : MOCK
   },
 }
 

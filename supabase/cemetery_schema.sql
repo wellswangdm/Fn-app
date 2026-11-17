@@ -281,6 +281,14 @@ create table if not exists cemetery.quotes (
   image_height  int,
 
   status        text not null default 'draft',   -- 'draft' | 'final'
+
+  -- A family (contact_id) owns several OPTIONS of the same quote; a
+  -- comparison compares the options of ONE family. version_label is what an
+  -- option is called — the heading above its column — and defaults to the
+  -- property on the quote.
+  version_label text,
+  sort_order    int not null default 0,
+
   is_template   boolean not null default false,
   template_name text,
 
@@ -290,6 +298,7 @@ create table if not exists cemetery.quotes (
 
 create index if not exists quotes_user_idx on cemetery.quotes (user_id, updated_at desc);
 create index if not exists quotes_park_idx on cemetery.quotes (park_id);
+create index if not exists quotes_contact_idx on cemetery.quotes (contact_id, sort_order);
 
 -- ─── 12. Quote line items ────────────────────────────────────────────────────
 -- `parent_item_id` links an automatic fee line to the product line that

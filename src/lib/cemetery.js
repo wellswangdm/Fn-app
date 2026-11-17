@@ -14,8 +14,9 @@
 
 import { supabase } from './supabase.js'
 import { CemeterySchemaError, isSchemaNotExposed } from './cemeterySchemaError.js'
+import { groupIntoFamilies } from './cemeteryFamilies.js'
 
-export { CemeterySchemaError }
+export { CemeterySchemaError, groupIntoFamilies }
 
 const cem = () => supabase.schema('cemetery')
 
@@ -188,16 +189,28 @@ const QUOTE_COLS = `id, park_id, user_id, contact_id, quote_number,
   gst_rate, pst_rate, gst_total, pst_total, subtotal, grand_total,
   is_monthly_payment_enabled, deposit_amount, interest_rate, payment_months,
   monthly_payment_amount, is_chinese_enabled, terms, notes,
-  image_url, image_height, status, is_template, template_name,
-  created_at, updated_at`
+  image_url, image_height, status, version_label, sort_order,
+  is_template, template_name, created_at, updated_at`
 
-export async function fetchQuotes({ parkId, templates = false } = {}) {
+export async function fetchQuotes({ parkId, templates = false, contactId = null } = {}) {
   let q = cem().from('quotes').select(QUOTE_COLS).eq('is_template', templates)
-  if (parkId) q = q.eq('park_id', parkId)
-  const { data, error } = await q.order('updated_at', { ascending: false })
+  if (parkId)    q = q.eq('park_id', parkId)
+  if (contactId) q = q.eq('contact_id', contactId)
+  const { data, error } = contactId
+    ? await q.order('sort_order')
+    : await q.order('updated_at', { ascending: false })
   check(error, 'fetchQuotes')
   return data || []
 }
+
+/**
+ * Quotes grouped into families. A family is one contact_id; its members are
+ * the OPTIONS being compared. Mirrors how the funeral portal groups versions.
+ */
+export async function fetchQuoteFamilies(parkId) {
+  return groupIntoFamilies(await fetchQuotes({ parkId }))
+}
+
 
 export async function fetchQuote(id) {
   const { data, error } = await cem().from('quotes').select(QUOTE_COLS).eq('id', id).single()
@@ -270,7 +283,6 @@ export async function saveQuote(quote, lines, userId) {
   const row = {
     park_id:        quote.parkId,
     user_id:        userId,
-    contact_id:     quote.contactId || null,
     quote_number:   quote.quoteNumber || null,
     client_name:    quote.clientName || null,
     client_email:   quote.clientEmail || null,
@@ -300,8 +312,15 @@ export async function saveQuote(quote, lines, userId) {
     image_url:    quote.imageUrl || null,
     image_height: quote.imageHeight || null,
     status:        quote.status || 'draft',
+    version_label: quote.versionLabel || null,
+    sort_order:    Number(quote.sortOrder) || 0,
+    // A quote never becomes a template by being saved. "Save as template"
+    // inserts a separate row (saveAsTemplate below); previously it flipped
+    // this flag on the quote itself, so the quote turned into a template and
+    // every later save overwrote that template instead of the quote.
     is_template:   !!quote.isTemplate,
     template_name: quote.templateName || null,
+    contact_id:    quote.contactId || null,
   }
 
   let quoteId = quote.id
@@ -337,6 +356,75 @@ export async function saveQuote(quote, lines, userId) {
   }
 
   return quoteId
+}
+
+/**
+ * Another OPTION for the same family: a copy sharing the contact_id, placed
+ * after the existing options. This is how a family gets something to compare.
+ */
+export async function addOptionToFamily(quoteId, userId, label = null) {
+  const src = await fetchQuote(quoteId)
+  const { items, ...rest } = src
+  const q = fromDbQuote(rest)
+  const contactId = q.contactId || crypto.randomUUID()
+
+  // If the source had no family yet, adopt it into the new one so both
+  // options sit together rather than the original being left behind.
+  if (!q.contactId) {
+    const { error } = await cem().from('quotes')
+      .update({ contact_id: contactId, sort_order: 0 }).eq('id', quoteId)
+    check(error, 'adoptQuoteIntoFamily')
+  }
+
+  const siblings = await fetchQuotes({ contactId })
+  const nextOrder = siblings.reduce((m, s) => Math.max(m, s.sort_order ?? 0), 0) + 1
+
+  return saveQuote({
+    ...q,
+    id: null,
+    contactId,
+    sortOrder:    nextOrder,
+    versionLabel: label || `Option ${nextOrder + 1}`,
+    isTemplate:   false,
+    templateName: '',
+    status:       'draft',
+  }, items, userId)
+}
+
+/**
+ * Save the current quote AS a template — a separate row. The quote itself is
+ * untouched and stays a quote.
+ */
+export async function saveAsTemplate(quote, lines, userId, templateName) {
+  return saveQuote({
+    ...quote,
+    id: null,
+    contactId:    null,
+    sortOrder:    0,
+    isTemplate:   true,
+    templateName,
+    clientName:   '',
+    clientEmail:  '',
+    clientPhone:  '',
+  }, lines, userId)
+}
+
+/** Start a new quote (and a new family) from a template. */
+export async function newQuoteFromTemplate(templateId, userId, { clientName = '' } = {}) {
+  const t = await fetchQuote(templateId)
+  const { items, ...rest } = t
+  const q = fromDbQuote(rest)
+  return saveQuote({
+    ...q,
+    id: null,
+    contactId:    crypto.randomUUID(),
+    sortOrder:    0,
+    isTemplate:   false,
+    templateName: '',
+    versionLabel: '',
+    clientName,
+    status:       'draft',
+  }, items, userId)
 }
 
 export async function deleteQuote(id) {
@@ -382,6 +470,8 @@ export function fromDbQuote(r) {
     imageUrl:    r.image_url || null,
     imageHeight: r.image_height || null,
     status:      r.status || 'draft',
+    versionLabel:r.version_label || '',
+    sortOrder:   r.sort_order ?? 0,
     isTemplate:  !!r.is_template,
     templateName:r.template_name || '',
     updatedAt:   r.updated_at,

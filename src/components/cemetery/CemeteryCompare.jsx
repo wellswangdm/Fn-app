@@ -20,7 +20,7 @@ function fmt(n) {
 
 const MAX = 4
 
-export default function CemeteryCompare({ park, onClose }) {
+export default function CemeteryCompare({ park, contactId, onClose }) {
   const [available, setAvailable] = useState([])
   const [selected,  setSelected]  = useState([])
   const [loaded,    setLoaded]    = useState([])
@@ -43,15 +43,18 @@ export default function CemeteryCompare({ park, onClose }) {
     let alive = true
     ;(async () => {
       try {
-        const qs = await fetchQuotes({ parkId: park.id })
+        // Only this family's options. Previously every quote in the park was
+        // listed and the first two auto-selected, which is the wrong
+        // hierarchy and unusable once there are many quotes.
+        const qs = await fetchQuotes({ parkId: park.id, contactId })
         if (!alive) return
         setAvailable(qs)
-        setSelected(qs.slice(0, 2).map(q => q.id))
+        setSelected(qs.map(q => q.id))
       } catch (e) { if (alive) setError(e.message || String(e)) }
       finally { if (alive) setLoading(false) }
     })()
     return () => { alive = false }
-  }, [park.id])
+  }, [park.id, contactId])
 
   useEffect(() => {
     let alive = true
@@ -71,7 +74,9 @@ export default function CemeteryCompare({ park, onClose }) {
           })
           return {
             ...q, items, totals,
-            label:    q.clientName || q.templateName || `Option ${i + 1}`,
+            label:    q.versionLabel
+                      || items.find(l => l.section === 'Property' && !l.parentItemId)?.name
+                      || `Option ${i + 1}`,
             parkName: park.name,
             plan:     paymentPlanSummary({ ...q, grandTotal: totals.grandTotal }),
           }
@@ -183,7 +188,8 @@ export default function CemeteryCompare({ park, onClose }) {
           <p className="text-sm text-stone-400 p-8 text-center">Loading…</p>
         ) : available.length === 0 ? (
           <p className="text-sm text-stone-400 p-10 text-center">
-            No saved quotes for this park yet — save a couple to compare them.
+            This family has only one option. Open it and use “Add option” to build
+            an alternative, then compare them here.
           </p>
         ) : (
           <>
