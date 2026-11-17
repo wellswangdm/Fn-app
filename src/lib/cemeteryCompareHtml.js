@@ -50,13 +50,13 @@ function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh, ba
   // On screen the sections get alternating bands and hairline rules between
   // columns, so a long comparison reads as a structured table rather than
   // floating text. Print keeps the plain white sheet.
-  const bg   = screen && band ? 'background:#fafafa;' : ''
-  const cell = screen ? 'class="cmp-cell"' : ''
+  const bandCls = screen && band ? 'class="cmp-band"' : ''
+  const cell    = screen ? 'class="cmp-cell"' : ''
   return `
-    <div style="text-align:center;padding:${screen ? '22px 0 8px' : '32px 0 10px'};${bg}">
+    <div ${bandCls} style="text-align:center;padding:${screen ? '22px 0 8px' : '32px 0 10px'};">
       <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:${GREY}">${esc(title)}</span>
     </div>
-    <div style="display:grid;grid-template-columns:${gridCols};${bg}">
+    <div ${bandCls} style="display:grid;grid-template-columns:${gridCols};">
       ${quotes.map(q => {
         const entries = section.byQuote[q.id] || []
         const pad = screen ? '4px 20px 18px' : '6px 24px 24px'
@@ -206,13 +206,21 @@ export function buildCemeteryWebHTML(props) {
     .sticky{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e8e8ea}
     .hgrid{display:grid;grid-template-columns:${gridCols}}
     /* hairline between columns, so a long list stays readable across */
+    .cmp-band{background:#fafafa}
     .cmp-cell + .cmp-cell{box-shadow:inset 1px 0 0 #efeff1}
     .foot{max-width:${cardMax}px;margin:14px auto 0;text-align:center;font-size:11px;color:#a1a1aa}
+    /* Printing from this page must give the same plain sheet as the Print
+       button: no column rules, no shaded bands, no card. Those are screen
+       furniture and look like stray lines on paper. */
     @media print{
       html,body{background:#fff}
       body{padding:0}
       .card{max-width:none;border:0;border-radius:0;box-shadow:none}
+      .scroll{overflow:visible}
+      .inner{min-width:0}
       .sticky{position:static}
+      .cmp-band{background:#fff !important}
+      .cmp-cell + .cmp-cell{box-shadow:none !important}
       .foot{display:none}
     }
   </style>

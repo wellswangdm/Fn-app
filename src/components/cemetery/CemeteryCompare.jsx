@@ -216,6 +216,9 @@ export default function CemeteryCompare({ park, onClose }) {
             ) : loaded.length === 0 ? (
               <p className="text-xs text-stone-400 text-center py-16">Select at least one option.</p>
             ) : (
+              // #print-zone is what the app's global print rule makes visible;
+              // without it a browser Print from this modal produced a blank page.
+              <div id="print-zone">
               <CemeteryCompareSheet
                 quotes={loaded}
                 sections={sections}
@@ -225,6 +228,7 @@ export default function CemeteryCompare({ park, onClose }) {
                 showPayment={showPayment}
                 zh={zh}
               />
+              </div>
             )}
           </>
         )}

@@ -35,8 +35,10 @@ export default function CemeteryCompareSheet({
   const COL_MAX = 330
   const frame   = { maxWidth: cols * COL_MAX, margin: '0 auto', minWidth: cols * 260 }
 
-  // Hairline between columns so a long list stays readable across.
-  const cell = i => (i === 0 ? '' : 'shadow-[inset_1px_0_0_#efeff1]')
+  // Hairline between columns so a long list stays readable across. Both this
+  // and the section bands below are screen furniture — on paper they come out
+  // as stray lines and grey slabs, so print drops them.
+  const cell = i => (i === 0 ? '' : 'shadow-[inset_1px_0_0_#efeff1] print:shadow-none')
 
   return (
     <div className="overflow-x-auto">
@@ -69,7 +71,7 @@ export default function CemeteryCompareSheet({
 
         {/* Sections */}
         {sections.map((section, si) => (
-          <div key={section.id} className={si % 2 === 1 ? 'bg-stone-50/70' : ''}>
+          <div key={section.id} className={si % 2 === 1 ? 'bg-stone-50/70 print:bg-transparent' : ''}>
             <div style={frame}>
             <div className="pt-6 pb-2 text-center">
               <span className="text-xs font-bold uppercase tracking-widest text-stone-400">
