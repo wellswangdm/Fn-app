@@ -17,7 +17,7 @@ function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
 
-export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, onSaved }) {
+export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, onSaved, onCompare }) {
   const [catalog, setCatalog] = useState({ properties: [], products: [], services: [] })
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
@@ -219,6 +219,11 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           <button onClick={() => setReview(true)} className="btn-secondary text-xs">
             {showChinese ? '預覽' : 'Review'}
           </button>
+          {onCompare && (
+            <button onClick={onCompare} className="btn-secondary text-xs">
+              {showChinese ? '對比' : 'Compare'}
+            </button>
+          )}
           <button onClick={() => save({ asTemplate: true })} disabled={saving} className="btn-secondary text-xs">
             {showChinese ? '儲存為範本' : 'Save as template'}
           </button>

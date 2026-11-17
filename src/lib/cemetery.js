@@ -385,6 +385,37 @@ export function fromDbQuote(r) {
   }
 }
 
+/**
+ * Presentation extras for quote lines. A quote line snapshots its name and
+ * price but not the product's photo or description, so a comparison looks
+ * those up from the catalogue.
+ */
+export async function fetchProductMeta(productIds = []) {
+  const ids = [...new Set(productIds.filter(Boolean))]
+  if (!ids.length) return {}
+  const { data, error } = await cem()
+    .from('products')
+    .select('id, image_url, description')
+    .in('id', ids)
+  check(error, 'fetchProductMeta')
+  const out = {}
+  for (const r of data || []) {
+    out[r.id] = { imageUrl: r.image_url || null, description: r.description || null }
+  }
+  return out
+}
+
+/** Store a rendered comparison and return its share id (reuses the funeral portal's table). */
+export async function createComparisonShare(html) {
+  const { data, error } = await supabase
+    .from('comparison_shares')
+    .insert({ html })
+    .select('id')
+    .single()
+  if (error) throw new Error(`createComparisonShare: ${error.message}`)
+  return data.id
+}
+
 // ─── Advisor profile (shared with the funeral portal) ────────────────────────
 
 export async function fetchAdvisor(user) {

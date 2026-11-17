@@ -20,8 +20,9 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
   const [parks,   setParks]   = useState([])
   const [parkId,  setParkId]  = useState(() => localStorage.getItem('cemetery_park') || '')
   const [advisor, setAdvisor] = useState(null)
-  const [view,    setView]    = useState('list')      // 'list' | 'editor' | 'compare'
+  const [view,    setView]    = useState('list')      // 'list' | 'editor'
   const [editId,  setEditId]  = useState(null)
+  const [comparing, setComparing] = useState(false)   // modal, over whichever view
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [schemaMissing, setSchemaMissing] = useState(false)
@@ -57,7 +58,7 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
   const park = parks.find(p => p.id === parkId) || null
 
   function selectPark(id) {
-    setParkId(id); setView('list'); setEditId(null)
+    setParkId(id); setView('list'); setEditId(null); setComparing(false)
   }
 
   return (
@@ -156,7 +157,7 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
             park={park}
             onNew={() => { setEditId(null); setView('editor') }}
             onOpen={id => { setEditId(id); setView('editor') }}
-            onCompare={() => setView('compare')}
+            onCompare={() => setComparing(true)}
           />
         )}
 
@@ -167,11 +168,13 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
             quoteId={editId}
             onBack={() => { setEditId(null); setView('list') }}
             onSaved={id => setEditId(id)}
+            onCompare={() => setComparing(true)}
           />
         )}
 
-        {!loading && park && view === 'compare' && (
-          <CemeteryCompare park={park} onBack={() => setView('list')} />
+        {/* Comparison opens over whichever view is showing, as in the funeral portal */}
+        {!loading && park && comparing && (
+          <CemeteryCompare park={park} onClose={() => setComparing(false)} />
         )}
       </main>
     </div>
