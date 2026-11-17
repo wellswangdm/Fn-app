@@ -51,6 +51,8 @@ W("--   Markers-Pillow  price=Price        + Install + ECF")
 W("--   Markers-Plate   price=BRONZE PRICE + INSTALL + ECF")
 W("--   Vases           price=PRICE        + INSTALL")
 W("--   Urns, Vaults    price only, no fees")
+W("--")
+W("-- Urns default to GST + PST; every other product is GST only.")
 W("--   Pictures        price=Basic Price  + Setting Fee")
 W("--")
 W("-- Safe to re-run (every insert is upsert-on-conflict).")
@@ -201,6 +203,9 @@ W("")
 
 # ── products + park_products ────────────────────────────────────────────────
 P, PP = [], []
+# Urns carry PST as well as GST; everything else is GST only.
+PST_CATEGORIES = {"urn"}
+
 def add(pid, cat, hmis, name, zh, price, base=None, ecf=None, install=None, inst_ref_sql="null",
         series=None, model=None, variant=None, size=None, base_size=None, color=None,
         dims=None, vase=None, vcount=None, page=None, note=None, order=0):
@@ -209,7 +214,11 @@ def add(pid, cat, hmis, name, zh, price, base=None, ecf=None, install=None, inst
         q(size), q(base_size), q(color), q(dims),
         "null" if vase is None else ("true" if vase else "false"),
         n(vcount) if vcount is not None else "null",
-        q(page), inst_ref_sql, q(note), str(order)]) + ")")
+        q(page), inst_ref_sql,
+        "true",                                        # default_gst
+        "true" if cat in PST_CATEGORIES else "false",  # default_pst
+        "true",                                        # default_discountable
+        q(note), str(order)]) + ")")
     PP.append("  (" + ", ".join([
         q(PARK), q(pid), n(price) if num(price) is not None else "0",
         fee(base), fee(ecf), fee(install), str(order)]) + ")")
@@ -261,14 +270,17 @@ for i, r in enumerate(sheet("5"), 1):          # Vaults
 W("-- ─── Products (shared catalogue — image_url left null for later) ───")
 W("insert into cemetery.products (id, category_id, hmis_code, name, name_zh, series, model,")
 W("  variant, size, base_size, color, dimensions, vase_included, vase_count, catalog_page,")
-W("  install_service_type_id, notes, sort_order) values")
+W("  install_service_type_id, default_gst, default_pst, default_discountable,")
+W("  notes, sort_order) values")
 W(",\n".join(P))
 W("  on conflict (id) do update set category_id=excluded.category_id, hmis_code=excluded.hmis_code,")
 W("    name=excluded.name, name_zh=excluded.name_zh, series=excluded.series, model=excluded.model,")
 W("    variant=excluded.variant, size=excluded.size, base_size=excluded.base_size,")
 W("    color=excluded.color, dimensions=excluded.dimensions, vase_included=excluded.vase_included,")
 W("    vase_count=excluded.vase_count, catalog_page=excluded.catalog_page,")
-W("    install_service_type_id=excluded.install_service_type_id, notes=excluded.notes,")
+W("    install_service_type_id=excluded.install_service_type_id,")
+W("    default_gst=excluded.default_gst, default_pst=excluded.default_pst,")
+W("    default_discountable=excluded.default_discountable, notes=excluded.notes,")
 W("    sort_order=excluded.sort_order, active=true;")
 W("")
 W("-- ─── Park products (availability + per-park price and fees) ───")

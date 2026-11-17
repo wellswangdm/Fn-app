@@ -74,6 +74,7 @@ export async function fetchProducts(parkId) {
                id, name, name_zh, hmis_code, description, series, model, variant,
                size, base_size, color, dimensions, vase_included, vase_count,
                catalog_page, image_url, notes, active,
+               default_gst, default_pst, default_discountable,
                product_categories ( id, name, name_zh, sort_order,
                  install_label, install_label_zh, ecf_label, ecf_label_zh,
                  base_label_suffix, base_label_suffix_zh )
@@ -106,6 +107,10 @@ export async function fetchProducts(parkId) {
         dimensions: p.dimensions, vase_included: p.vase_included,
         vase_count: p.vase_count, catalog_page: p.catalog_page,
         image_url: p.image_url, notes: p.notes,
+        // quote-line defaults (urns carry PST; everything else is GST only)
+        default_gst:          p.default_gst,
+        default_pst:          p.default_pst,
+        default_discountable: p.default_discountable,
         // category + fee labels
         categoryId:   c.id || null,
         categoryName: c.name || 'Other',

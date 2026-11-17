@@ -203,6 +203,12 @@ create table if not exists cemetery.products (
   -- on park_products.install_price, so nothing re-prices itself silently.
   install_service_type_id text references cemetery.service_types,
 
+  -- Quote-line defaults, overridable per line by the advisor.
+  -- Urns carry PST as well as GST; markers and property do not.
+  default_gst          boolean not null default true,
+  default_pst          boolean not null default false,
+  default_discountable boolean not null default true,
+
   notes         text,
   sort_order    int     default 0,
   active        boolean not null default true,

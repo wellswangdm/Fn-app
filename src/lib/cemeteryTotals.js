@@ -253,10 +253,23 @@ export function linesForProperty(prop) {
  * A product → the product line plus its granite base, installation and ECF
  * lines. `product` is a joined row: park_products + products + product_categories.
  * Fee labels come from the category; the base label is composed from base_size.
+ *
+ * Discountability: only ENDOWMENT CARE (ECF) is non-discountable. Installation
+ * and the granite base are discountable like any other merchandise. The old
+ * app marked every automatic fee non-discountable because it treated them all
+ * as one undifferentiated "extra" attached to the marker.
+ *
+ * Tax defaults come from the product (default_gst / default_pst) rather than
+ * being assumed, so e.g. urns can carry PST without a special case in code.
  */
 export function linesForProduct(product) {
   const price = Number(product.price) || 0
   const cat   = product.category || {}
+
+  // A product row may arrive with the flags at the top level or under
+  // `category` when a park hasn't overridden them.
+  const defGst = product.default_gst ?? cat.default_gst
+  const defPst = product.default_pst ?? cat.default_pst
 
   const main = {
     id: nextId(),
@@ -267,8 +280,8 @@ export function linesForProduct(product) {
     quantity:    1,
     lineTotal:   price,
     section:     MS,
-    isGst:       true,
-    isPst:       false,
+    isGst:       defGst !== false,
+    isPst:       defPst === true,
     isDiscountable: true,
     isWaived:    false,
     ecfIncluded: false,
@@ -292,7 +305,9 @@ export function linesForProduct(product) {
       section:     MS,
       isGst:       true,
       isPst:       false,
-      isDiscountable: false,                 // fees are never discountable
+      // Endowment care is the only non-discountable fee. Installation and the
+      // granite base discount like anything else.
+      isDiscountable: kind !== 'fee_ecf',
       isWaived:    false,
       ecfIncluded: false,
       sourceKind:  kind,
