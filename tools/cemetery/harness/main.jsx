@@ -10,6 +10,7 @@ import {
   calcCemeteryTotals, linesForProperty, linesForProduct, linesForService,
   customLine, processingFeeLine, removeLine, setQuantity, paymentPlanSummary, defaultDeposit,
 } from '../../../src/lib/cemeteryTotals.js'
+import { useChineseMode } from '../../../src/lib/useChineseMode.js'
 import fixture from '../fixture.json'
 import '../../../src/index.css'
 
@@ -17,7 +18,7 @@ const park = fixture.park
 
 function App() {
   const [lines, setLines] = useState(() => [processingFeeLine()])
-  const [zh, setZh] = useState(false)
+  const [zh, setZh] = useChineseMode()   // same shared preference the app uses
   const [review, setReview] = useState(false)
   const [pct, setPct] = useState(0)
   const [waive, setWaive] = useState(0)
@@ -34,7 +35,7 @@ function App() {
   const quote = {
     clientName: 'Harness Preview', clientPhone: '604-555-0100',
     advisorName: 'Advisor Name', advisorEmail: 'advisor@example.com',
-    isChineseEnabled: zh, discountPercent: pct, manualWaiveName: 'Miscellaneous Waived',
+    discountPercent: pct, manualWaiveName: 'Miscellaneous Waived',
     gstRate: Number(park.gst_rate), pstRate: Number(park.pst_rate),
     terms: 'Prices are subject to change without further notice.',
     isMonthlyPaymentEnabled: true, depositAmount: defaultDeposit(totals.grandTotal),

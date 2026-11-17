@@ -3,6 +3,7 @@ import CemeteryCatalog   from '../components/cemetery/CemeteryCatalog.jsx'
 import CemeteryLineTable from '../components/cemetery/CemeteryLineTable.jsx'
 import CemeteryReview    from '../components/cemetery/CemeteryReview.jsx'
 import { fetchCatalog, fetchQuote, saveQuote, fromDbQuote } from '../lib/cemetery.js'
+import { useChineseMode } from '../lib/useChineseMode.js'
 import {
   calcCemeteryTotals, linesForProperty, linesForProduct, linesForService,
   customLine, processingFeeLine, removeLine, setQuantity,
@@ -10,8 +11,7 @@ import {
 } from '../lib/cemeteryTotals.js'
 
 const MS = 'Merchandise and Services'
-const TERMS_EN = 'Prices are subject to change without further notice.'
-const TERMS_ZH = '價格如有變更，恕不另行通知。'
+import { DEFAULT_TERMS_EN } from '../lib/cemeteryTerms.js'
 
 function fmt(n) {
   return `$${Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -44,8 +44,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     depositAmount:  0,
     interestRate:   0,
     paymentMonths:  60,
-    isChineseEnabled: false,
-    terms:  TERMS_EN,
+    terms:  DEFAULT_TERMS_EN,
     notes:  '',
     imageUrl: null,
     imageHeight: 320,
@@ -56,7 +55,12 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   const [depositManual, setDepositManual] = useState(false)
   const imageInput = useRef(null)
 
-  const showChinese = q.isChineseEnabled
+  // Language is a VIEWING preference, shared with the funeral portal and with
+  // the review and comparison screens — not a property of the saved quote.
+  // Saving it per quote meant two quotes could be stored in different
+  // languages and had to be edited one at a time before they could be
+  // compared.
+  const [showChinese, setShowChinese] = useChineseMode()
 
   // ── Load catalogue (and an existing quote) ────────────────────────────────
   useEffect(() => {
@@ -136,16 +140,6 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     })
   }
 
-  function toggleChinese(on) {
-    setQ(p => ({
-      ...p,
-      isChineseEnabled: on,
-      terms: on
-        ? (p.terms === TERMS_EN || !p.terms.trim() ? TERMS_ZH : p.terms)
-        : (p.terms === TERMS_ZH || !p.terms.trim() ? TERMS_EN : p.terms),
-    }))
-  }
-
   function onImage(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -213,7 +207,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
                    className="w-4 h-4 rounded text-primary-600" />
             HMIS
           </label>
-          <button onClick={() => toggleChinese(!showChinese)} className="btn-secondary text-xs">
+          <button onClick={() => setShowChinese(!showChinese)} className="btn-secondary text-xs">
             {showChinese ? 'English' : '中文'}
           </button>
           <button onClick={() => setReview(true)} className="btn-secondary text-xs">

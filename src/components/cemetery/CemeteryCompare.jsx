@@ -6,6 +6,7 @@ import {
 import { calcCemeteryTotals, paymentPlanSummary } from '../../lib/cemeteryTotals.js'
 import { buildComparisonSections, sectionsHaveImages } from '../../lib/cemeteryCompare.js'
 import { buildCemeteryPrintHTML, buildCemeteryWebHTML } from '../../lib/cemeteryCompareHtml.js'
+import { useChineseMode } from '../../lib/useChineseMode.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cemetery comparison — selection, options and sharing.
@@ -33,7 +34,9 @@ export default function CemeteryCompare({ park, onClose }) {
   const [showTicker,  setShowTicker]  = useState(true)
   const [showPayment, setShowPayment] = useState(true)
   const [itemizeFees, setItemizeFees] = useState(false)
-  const [zh,          setZh]          = useState(false)
+  // Shared with the review screen and the funeral portal, so comparing two
+  // quotes never depends on the language each was built in.
+  const [zh,          setZh]          = useChineseMode()
   const [shareStatus, setShareStatus] = useState(null)
 
   useEffect(() => {

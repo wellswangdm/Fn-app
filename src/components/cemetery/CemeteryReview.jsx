@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { orderedLines } from '../../lib/cemeteryTotals.js'
+import { useChineseMode } from '../../lib/useChineseMode.js'
+import { termsFor } from '../../lib/cemeteryTerms.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cemetery quote review / print sheet
@@ -32,8 +34,11 @@ const SIZES = {
 
 export default function CemeteryReview({ park, quote, lines, totals, plan, onClose }) {
   const [size, setSize] = useState('standard')
-  const zh = quote.isChineseEnabled
-  const S  = SIZES[size]
+  // Language is chosen HERE, at the point the quote is shown, rather than
+  // being baked into the quote when it was built. Two quotes saved at
+  // different times always display in the same language.
+  const [zh, setZh] = useChineseMode()
+  const S = SIZES[size]
 
   const hasPlan  = !!quote.isMonthlyPaymentEnabled && plan?.monthly > 0
   const ordered  = orderedLines(lines)
@@ -62,7 +67,10 @@ export default function CemeteryReview({ park, quote, lines, totals, plan, onClo
           </button>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">
+            <button onClick={() => setZh(!zh)} className="btn-secondary text-xs">
+              {zh ? 'English' : '中文'}
+            </button>
+            <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider ml-1">
               {zh ? '字體' : 'Font'}
             </span>
             <select value={size} onChange={e => setSize(e.target.value)}
@@ -214,10 +222,10 @@ export default function CemeteryReview({ park, quote, lines, totals, plan, onClo
             </dl>
           </section>
 
-          {quote.terms && (
+          {termsFor(quote.terms, zh) && (
             <footer className="mt-6 pt-3 border-t border-stone-200" style={{ breakInside: 'avoid' }}>
               <p className="text-[10px] text-stone-400 leading-relaxed whitespace-pre-line">
-                {quote.terms}
+                {termsFor(quote.terms, zh)}
               </p>
             </footer>
           )}

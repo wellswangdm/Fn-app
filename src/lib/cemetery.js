@@ -292,7 +292,9 @@ export async function saveQuote(quote, lines, userId) {
     interest_rate:   Number(quote.interestRate) || 0,
     payment_months:  Number(quote.paymentMonths) || 60,
     monthly_payment_amount: quote.monthlyPaymentAmount ?? null,
-    is_chinese_enabled: !!quote.isChineseEnabled,
+    // is_chinese_enabled is retained for older rows but no longer drives
+    // anything: language is a viewing preference (see useChineseMode), not a
+    // property of the quote.
     terms:  quote.terms || null,
     notes:  quote.notes || null,
     image_url:    quote.imageUrl || null,
@@ -375,7 +377,6 @@ export function fromDbQuote(r) {
     interestRate:   Number(r.interest_rate) || 0,
     paymentMonths:  Number(r.payment_months) || 60,
     monthlyPaymentAmount: r.monthly_payment_amount,
-    isChineseEnabled: !!r.is_chinese_enabled,
     terms: r.terms || '',
     notes: r.notes || '',
     imageUrl:    r.image_url || null,
