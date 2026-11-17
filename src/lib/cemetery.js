@@ -13,20 +13,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { supabase } from './supabase.js'
+import { CemeterySchemaError, isSchemaNotExposed } from './cemeterySchemaError.js'
+
+export { CemeterySchemaError }
 
 const cem = () => supabase.schema('cemetery')
 
-export class CemeterySchemaError extends Error {}
-
 function check(error, what) {
   if (!error) return
-  const msg = String(error.message || '')
-  if (/schema must be one of|does not exist|not exposed/i.test(msg)) {
-    throw new CemeterySchemaError(
-      `The "cemetery" schema is not reachable. Add it under ` +
-      `Supabase → Settings → API → Exposed schemas, then reload. (${msg})`)
+  if (isSchemaNotExposed(error)) {
+    throw new CemeterySchemaError(String(error.message || 'schema not exposed'))
   }
-  throw new Error(`${what}: ${msg}`)
+  throw new Error(`${what}: ${error.message || error}`)
 }
 
 // ─── Parks ───────────────────────────────────────────────────────────────────

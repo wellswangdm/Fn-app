@@ -121,20 +121,49 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
         {!loading && schemaMissing && (
           <div className="max-w-xl mx-auto p-6">
             <div className="card p-6">
-              <h2 className="text-base font-bold text-stone-800">One setup step left</h2>
+              <h2 className="text-base font-bold text-stone-800">
+                One setup step left — expose the schema
+              </h2>
               <p className="text-sm text-stone-600 mt-2 leading-relaxed">
-                The cemetery tables exist but the API can’t see them yet. In Supabase go to
-                <span className="font-semibold"> Settings → API → Exposed schemas</span> and
-                add <code className="bg-stone-100 px-1.5 py-0.5 rounded text-[13px]">cemetery</code>,
-                then reload this page.
+                The cemetery tables are there, but Supabase’s API hasn’t been told to serve
+                them. Running the SQL creates the schema; exposing it is a separate switch.
               </p>
-              <p className="text-xs text-stone-400 mt-3">
-                If you haven’t run the SQL yet, run
-                <code className="bg-stone-100 px-1.5 py-0.5 rounded mx-1">supabase/cemetery_schema.sql</code>
-                then
-                <code className="bg-stone-100 px-1.5 py-0.5 rounded mx-1">supabase/cemetery_seed_6800.sql</code>
-                first.
-              </p>
+
+              <ol className="text-sm text-stone-600 mt-4 space-y-2 list-decimal list-inside">
+                <li>
+                  In Supabase, open <span className="font-semibold">Project Settings → API</span>
+                  {' '}(on newer dashboards: <span className="font-semibold">Data API</span>).
+                </li>
+                <li>
+                  Find <span className="font-semibold">Exposed schemas</span> and add
+                  {' '}<code className="bg-stone-100 px-1.5 py-0.5 rounded text-[13px]">cemetery</code>
+                  {' '}alongside <code className="bg-stone-100 px-1.5 py-0.5 rounded text-[13px]">public</code>.
+                </li>
+                <li>Save, wait a few seconds for the API to reload, then reload this page.</li>
+              </ol>
+
+              <details className="mt-4">
+                <summary className="text-xs text-stone-500 cursor-pointer hover:text-stone-700">
+                  Can’t find the setting? Do it in SQL instead
+                </summary>
+                <pre className="mt-2 bg-stone-900 text-stone-100 rounded-lg p-3 text-[11px] overflow-x-auto">
+{`alter role authenticator
+  set pgrst.db_schemas = 'public, graphql_public, cemetery';
+notify pgrst, 'reload config';`}
+                </pre>
+                <p className="text-[11px] text-stone-400 mt-1.5">
+                  Run in the SQL editor. If you later change Exposed schemas in the dashboard,
+                  that setting wins — so prefer the dashboard when you can find it.
+                </p>
+              </details>
+
+              <button onClick={() => window.location.reload()} className="btn-primary text-xs mt-5">
+                Reload page
+              </button>
+
+              {error && (
+                <p className="text-[11px] text-stone-400 mt-4 font-mono break-all">{error}</p>
+              )}
             </div>
           </div>
         )}
@@ -144,10 +173,11 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
             <div className="card p-6">
               <h2 className="text-base font-bold text-stone-800">No parks configured</h2>
               <p className="text-sm text-stone-600 mt-2">
-                Run <code className="bg-stone-100 px-1.5 py-0.5 rounded">supabase/cemetery_seed_6800.sql</code>
+                The API is reachable but no park rows came back. Run
+                {' '}<code className="bg-stone-100 px-1.5 py-0.5 rounded">supabase/cemetery_seed_6800.sql</code>
                 {' '}to load Victory Memorial Park.
               </p>
-              {error && <p className="text-xs text-red-600 mt-3">{error}</p>}
+              {error && <p className="text-xs text-red-600 mt-3 font-mono break-all">{error}</p>}
             </div>
           </div>
         )}
