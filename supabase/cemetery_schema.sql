@@ -400,10 +400,21 @@ create policy cem_quote_items_own on cemetery.quote_items
 -- (or Data API → Extra search path, depending on dashboard version).
 
 grant usage on schema cemetery to anon, authenticated, service_role;
-grant select on all tables in schema cemetery to anon, authenticated;
-grant all    on all tables in schema cemetery to service_role;
+
+-- Catalogue: readable by a signed-in advisor, never writable from the browser.
+-- Price changes go through SQL you run yourself, as on the funeral side.
+grant select on all tables in schema cemetery to authenticated;
+
+-- Quotes: an advisor writes their own. RLS decides WHICH rows; these grants
+-- are what let the statement run at all. Without them a save fails with
+-- "permission denied for table quotes" before any policy is consulted.
+grant select, insert, update, delete on cemetery.quotes      to authenticated;
+grant select, insert, update, delete on cemetery.quote_items to authenticated;
+
+grant all on all tables in schema cemetery to service_role;
+
 alter default privileges in schema cemetery
-  grant select on tables to anon, authenticated;
+  grant select on tables to authenticated;
 alter default privileges in schema cemetery
   grant all on tables to service_role;
 
