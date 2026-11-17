@@ -64,8 +64,13 @@
     overflow: visible !important;
     background: white;
   }
+  /* `auto` means "whatever paper the printer is loaded with" — Letter in
+     North America, A4 elsewhere. Naming a size instead makes the browser fit
+     that box inside the real paper, which shrinks the content and adds margin
+     on top of the one declared here. The margin lives only in this rule, so
+     a sheet's own padding never stacks on top of it. */
   @page {
-    size: A4 portrait;
-    margin: 1cm 1.5cm;
+    size: auto;
+    margin: 12mm;
   }
 }

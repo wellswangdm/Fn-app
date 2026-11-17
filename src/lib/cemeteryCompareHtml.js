@@ -46,6 +46,7 @@ function headerCells({ quotes, showTicker, zh, cellPadding = '24px 24px 28px' })
 }
 
 function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh, band = false, screen = false }) {
+  const gridCls = screen ? 'class="cmp-grid"' : ''
   const title = zh && section.nameZh ? section.nameZh : section.name
   // On screen the sections get alternating bands and hairline rules between
   // columns, so a long comparison reads as a structured table rather than
@@ -56,7 +57,7 @@ function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh, ba
     <div ${bandCls} style="text-align:center;padding:${screen ? '22px 0 8px' : '32px 0 10px'};">
       <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:${GREY}">${esc(title)}</span>
     </div>
-    <div ${bandCls} style="display:grid;grid-template-columns:${gridCols};">
+    <div ${bandCls} ${gridCls} style="display:grid;grid-template-columns:${gridCols};">
       ${quotes.map(q => {
         const entries = section.byQuote[q.id] || []
         const pad = screen ? '4px 20px 18px' : '6px 24px 24px'
@@ -81,7 +82,8 @@ function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh, ba
 const GREEN = '#059669'
 
 function summaryHTML({ quotes, gridCols, zh, screen = false }) {
-  const cell = screen ? 'class="cmp-cell"' : ''
+  const cell    = screen ? 'class="cmp-cell"' : ''
+  const gridCls = screen ? 'class="cmp-grid"' : ''
   const BOX = 'background:#f5f5f7;border:1px solid #e5e5e5;border-radius:8px;padding:12px;font-size:13px;'
   const row = (label, value, colour = '#6b6b6b', weight = '600') => `
     <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;color:${colour}">
@@ -91,7 +93,7 @@ function summaryHTML({ quotes, gridCols, zh, screen = false }) {
     <div style="text-align:center;padding:32px 0 10px;">
       <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:${GREY}">${zh ? '費用明細' : 'Summary'}</span>
     </div>
-    <div style="display:grid;grid-template-columns:${gridCols};">
+    <div ${gridCls} style="display:grid;grid-template-columns:${gridCols};">
       ${quotes.map(q => {
         const t = q.totals
         return `
@@ -113,7 +115,8 @@ function summaryHTML({ quotes, gridCols, zh, screen = false }) {
 }
 
 function paymentHTML({ quotes, gridCols, zh, screen = false }) {
-  const cell = screen ? 'class="cmp-cell"' : ''
+  const cell    = screen ? 'class="cmp-cell"' : ''
+  const gridCls = screen ? 'class="cmp-grid"' : ''
   if (!quotes.some(q => q.isMonthlyPaymentEnabled && q.plan?.monthly > 0)) return ''
   const BOX = 'background:#f5f5f7;border:1px solid #e5e5e5;border-radius:8px;padding:10px 12px;font-size:12px;'
   const ROW = 'display:flex;justify-content:space-between;color:#6b6b6b;'
@@ -122,7 +125,7 @@ function paymentHTML({ quotes, gridCols, zh, screen = false }) {
     <div style="text-align:center;padding:32px 0 10px;">
       <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:${GREY}">${zh ? '付款方式' : 'Payment Options'}</span>
     </div>
-    <div style="display:grid;grid-template-columns:${gridCols};">
+    <div ${gridCls} style="display:grid;grid-template-columns:${gridCols};">
       ${quotes.map(q => {
         if (!q.isMonthlyPaymentEnabled || !(q.plan?.monthly > 0)) {
           return `<div ${cell} style="padding:6px 20px 22px;text-align:center;"><span style="font-size:13px;color:${FAINT}">${zh ? '一次付清' : 'Paid in full'}</span></div>`
@@ -156,7 +159,7 @@ function body(props) {
 export function buildCemeteryPrintHTML(props) {
   const gridCols = `repeat(${props.quotes.length},minmax(0,1fr))`
   return `
-    <div style="font-family:${FONT};max-width:960px;margin:0 auto;color:${INK}">
+    <div style="font-family:${FONT};width:100%;max-width:960px;margin:0 auto;color:${INK}">
       <div style="display:grid;grid-template-columns:${gridCols};">
         ${headerCells({ ...props, gridCols })}
       </div>
@@ -212,8 +215,13 @@ export function buildCemeteryWebHTML(props) {
     /* Printing from this page must give the same plain sheet as the Print
        button: no column rules, no shaded bands, no card. Those are screen
        furniture and look like stray lines on paper. */
+    @page{size:auto;margin:12mm}
     @media print{
       html,body{background:#fff}
+      /* On screen each column has a 260px floor so it stays readable. On
+         paper that floor can be wider than the sheet — three columns need
+         206mm and A4 only gives 186mm — so let them shrink to fit. */
+      .hgrid,.cmp-grid{grid-template-columns:repeat(${n},minmax(0,1fr))!important}
       body{padding:0}
       .card{max-width:none;border:0;border-radius:0;box-shadow:none}
       .scroll{overflow:visible}

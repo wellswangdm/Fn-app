@@ -92,10 +92,15 @@ export default function CemeteryReview({ park, quote, lines, totals, plan, onClo
 
       {/* A4 sheet */}
       <div className="py-6 px-3 print:p-0">
+        {/* On screen this is a sheet of paper, so it keeps an A4-ish width and
+            its own padding. On paper both come off: the width is whatever the
+            page gives it, and the margin comes solely from @page, so the two
+            never stack and the sheet fits Letter and A4 alike. */}
         <div id="print-zone"
              className={`mx-auto bg-white shadow-sm print:shadow-none border border-stone-200
-                         print:border-0 ${S.body} text-stone-800`}
-             style={{ maxWidth: '210mm', padding: '14mm' }}>
+                         print:border-0 max-w-[210mm] p-[14mm]
+                         print:max-w-none print:w-full print:p-0
+                         ${S.body} text-stone-800`}>
 
           {/* Letterhead: park supplies name + address, advisor supplies the rest */}
           <header className="flex justify-between items-start gap-6 pb-4 border-b border-stone-300">

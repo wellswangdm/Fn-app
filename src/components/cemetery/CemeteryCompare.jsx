@@ -109,7 +109,9 @@ export default function CemeteryCompare({ park, onClose }) {
     win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>${park.name} — Quote Comparison</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;padding:24px}
-@page{margin:1.5cm}@media print{body{padding:0}}</style></head>
+/* size:auto uses whatever paper is loaded — Letter or A4 — instead of
+   fitting a named page box inside it and shrinking everything. */
+@page{size:auto;margin:12mm}@media print{body{padding:0}}</style></head>
 <body>${buildCemeteryPrintHTML(htmlProps)}
 <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400))<\/script></body></html>`)
     win.document.close()
