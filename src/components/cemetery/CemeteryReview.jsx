@@ -120,19 +120,10 @@ export default function CemeteryReview({ park, quote, lines, totals, plan, onClo
             </div>
           </header>
 
-          {/* Client on one slim line, and only when there is one — the old
-              block left a "—" and a row of dead space on most quotes. */}
-          {(quote.clientName || quote.clientPhone || quote.clientEmail) && (
-            <p className="text-[11px] text-stone-500 pt-2.5">
-              <span className="font-semibold uppercase tracking-widest text-stone-400 mr-2">
-                {zh ? '客戶' : 'Prepared for'}
-              </span>
-              <span className="font-semibold text-stone-700">{quote.clientName}</span>
-              {[quote.clientPhone, quote.clientEmail].filter(Boolean).map((v, i) => (
-                <span key={i} className="text-stone-500"> · {v}</span>
-              ))}
-            </p>
-          )}
+          {/* The client's name, phone and email are deliberately NOT printed.
+              They are kept on the quote so it can be found in the list and
+              labelled in a comparison, but the sheet itself carries only the
+              park and the advisor. */}
 
           {quote.imageUrl && (
             <div className="pt-4 pb-1" style={{ breakInside: 'avoid' }}>
