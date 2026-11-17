@@ -45,20 +45,26 @@ function headerCells({ quotes, showTicker, zh, cellPadding = '24px 24px 28px' })
   }).join('')
 }
 
-function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh }) {
+function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh, band = false, screen = false }) {
   const title = zh && section.nameZh ? section.nameZh : section.name
+  // On screen the sections get alternating bands and hairline rules between
+  // columns, so a long comparison reads as a structured table rather than
+  // floating text. Print keeps the plain white sheet.
+  const bg   = screen && band ? 'background:#fafafa;' : ''
+  const cell = screen ? 'class="cmp-cell"' : ''
   return `
-    <div style="text-align:center;padding:32px 0 10px;">
+    <div style="text-align:center;padding:${screen ? '22px 0 8px' : '32px 0 10px'};${bg}">
       <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:${GREY}">${esc(title)}</span>
     </div>
-    <div style="display:grid;grid-template-columns:${gridCols};">
+    <div style="display:grid;grid-template-columns:${gridCols};${bg}">
       ${quotes.map(q => {
         const entries = section.byQuote[q.id] || []
+        const pad = screen ? '4px 20px 18px' : '6px 24px 24px'
         if (!entries.length) {
-          return `<div style="text-align:center;padding:6px 24px 24px;"><span style="font-size:13px;color:${FAINT}">${zh ? '未包含' : 'Not included'}</span></div>`
+          return `<div ${cell} style="text-align:center;padding:${pad};"><span style="font-size:13px;color:${FAINT}">${zh ? '未包含' : 'Not included'}</span></div>`
         }
         return `
-        <div style="text-align:center;padding:6px 24px 24px;">
+        <div ${cell} style="text-align:center;padding:${pad};">
           ${entries.map(e => `
             <div style="margin-bottom:14px">
               ${showImages && e.imageUrl ? `<img src="${esc(e.imageUrl)}" style="max-width:220px;width:100%;height:auto;object-fit:contain;border-radius:10px;background:#f5f5f7;margin-bottom:10px">` : ''}
@@ -74,7 +80,8 @@ function sectionHTML({ section, quotes, gridCols, showPrices, showImages, zh }) 
 
 const GREEN = '#059669'
 
-function summaryHTML({ quotes, gridCols, zh }) {
+function summaryHTML({ quotes, gridCols, zh, screen = false }) {
+  const cell = screen ? 'class="cmp-cell"' : ''
   const BOX = 'background:#f5f5f7;border:1px solid #e5e5e5;border-radius:8px;padding:12px;font-size:13px;'
   const row = (label, value, colour = '#6b6b6b', weight = '600') => `
     <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;color:${colour}">
@@ -88,7 +95,7 @@ function summaryHTML({ quotes, gridCols, zh }) {
       ${quotes.map(q => {
         const t = q.totals
         return `
-        <div style="padding:4px 24px 24px;">
+        <div ${cell} style="padding:4px 20px 22px;">
           <div style="${BOX}">
             ${row(zh ? '小計' : 'Subtotal', fmt(t.subtotal))}
             ${t.waiveAmount > 0 ? row(q.manualWaiveName || (zh ? '減免' : 'Waived'), `− ${fmt(t.waiveAmount)}`, GREEN) : ''}
@@ -105,7 +112,8 @@ function summaryHTML({ quotes, gridCols, zh }) {
     </div>`
 }
 
-function paymentHTML({ quotes, gridCols, zh }) {
+function paymentHTML({ quotes, gridCols, zh, screen = false }) {
+  const cell = screen ? 'class="cmp-cell"' : ''
   if (!quotes.some(q => q.isMonthlyPaymentEnabled && q.plan?.monthly > 0)) return ''
   const BOX = 'background:#f5f5f7;border:1px solid #e5e5e5;border-radius:8px;padding:10px 12px;font-size:12px;'
   const ROW = 'display:flex;justify-content:space-between;color:#6b6b6b;'
@@ -117,10 +125,10 @@ function paymentHTML({ quotes, gridCols, zh }) {
     <div style="display:grid;grid-template-columns:${gridCols};">
       ${quotes.map(q => {
         if (!q.isMonthlyPaymentEnabled || !(q.plan?.monthly > 0)) {
-          return `<div style="padding:6px 24px 24px;text-align:center;"><span style="font-size:13px;color:${FAINT}">${zh ? '一次付清' : 'Paid in full'}</span></div>`
+          return `<div ${cell} style="padding:6px 20px 22px;text-align:center;"><span style="font-size:13px;color:${FAINT}">${zh ? '一次付清' : 'Paid in full'}</span></div>`
         }
         return `
-        <div style="padding:6px 24px 24px;">
+        <div ${cell} style="padding:6px 20px 22px;">
           <div style="${BOX}">
             <div style="${ROW}"><span>${zh ? '首期' : 'Deposit'}</span><span style="${VAL}">${fmt(q.plan.deposit)}</span></div>
             <div style="${ROW}border-top:1px solid #e5e5e5;padding-top:6px;margin-top:6px;">
@@ -137,10 +145,11 @@ function paymentHTML({ quotes, gridCols, zh }) {
 }
 
 function body(props) {
-  const { sections, quotes, gridCols } = props
-  return sections.map(section => sectionHTML({ ...props, section })).join('')
-    + summaryHTML({ quotes, gridCols, zh: props.zh })
-    + paymentHTML({ quotes, gridCols, zh: props.zh })
+  const { sections, quotes, gridCols, screen = false } = props
+  return sections.map((section, i) =>
+      sectionHTML({ ...props, section, band: i % 2 === 1, screen })).join('')
+    + summaryHTML({ quotes, gridCols, zh: props.zh, screen })
+    + paymentHTML({ quotes, gridCols, zh: props.zh, screen })
 }
 
 /** Print sheet: fixed 960px, equal columns. */
@@ -155,17 +164,27 @@ export function buildCemeteryPrintHTML(props) {
     </div>`
 }
 
-/** Shared link / standalone page: sticky header, columns get a readable floor. */
+/**
+ * Shared link / on-screen preview.
+ *
+ * This is the version shown on a monitor, so unlike the print sheet it is
+ * sized for a screen: the whole comparison is a centred card of bounded
+ * width. Previously the wrapper was `width:100%`, so on a wide display two
+ * columns stretched to the screen edges with their content centred in each,
+ * leaving a canyon of empty space down the middle.
+ *
+ * Columns are capped at COL_MAX and the card never exceeds the room they
+ * need, so it stays compact on a large monitor and still scrolls sideways on
+ * a phone.
+ */
 export function buildCemeteryWebHTML(props) {
-  const n        = props.quotes.length
-  const colMin   = 260
-  const compact  = n <= 2
-  const gridCols = compact
-    ? `repeat(${n},minmax(0,1fr))`
-    : `repeat(${n},minmax(${colMin}px,1fr))`
-  const wrap = compact
-    ? 'width:100%;padding-bottom:80px'
-    : `min-width:${n * colMin}px;margin:0 auto;padding-bottom:80px`
+  const n       = props.quotes.length
+  const COL_MIN = 260
+  const COL_MAX = 330
+  const GUTTER  = 48
+
+  const gridCols = `repeat(${n},minmax(${COL_MIN}px,1fr))`
+  const cardMax  = n * COL_MAX + GUTTER
 
   return `<!DOCTYPE html>
 <html lang="${props.zh ? 'zh-Hant' : 'en'}">
@@ -175,17 +194,37 @@ export function buildCemeteryWebHTML(props) {
   <title>${esc(props.title || 'Cemetery Quote Comparison')}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{background:#fff;font-family:${FONT};color:${INK};-webkit-font-smoothing:antialiased}
-    .wrap{${wrap}}
-    .sticky{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e5e5e5;}
-    .hgrid{display:grid;grid-template-columns:${gridCols};}
+    html,body{background:#f5f5f7;font-family:${FONT};color:${INK};-webkit-font-smoothing:antialiased}
+    body{padding:28px 20px 56px}
+    .card{
+      max-width:${cardMax}px;margin:0 auto;background:#fff;
+      border:1px solid #e8e8ea;border-radius:16px;overflow:hidden;
+      box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.05);
+    }
+    .scroll{overflow-x:auto}
+    .inner{min-width:${n * COL_MIN}px}
+    .sticky{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e8e8ea}
+    .hgrid{display:grid;grid-template-columns:${gridCols}}
+    /* hairline between columns, so a long list stays readable across */
+    .cmp-cell + .cmp-cell{box-shadow:inset 1px 0 0 #efeff1}
+    .foot{max-width:${cardMax}px;margin:14px auto 0;text-align:center;font-size:11px;color:#a1a1aa}
+    @media print{
+      html,body{background:#fff}
+      body{padding:0}
+      .card{max-width:none;border:0;border-radius:0;box-shadow:none}
+      .sticky{position:static}
+      .foot{display:none}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="sticky"><div class="hgrid">${headerCells({ ...props, gridCols, cellPadding: '20px 16px 20px' })}</div></div>
-    ${body({ ...props, gridCols })}
+  <div class="card">
+    <div class="scroll"><div class="inner">
+      <div class="sticky"><div class="hgrid">${headerCells({ ...props, gridCols, cellPadding: '20px 16px 20px' })}</div></div>
+      ${body({ ...props, gridCols, screen: true })}
+    </div></div>
   </div>
+  ${props.title ? `<p class="foot">${esc(props.title)}</p>` : ''}
 </body>
 </html>`
 }

@@ -26,15 +26,24 @@ export default function CemeteryCompareSheet({
   if (quotes.length === 0) return null
 
   const cols      = quotes.length
-  const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
+  const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(260px, 1fr))` }
   const hasPlans  = quotes.some(q => q.isMonthlyPaymentEnabled && q.plan?.monthly > 0)
+
+  // Cap the columns and centre them. Letting them stretch to the full width
+  // of a wide screen leaves each column's centred content marooned with a
+  // canyon of empty space down the middle.
+  const COL_MAX = 330
+  const frame   = { maxWidth: cols * COL_MAX, margin: '0 auto', minWidth: cols * 260 }
+
+  // Hairline between columns so a long list stays readable across.
+  const cell = i => (i === 0 ? '' : 'shadow-[inset_1px_0_0_#efeff1]')
 
   return (
     <div className="overflow-x-auto">
-      <div style={{ minWidth: cols > 2 ? `${cols * 240}px` : undefined }}>
+      <div style={{ minWidth: cols * 260 }}>
 
         {/* Column headers */}
-        <div className="grid" style={gridStyle}>
+        <div className="grid" style={{ ...gridStyle, ...frame }}>
           {quotes.map((q, i) => {
             const parts = [
               q.totals.waiveAmount    > 0 && `${fmt(q.totals.waiveAmount)} waived`,
@@ -42,7 +51,7 @@ export default function CemeteryCompareSheet({
               q.totals.taxTotal       > 0 && `${fmt(q.totals.taxTotal)} tax incl.`,
             ].filter(Boolean)
             return (
-              <div key={q.id} className="px-8 pt-7 pb-6 text-center">
+              <div key={q.id} className={`px-6 pt-7 pb-6 text-center ${cell(i)}`}>
                 <p className="text-2xl font-bold text-stone-900">
                   {q.label || `Option ${i + 1}`}
                 </p>
@@ -59,18 +68,19 @@ export default function CemeteryCompareSheet({
         </div>
 
         {/* Sections */}
-        {sections.map(section => (
-          <div key={section.id}>
-            <div className="pt-8 pb-2 text-center">
+        {sections.map((section, si) => (
+          <div key={section.id} className={si % 2 === 1 ? 'bg-stone-50/70' : ''}>
+            <div style={frame}>
+            <div className="pt-6 pb-2 text-center">
               <span className="text-xs font-bold uppercase tracking-widest text-stone-400">
                 {zh && section.nameZh ? section.nameZh : section.name}
               </span>
             </div>
             <div className="grid" style={gridStyle}>
-              {quotes.map(q => {
+              {quotes.map((q, i) => {
                 const entries = section.byQuote[q.id] || []
                 return (
-                  <div key={q.id} className="px-8 pb-8 text-center">
+                  <div key={q.id} className={`px-6 pb-7 text-center ${cell(i)}`}>
                     {entries.length === 0 ? (
                       <p className="text-sm text-stone-300 mt-4">
                         {zh ? '未包含' : 'Not included'}
@@ -105,21 +115,22 @@ export default function CemeteryCompareSheet({
                 )
               })}
             </div>
+            </div>
           </div>
         ))}
 
         {/* Summary — the breakdown behind each column's headline figure */}
         <div>
-          <div className="pt-8 pb-2 text-center">
+          <div className="pt-6 pb-2 text-center">
             <span className="text-xs font-bold uppercase tracking-widest text-stone-400">
               {zh ? '費用明細' : 'Summary'}
             </span>
           </div>
-          <div className="grid" style={gridStyle}>
-            {quotes.map(q => {
+          <div className="grid" style={{ ...gridStyle, ...frame }}>
+            {quotes.map((q, i) => {
               const t = q.totals
               return (
-                <div key={q.id} className="px-6 pb-8 pt-1">
+                <div key={q.id} className={`px-5 pb-7 pt-1 ${cell(i)}`}>
                   <dl className="bg-stone-50 rounded-lg p-3 border border-stone-100 text-[13px] space-y-1.5">
                     <Row label={zh ? '小計' : 'Subtotal'} value={fmt(t.subtotal)} />
                     {t.waiveAmount > 0 && (
@@ -150,14 +161,14 @@ export default function CemeteryCompareSheet({
         {/* Payment options */}
         {showPayment && hasPlans && (
           <div>
-            <div className="pt-8 pb-2 text-center">
+            <div className="pt-6 pb-2 text-center">
               <span className="text-xs font-bold uppercase tracking-widest text-stone-400">
                 {zh ? '付款方式' : 'Payment Options'}
               </span>
             </div>
-            <div className="grid" style={gridStyle}>
-              {quotes.map(q => (
-                <div key={q.id} className="px-6 pb-8 pt-3">
+            <div className="grid" style={{ ...gridStyle, ...frame }}>
+              {quotes.map((q, i) => (
+                <div key={q.id} className={`px-5 pb-7 pt-3 ${cell(i)}`}>
                   {q.isMonthlyPaymentEnabled && q.plan?.monthly > 0 ? (
                     <>
                       <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] space-y-1">
