@@ -404,7 +404,7 @@ export async function saveQuote(quote, lines, userId) {
  * Another OPTION for the same family: a copy sharing the contact_id, placed
  * after the existing options. This is how a family gets something to compare.
  */
-export async function addOptionToFamily(quoteId, userId, { label = null, blank = false } = {}) {
+export async function addOptionToFamily(quoteId, userId, { blank = false } = {}) {
   const src = await fetchQuote(quoteId)
   const { items, ...rest } = src
   const q = fromDbQuote(rest)
@@ -435,7 +435,10 @@ export async function addOptionToFamily(quoteId, userId, { label = null, blank =
     id: null,
     contactId,
     sortOrder:    nextOrder,
-    versionLabel: label || `Option ${nextOrder + 1}`,
+    // No name: an option is named after the property it is built around
+    // unless somebody types one. Storing "Option 2" here left a blank option
+    // stuck with that name even after it had a property.
+    versionLabel: '',
     isTemplate:   false,
     templateName: '',
     status:       'draft',
@@ -480,6 +483,26 @@ export async function newQuoteFromTemplate(templateId, userId, { clientName = ''
     clientName,
     status:       'draft',
   }, items, userId)
+}
+
+/**
+ * The property each quote is built around, for screens that show an option's
+ * name without loading its line items. One query for the whole list.
+ */
+export async function fetchPropertyNames(quoteIds = []) {
+  const ids = [...new Set(quoteIds.filter(Boolean))]
+  if (!ids.length) return {}
+  const { data, error } = await cem()
+    .from('quote_items')
+    .select('quote_id, name, sort_order')
+    .in('quote_id', ids)
+    .eq('section', 'Property')
+    .is('parent_item_id', null)
+    .order('sort_order')
+  check(error, 'fetchPropertyNames')
+  const out = {}
+  for (const r of data || []) if (!(r.quote_id in out)) out[r.quote_id] = r.name
+  return out
 }
 
 export async function deleteQuote(id) {

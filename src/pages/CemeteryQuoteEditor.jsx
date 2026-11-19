@@ -4,10 +4,10 @@ import CemeteryLineTable from '../components/cemetery/CemeteryLineTable.jsx'
 import CemeteryReview    from '../components/cemetery/CemeteryReview.jsx'
 import {
   fetchCatalog, fetchQuote, saveQuote, fromDbQuote,
-  addOptionToFamily, saveAsTemplate, fetchQuotes,
+  addOptionToFamily, saveAsTemplate, fetchQuotes, fetchPropertyNames, deleteQuote,
 } from '../lib/cemetery.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
-import { autoLabel, optionLabel, propertyNameOf, looksAuto } from '../lib/cemeteryOptionLabel.js'
+import { optionName, propertyNameOf } from '../lib/cemeteryOptionLabel.js'
 import {
   calcCemeteryTotals, linesForProperty, linesForProduct, linesForService,
   customLine, processingFeeLine, removeLine, setQuantity,
@@ -67,17 +67,16 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   // going back to the list; and the templates, so a quote can be started
   // from one here rather than only from the Templates tab.
   const [siblings,  setSiblings]  = useState([])
+  const [siblingProperty, setSiblingProperty] = useState({})
   const [templates, setTemplates] = useState([])
   const [menu,      setMenu]      = useState(null)   // 'add' | 'template'
+  const [renaming,  setRenaming]  = useState(false)
 
   // Switching options or loading a template throws away unsaved work, so
   // track whether there is any.
   const [dirty, setDirty] = useState(false)
   const hydrating = useRef(true)
 
-  // Whether the option's name is still being derived from its property, or
-  // the advisor has typed one of their own.
-  const [labelIsAuto, setLabelIsAuto] = useState(true)
 
   // Language is a VIEWING preference, shared with the funeral portal and with
   // the review and comparison screens — not a property of the saved quote.
@@ -103,10 +102,11 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           setQ(prev => ({ ...prev, ...q0 }))
           setLines(items)
           setDepositManual(true)
-          setLabelIsAuto(looksAuto(q0.versionLabel, items))
           if (q0.contactId) {
             const fam = await fetchQuotes({ parkId: park.id, contactId: q0.contactId })
-            if (alive) setSiblings(fam)
+            if (!alive) return
+            setSiblings(fam)
+            setSiblingProperty(await fetchPropertyNames(fam.map(f => f.id)))
           }
         }
         const tpl = await fetchQuotes({ parkId: park.id, templates: true })
@@ -143,6 +143,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     try {
       const fam = await fetchQuotes({ parkId: park.id, contactId: cid })
       setSiblings(fam)
+      setSiblingProperty(await fetchPropertyNames(fam.map(f => f.id)))
     } catch { /* the switcher just keeps what it had */ }
   }
 
@@ -184,23 +185,8 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   // An option is named after the property on it unless the advisor renames it.
   const propertyName = propertyNameOf(lines)
   const myIndex      = Math.max(0, siblings.findIndex(s2 => s2.id === q.id))
-  const takenLabels  = siblings.filter(s2 => s2.id !== q.id).map(s2 => optionLabel(s2, 0))
-  // While the name is auto it follows the property, even though a value is
-  // already stored — a blank option is saved as "Option 2" before it has a
-  // property, and should take the property's name once it does.
-  const effectiveLabel = labelIsAuto
-    ? autoLabel(lines, myIndex, takenLabels)
-    : ((q.versionLabel || '').trim() || autoLabel(lines, myIndex, takenLabels))
+  const displayName  = optionName({ versionLabel: q.versionLabel, propertyName, index: myIndex })
 
-  // While the name is auto, keep it showing the property the option is built
-  // around — so the field, the switcher and the comparison always read the
-  // same thing, and a blank option stops saying "Option 2" the moment it has
-  // a property. Once the advisor types a name, this stops touching it.
-  useEffect(() => {
-    if (hydrating.current || !labelIsAuto) return
-    if (q.versionLabel === effectiveLabel) return
-    setQ(p => ({ ...p, versionLabel: effectiveLabel }))
-  }, [effectiveLabel, labelIsAuto, q.versionLabel])
 
   // ── Line operations ───────────────────────────────────────────────────────
   const add = next => setLines(ls => [...ls, ...next])
@@ -248,12 +234,11 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
       const id = await saveQuote({
         ...q,
         contactId,
-        versionLabel: effectiveLabel,
         depositAmount: deposit,
         monthlyPaymentAmount: monthly,
         totals,
       }, lines, advisor?.userId)
-      setQ(p => ({ ...p, id, contactId, versionLabel: effectiveLabel }))
+      setQ(p => ({ ...p, id, contactId }))
       setDirty(false)
       onSaved?.(id)
       setNotice(showChinese ? '已儲存' : 'Saved')
@@ -291,7 +276,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
       if (!id || dirty) {
         const contactId = q.contactId || crypto.randomUUID()
         id = await saveQuote({
-          ...q, id, contactId, versionLabel: effectiveLabel,
+          ...q, id, contactId,
           depositAmount: deposit, monthlyPaymentAmount: monthly, totals,
         }, lines, advisor?.userId)
         setQ(p => ({ ...p, id, contactId }))
@@ -327,6 +312,22 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
         terms: tq.terms || p.terms,
       }))
       setNotice(showChinese ? `已載入範本「${t.template_name}」` : `Loaded template "${t.template_name}"`)
+    } catch (e) {
+      setError(e.message || String(e))
+    } finally { setSaving(false) }
+  }
+
+  /** Remove this option. The family keeps the rest; you land on a sibling. */
+  async function removeOption(id, name) {
+    const other = siblings.find(s2 => s2.id !== id)
+    if (!other) return
+    if (!window.confirm(showChinese
+      ? `確定要刪除「${name}」嗎？此操作無法復原。`
+      : `Delete “${name}”? This cannot be undone.`)) return
+    setSaving(true); setError('')
+    try {
+      await deleteQuote(id)
+      onOpenQuote?.(other.id)
     } catch (e) {
       setError(e.message || String(e))
     } finally { setSaving(false) }
@@ -429,7 +430,8 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
-      {/* Options in this family — switch without going back to the list */}
+      {/* Options in this family. Click one to switch; click the one you are
+          on to rename it, the way you would rename a tab. */}
       {siblings.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
@@ -437,17 +439,48 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           </span>
           {siblings.map((s2, i) => {
             const active = s2.id === q.id
+            const name = active
+              ? displayName
+              : optionName({ versionLabel: s2.version_label,
+                             propertyName: siblingProperty[s2.id], index: i })
+            if (active && renaming) {
+              return (
+                <input key={s2.id} autoFocus
+                       className="input text-xs py-1.5 w-56"
+                       defaultValue={q.versionLabel || ''}
+                       placeholder={propertyName || name}
+                       onBlur={e => { setQ(p => ({ ...p, versionLabel: e.target.value })); setRenaming(false) }}
+                       onKeyDown={e => {
+                         if (e.key === 'Enter') e.currentTarget.blur()
+                         if (e.key === 'Escape') setRenaming(false)
+                       }} />
+              )
+            }
             return (
-              <button key={s2.id} onClick={() => switchOption(s2.id)}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors ${
+              <span key={s2.id}
+                className={`inline-flex items-center rounded-xl border text-xs font-medium transition-colors ${
                   active ? 'border-primary-300 bg-primary-50 text-primary-700'
                          : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}>
-                <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle ${
-                  active ? 'bg-primary-500' : 'bg-stone-300'}`} />
-                {s2.id === q.id ? effectiveLabel : optionLabel(s2, i)}
-                {active && <span className="ml-1.5 text-[10px] opacity-60">
-                  {showChinese ? '編輯中' : 'editing'}</span>}
-              </button>
+                <button onClick={() => (active ? setRenaming(true) : switchOption(s2.id))}
+                        title={active
+                          ? (showChinese ? '點擊重新命名' : 'Click to rename')
+                          : (showChinese ? '切換至此方案' : 'Switch to this option')}
+                        className="px-3 py-1.5">
+                  <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle ${
+                    active ? 'bg-primary-500' : 'bg-stone-300'}`} />
+                  {name}
+                </button>
+                {active && (
+                  <button onClick={() => removeOption(s2.id, name)}
+                          title={showChinese ? '刪除此方案' : 'Delete this option'}
+                          className="pr-2.5 pl-0.5 text-primary-400 hover:text-red-600">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </span>
             )
           })}
         </div>
@@ -482,28 +515,6 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
 
           {/* ── Quote ── */}
           <div className="space-y-5 min-w-0">
-
-            {/* Option name — the heading above this option's column in a
-                comparison. Defaults to the property on the quote. */}
-            <div className="card p-4">
-              <label className="label">{showChinese ? '方案名稱' : 'Option name'}</label>
-              <input className="input text-sm" value={q.versionLabel}
-                     placeholder={propertyName || (showChinese ? '例如：企碑地' : 'e.g. Royal Plateau (Upright)')}
-                     onChange={e => {
-                       const v = e.target.value
-                       setLabelIsAuto(v.trim() === '')
-                       setQ(p => ({ ...p, versionLabel: v }))
-                     }} />
-              <p className="text-[11px] text-stone-400 mt-1">
-                {labelIsAuto
-                  ? (showChinese
-                      ? '目前依墓地名稱自動命名，可直接輸入覆寫。'
-                      : 'Named after the property on this option. Type to override.')
-                  : (showChinese
-                      ? '清空則恢復使用墓地名稱。'
-                      : 'Clear it to go back to the property name.')}
-              </p>
-            </div>
 
             {/* Client — kept for finding the quote later; not printed */}
             <div className="card p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">

@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
-import { fetchQuoteFamilies, fetchQuotes, deleteQuote, newQuoteFromTemplate } from '../lib/cemetery.js'
-import { optionLabel } from '../lib/cemeteryOptionLabel.js'
+import {
+  fetchQuoteFamilies, fetchQuotes, fetchPropertyNames,
+  deleteQuote, newQuoteFromTemplate,
+} from '../lib/cemetery.js'
+import { optionName } from '../lib/cemeteryOptionLabel.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Saved quotes, grouped the way the funeral portal groups versions.
+// Saved quotes.
 //
-// A FAMILY owns several OPTIONS of the same quote. Comparing happens inside a
-// family — you compare the options you built for those people, not every
-// quote in the park. The old flat list made the comparison screen offer every
-// quote ever saved, which was both the wrong hierarchy and unworkable once
-// there are more than a handful.
+// A family owns one or more OPTIONS. Every option is on screen and one click
+// away — they used to be hidden behind a disclosure triangle, so opening the
+// second option meant expanding the family first and then picking from the
+// list, which is two clicks to do the obvious thing.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function fmt(n) {
@@ -21,21 +23,16 @@ function when(ts) {
   return new Date(ts).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-// One rule for what an option is called — see cemeteryOptionLabel.js.
-// Falling back to the client name here made the first option read "Benny Kam"
-// while the builder called the same option something else.
-const labelOf = optionLabel
-
 export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onCompare }) {
-  const [tab,       setTab]       = useState('quotes')
-  const [families,  setFamilies]  = useState([])
-  const [templates, setTemplates] = useState([])
-  const [expanded,  setExpanded]  = useState(() => new Set())
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState('')
-  const [search,    setSearch]    = useState('')
-  const [reloadAt,  setReloadAt]  = useState(0)
-  const [busy,      setBusy]      = useState(false)
+  const [tab,        setTab]        = useState('quotes')
+  const [families,   setFamilies]   = useState([])
+  const [propertyOf, setPropertyOf] = useState({})
+  const [templates,  setTemplates]  = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState('')
+  const [search,     setSearch]     = useState('')
+  const [reloadAt,   setReloadAt]   = useState(0)
+  const [busy,       setBusy]       = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -44,7 +41,11 @@ export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onComp
       try {
         if (tab === 'quotes') {
           const f = await fetchQuoteFamilies(park.id)
-          if (alive) setFamilies(f)
+          if (!alive) return
+          setFamilies(f)
+          // An option is named after the property it is built around; the list
+          // does not load line items, so ask for just those names.
+          setPropertyOf(await fetchPropertyNames(f.flatMap(g => g.options.map(o => o.id))))
         } else {
           const t = await fetchQuotes({ parkId: park.id, templates: true })
           if (alive) setTemplates(t)
@@ -58,32 +59,25 @@ export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onComp
     return () => { alive = false }
   }, [park.id, tab, reloadAt])
 
-  function toggle(key) {
-    setExpanded(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
-  }
+  const nameOf = (o, i) =>
+    optionName({ versionLabel: o.version_label, propertyName: propertyOf[o.id], index: i })
 
   async function remove(id, label) {
-    if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return
+    if (!window.confirm(`Delete “${label}”? This cannot be undone.`)) return
     try { await deleteQuote(id); setReloadAt(Date.now()) }
     catch (e) { setError(e.message || String(e)) }
   }
 
   async function useTemplate(t) {
     setBusy(true); setError('')
-    try {
-      const id = await newQuoteFromTemplate(t.id, advisor?.userId)
-      onOpen(id)
-    } catch (e) { setError(e.message || String(e)) }
+    try { onOpen(await newQuoteFromTemplate(t.id, advisor?.userId)) }
+    catch (e) { setError(e.message || String(e)) }
     finally { setBusy(false) }
   }
 
   const matches = s => !search || String(s || '').toLowerCase().includes(search.toLowerCase())
-  const shownFamilies = families.filter(g =>
-    matches(g.name) || g.options.some(o => matches(o.version_label) || matches(o.quote_number)))
+  const shownFamilies = families.filter((g) =>
+    matches(g.name) || g.options.some((o, i) => matches(nameOf(o, i))))
   const shownTemplates = templates.filter(t => matches(t.template_name))
 
   return (
@@ -141,11 +135,9 @@ export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onComp
                 </div>
                 <span className="text-sm text-stone-500 shrink-0">{fmt(t.grand_total)}</span>
                 <button onClick={() => useTemplate(t)} disabled={busy}
-                        className="btn-primary text-xs shrink-0">
-                  Use template
-                </button>
-                <IconButton label="Delete template"
-                            onClick={() => remove(t.id, t.template_name || 'this template')} />
+                        className="btn-primary text-xs shrink-0">Use template</button>
+                <TrashButton label="Delete template"
+                             onClick={() => remove(t.id, t.template_name || 'this template')} />
               </div>
             ))}
           </div>
@@ -162,60 +154,45 @@ export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onComp
         </Empty>
 
       ) : (
-        <div className="card divide-y divide-stone-100 overflow-hidden">
-          {shownFamilies.map(g => {
-            const open  = expanded.has(g.key)
-            const multi = g.options.length > 1
-            const first = g.options[0]
-            return (
-              <div key={g.key}>
-                <div className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
-                  <button onClick={() => (multi ? toggle(g.key) : onOpen(first.id))}
-                          className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-stone-800 truncate">
-                      {g.name || labelOf(first, 0)}
-                    </p>
-                    <p className="text-[11px] text-stone-400 mt-0.5">
-                      {when(g.updatedAt)}
-                      {multi && <> · {open ? '▾' : '▸'} {g.options.length} options</>}
-                      {!multi && first.version_label && <> · {first.version_label}</>}
-                    </p>
-                  </button>
-
-                  <span className="text-sm font-semibold text-stone-700 shrink-0">
-                    {fmt(first.grand_total)}
-                  </span>
-
-                  {multi && (
-                    <button onClick={() => onCompare(g.contactId || g.key)}
-                            className="btn-secondary text-xs shrink-0">
-                      Compare
-                    </button>
-                  )}
-                  {!multi && (
-                    <IconButton label="Delete quote"
-                                onClick={() => remove(first.id, g.name || 'this quote')} />
-                  )}
+        <div className="space-y-3">
+          {shownFamilies.map(g => (
+            <div key={g.key} className="card overflow-hidden">
+              <div className="flex items-center gap-3 px-4 pt-3.5 pb-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-stone-800 truncate">
+                    {g.name || nameOf(g.options[0], 0)}
+                  </p>
+                  <p className="text-[11px] text-stone-400 mt-0.5">
+                    {when(g.updatedAt)}
+                    {g.options.length > 1 && ` · ${g.options.length} options`}
+                  </p>
                 </div>
-
-                {multi && open && (
-                  <div className="bg-stone-50/60 border-t border-stone-100">
-                    {g.options.map((o, i) => (
-                      <div key={o.id} className="flex items-center gap-3 pl-10 pr-4 py-2.5
-                                                 hover:bg-white border-b border-stone-100 last:border-0">
-                        <button onClick={() => onOpen(o.id)} className="flex-1 text-left min-w-0">
-                          <p className="text-[13px] text-stone-700 truncate">{labelOf(o, i)}</p>
-                          <p className="text-[11px] text-stone-400">{when(o.updated_at)}</p>
-                        </button>
-                        <span className="text-[13px] text-stone-600 shrink-0">{fmt(o.grand_total)}</span>
-                        <IconButton label="Delete option" onClick={() => remove(o.id, labelOf(o, i))} />
-                      </div>
-                    ))}
-                  </div>
+                {g.options.length > 1 && (
+                  <button onClick={() => onCompare(g.contactId || g.key)}
+                          className="btn-secondary text-xs shrink-0">Compare</button>
                 )}
               </div>
-            )
-          })}
+
+              {/* Every option, one click away */}
+              <div className="px-3 pb-3 flex flex-wrap gap-2">
+                {g.options.map((o, i) => (
+                  <span key={o.id}
+                        className="group inline-flex items-center rounded-xl border border-stone-200
+                                   bg-white hover:border-primary-300 hover:bg-primary-50/40
+                                   transition-colors">
+                    <button onClick={() => onOpen(o.id)} className="px-3 py-2 text-left">
+                      <span className="block text-xs font-medium text-stone-700 group-hover:text-primary-800">
+                        {nameOf(o, i)}
+                      </span>
+                      <span className="block text-[11px] text-stone-400">{fmt(o.grand_total)}</span>
+                    </button>
+                    <TrashButton label="Delete option" small
+                                 onClick={() => remove(o.id, nameOf(o, i))} />
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -230,11 +207,11 @@ function Empty({ children }) {
   )
 }
 
-function IconButton({ onClick, label }) {
+function TrashButton({ onClick, label, small }) {
   return (
-    <button onClick={onClick} aria-label={label}
-            className="shrink-0 w-8 h-8 rounded-lg text-stone-300 hover:text-red-600
-                       hover:bg-red-50 transition-colors">
+    <button onClick={onClick} aria-label={label} title={label}
+            className={`shrink-0 text-stone-300 hover:text-red-600 transition-colors ${
+              small ? 'pr-2.5 pl-1' : 'w-8 h-8 rounded-lg hover:bg-red-50'}`}>
       <svg className="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />

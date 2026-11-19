@@ -56,6 +56,7 @@ const make = (table) => {
   const chain = {
     select: () => chain, in: () => chain, order: () => chain,
     eq: (c, v) => { f[c] = v; return chain },
+    is: (c, v) => { f[c] = v; return chain },
     insert: (p) => { op = 'insert'; payload = p; return chain },
     update: (p) => { op = 'update'; payload = p; return chain },
     delete: () => { op = 'delete'; return chain },
