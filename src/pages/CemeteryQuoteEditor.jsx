@@ -7,6 +7,7 @@ import {
   addOptionToFamily, saveAsTemplate, fetchQuotes,
 } from '../lib/cemetery.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
+import { autoLabel, optionLabel, propertyNameOf, looksAuto } from '../lib/cemeteryOptionLabel.js'
 import {
   calcCemeteryTotals, linesForProperty, linesForProduct, linesForService,
   customLine, processingFeeLine, removeLine, setQuantity,
@@ -74,6 +75,10 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   const [dirty, setDirty] = useState(false)
   const hydrating = useRef(true)
 
+  // Whether the option's name is still being derived from its property, or
+  // the advisor has typed one of their own.
+  const [labelIsAuto, setLabelIsAuto] = useState(true)
+
   // Language is a VIEWING preference, shared with the funeral portal and with
   // the review and comparison screens — not a property of the saved quote.
   // Saving it per quote meant two quotes could be stored in different
@@ -98,6 +103,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           setQ(prev => ({ ...prev, ...q0 }))
           setLines(items)
           setDepositManual(true)
+          setLabelIsAuto(looksAuto(q0.versionLabel, items))
           if (q0.contactId) {
             const fam = await fetchQuotes({ parkId: park.id, contactId: q0.contactId })
             if (alive) setSiblings(fam)
@@ -124,6 +130,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     if (hydrating.current) return
     setDirty(true)
   }, [lines, q])
+
 
   /**
    * Re-read the family's options. Called after adding one so the switcher
@@ -175,8 +182,25 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   })
 
   // An option is named after the property on it unless the advisor renames it.
-  const propertyName = lines.find(l => l.section === 'Property' && !l.parentItemId)?.name || ''
-  const effectiveLabel = q.versionLabel || propertyName
+  const propertyName = propertyNameOf(lines)
+  const myIndex      = Math.max(0, siblings.findIndex(s2 => s2.id === q.id))
+  const takenLabels  = siblings.filter(s2 => s2.id !== q.id).map(s2 => optionLabel(s2, 0))
+  // While the name is auto it follows the property, even though a value is
+  // already stored — a blank option is saved as "Option 2" before it has a
+  // property, and should take the property's name once it does.
+  const effectiveLabel = labelIsAuto
+    ? autoLabel(lines, myIndex, takenLabels)
+    : ((q.versionLabel || '').trim() || autoLabel(lines, myIndex, takenLabels))
+
+  // While the name is auto, keep it showing the property the option is built
+  // around — so the field, the switcher and the comparison always read the
+  // same thing, and a blank option stops saying "Option 2" the moment it has
+  // a property. Once the advisor types a name, this stops touching it.
+  useEffect(() => {
+    if (hydrating.current || !labelIsAuto) return
+    if (q.versionLabel === effectiveLabel) return
+    setQ(p => ({ ...p, versionLabel: effectiveLabel }))
+  }, [effectiveLabel, labelIsAuto, q.versionLabel])
 
   // ── Line operations ───────────────────────────────────────────────────────
   const add = next => setLines(ls => [...ls, ...next])
@@ -420,7 +444,7 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
                          : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}>
                 <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle ${
                   active ? 'bg-primary-500' : 'bg-stone-300'}`} />
-                {s2.version_label || `${showChinese ? '方案' : 'Option'} ${i + 1}`}
+                {s2.id === q.id ? effectiveLabel : optionLabel(s2, i)}
                 {active && <span className="ml-1.5 text-[10px] opacity-60">
                   {showChinese ? '編輯中' : 'editing'}</span>}
               </button>
@@ -465,11 +489,19 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
               <label className="label">{showChinese ? '方案名稱' : 'Option name'}</label>
               <input className="input text-sm" value={q.versionLabel}
                      placeholder={propertyName || (showChinese ? '例如：企碑地' : 'e.g. Royal Plateau (Upright)')}
-                     onChange={e => setQ(p => ({ ...p, versionLabel: e.target.value }))} />
+                     onChange={e => {
+                       const v = e.target.value
+                       setLabelIsAuto(v.trim() === '')
+                       setQ(p => ({ ...p, versionLabel: v }))
+                     }} />
               <p className="text-[11px] text-stone-400 mt-1">
-                {showChinese
-                  ? '留空則使用墓地名稱。此名稱只在對比時顯示。'
-                  : 'Leave blank to use the property name. Shown as the column heading when comparing.'}
+                {labelIsAuto
+                  ? (showChinese
+                      ? '目前依墓地名稱自動命名，可直接輸入覆寫。'
+                      : 'Named after the property on this option. Type to override.')
+                  : (showChinese
+                      ? '清空則恢復使用墓地名稱。'
+                      : 'Clear it to go back to the property name.')}
               </p>
             </div>
 

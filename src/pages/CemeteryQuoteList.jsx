@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchQuoteFamilies, fetchQuotes, deleteQuote, newQuoteFromTemplate } from '../lib/cemetery.js'
+import { optionLabel } from '../lib/cemeteryOptionLabel.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Saved quotes, grouped the way the funeral portal groups versions.
@@ -20,7 +21,10 @@ function when(ts) {
   return new Date(ts).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-const labelOf = (o, i) => o.version_label || o.client_name || `Option ${i + 1}`
+// One rule for what an option is called — see cemeteryOptionLabel.js.
+// Falling back to the client name here made the first option read "Benny Kam"
+// while the builder called the same option something else.
+const labelOf = optionLabel
 
 export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onCompare }) {
   const [tab,       setTab]       = useState('quotes')

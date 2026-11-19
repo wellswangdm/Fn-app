@@ -7,6 +7,7 @@ import { calcCemeteryTotals, paymentPlanSummary } from '../../lib/cemeteryTotals
 import { buildComparisonSections, sectionsHaveImages } from '../../lib/cemeteryCompare.js'
 import { buildCemeteryPrintHTML, buildCemeteryWebHTML } from '../../lib/cemeteryCompareHtml.js'
 import { useChineseMode } from '../../lib/useChineseMode.js'
+import { optionLabel } from '../../lib/cemeteryOptionLabel.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cemetery comparison — selection, options and sharing.
@@ -74,9 +75,7 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
           })
           return {
             ...q, items, totals,
-            label:    q.versionLabel
-                      || items.find(l => l.section === 'Property' && !l.parentItemId)?.name
-                      || `Option ${i + 1}`,
+            label:    optionLabel({ version_label: q.versionLabel }, i),
             parkName: park.name,
             plan:     paymentPlanSummary({ ...q, grandTotal: totals.grandTotal }),
           }
@@ -205,9 +204,7 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
                     selected.includes(a.id) ? 'bg-primary-500' : 'bg-stone-300'}`} />
                   {/* The same label as the column heading above. The family
                       name is on every option, so it tells them apart not at all. */}
-                  {loaded.find(l => l.id === a.id)?.label
-                    || a.version_label
-                    || `Option ${i + 1}`}
+                  {loaded.find(l => l.id === a.id)?.label || optionLabel(a, i)}
                 </button>
               ))}
 
