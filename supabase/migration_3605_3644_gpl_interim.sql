@@ -83,13 +83,22 @@ update package_items pi
    and cur.category_id     = t.category_id      -- it is a stationery line
    and pi.service_item_id <> t.id;              -- and not already the cheapest
 
--- ─── 3. Heritage package savings ─────────────────────────────────────────────
--- The Funeral (burial) package only — the Cremation Heritage package keeps
--- its own figure. total_price is untouched; this is the "you save" line.
-update packages
-   set package_discount = 605.00
- where funeral_home_id in ('3605', '3644')
-   and lower(name) = lower('Dignity Memorial Heritage Funeral Service');
+-- ─── 3. Package savings ──────────────────────────────────────────────────────
+-- The "you save" figure on a package. total_price is untouched.
+--
+-- Burial packages only. Each has a cremation counterpart that is NOT listed
+-- here and keeps its own figure:
+--   Heritage Cremation $515, Tribute Cremation $50, Jade Cremation $460.
+with savings(name, discount) as (values
+  ('Dignity Memorial Heritage Funeral Service', 605.00),   -- was 585
+  ('Dignity Memorial Tribute Funeral Service',  495.00),   -- was 475
+  ('Dignity Jade Burial Plan',                  575.00)    -- was 555
+)
+update packages p
+   set package_discount = s.discount
+  from savings s
+ where p.funeral_home_id in ('3605', '3644')
+   and lower(p.name) = lower(s.name);
 
 commit;
 
@@ -126,17 +135,23 @@ select g.name,
  group by g.name, g.price
  order by result desc, g.name;
 
--- ─── Check 2: Heritage savings ───────────────────────────────────────────────
--- Only the Funeral (burial) package was asked to change; the Cremation one
--- keeps its own figure and is shown for context.
-select funeral_home_id, name, total_price, package_discount,
-       case when name ilike '%Heritage Funeral%'
-            then case when package_discount = 605.00 then 'ok' else 'CHECK' end
-            else 'unchanged, as intended' end as result
-  from packages
- where funeral_home_id in ('3605','3644')
-   and name ilike '%Heritage%'
- order by funeral_home_id, name;
+-- ─── Check 2: package savings ────────────────────────────────────────────────
+-- The three burial packages should read their new figure; everything else is
+-- shown for context and should be unchanged.
+with savings(name, discount) as (values
+  ('Dignity Memorial Heritage Funeral Service', 605.00),
+  ('Dignity Memorial Tribute Funeral Service',  495.00),
+  ('Dignity Jade Burial Plan',                  575.00)
+)
+select p.funeral_home_id, p.name, p.total_price, p.package_discount,
+       case when s.name is null then 'not in this update'
+            when p.package_discount = s.discount then 'ok'
+            else 'CHECK' end as result
+  from packages p
+  left join savings s on lower(s.name) = lower(p.name)
+ where p.funeral_home_id in ('3605','3644')
+   and p.pkg_type = 'package'
+ order by p.funeral_home_id, (s.name is null), p.sort_order;
 
 -- ─── Check 3: the two homes still agree on every price ───────────────────────
 -- Expect 0. Ocean View mirrors Forest Lawn until it gets its own GPL.
