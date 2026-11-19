@@ -118,7 +118,42 @@ function buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuo
     </div>`
 }
 
-function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showPayment, paymentPlansByQuote, monthlyPlansByQuote, paymentTerms, gridCols, translations = {}, showChinese = true }) {
+const GREEN = '#059669'
+
+// Mirrors the cemetery comparison's summary: what is behind each column's
+// headline figure, with the money off in green.
+function buildSummarySectionHTML({ shown, gridCols }) {
+  const row = (label, value, colour = '#6b6b6b', weight = '600') => `
+    <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;color:${colour}">
+      <span>${esc(label)}</span><span style="font-weight:${weight}">${esc(value)}</span>
+    </div>`
+  return `
+    <div style="text-align:center;padding:32px 0 10px;">
+      <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#86868b">Summary</span>
+    </div>
+    <div style="display:grid;grid-template-columns:${gridCols};">
+      ${shown.map(q => {
+        const pct = q.discount_type === 'percentage' && Number(q.discount_value) > 0
+          ? ` ${Number(q.discount_value)}%` : ''
+        return `
+        <div style="padding:4px 24px 24px;">
+          <div style="${BOX_STYLE}">
+            ${row('Subtotal', fmt(q.subtotal))}
+            ${q.pkg_disc_amount  > 0 ? row('Package savings', `− ${fmt(q.pkg_disc_amount)}`,  GREEN) : ''}
+            ${q.user_disc_amount > 0 ? row('Discount' + pct,  `− ${fmt(q.user_disc_amount)}`, GREEN) : ''}
+            ${q.gst_amount > 0 ? row('GST 5%', fmt(q.gst_amount), '#a1a1aa') : ''}
+            ${q.pst_amount > 0 ? row('PST 7%', fmt(q.pst_amount), '#a1a1aa') : ''}
+            <div style="display:flex;justify-content:space-between;gap:12px;border-top:1px solid #e5e5e5;padding-top:8px;margin-top:8px;">
+              <span style="font-weight:600;color:#3a3a3c">Total</span>
+              <span style="font-size:16px;font-weight:700;color:#1d1d1f">${fmt(q.total)}</span>
+            </div>
+          </div>
+        </div>`
+      }).join('')}
+    </div>`
+}
+
+function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, showPrices, showCasketImages, showTicker, showPayment, paymentPlansByQuote, monthlyPlansByQuote, paymentTerms, gridCols, translations = {}, showChinese = true }) {
   const g = `display:grid;grid-template-columns:${gridCols};`
 
   function catSectionHTML({ catName, itemsByVersion }) {
@@ -167,11 +202,14 @@ function buildCategoryBlocks({ shown, categoryData, hasCaskets, casketByQuote, s
     ? buildPaymentSectionHTML({ shown, paymentPlansByQuote, monthlyPlansByQuote, paymentTerms, gridCols })
     : ''
 
+  const summaryHTML = showTicker ? buildSummarySectionHTML({ shown, gridCols }) : ''
+
   return `
     ${pssCat   ? catSectionHTML(pssCat)   : ''}
     ${casketHTML}
     ${transCat ? catSectionHTML(transCat) : ''}
     ${caCat    ? catSectionHTML(caCat)    : ''}
+    ${summaryHTML}
     ${paymentHTML}`
 }
 
@@ -236,6 +274,16 @@ function buildWebHTML(props) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
+
+function SumRow({ label, value, green, muted }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <dt className={green ? 'text-emerald-600' : muted ? 'text-stone-400' : 'text-stone-500'}>{label}</dt>
+      <dd className={green ? 'text-emerald-600 font-semibold'
+                           : muted ? 'text-stone-400' : 'font-semibold text-stone-700'}>{value}</dd>
+    </div>
+  )
+}
 
 const STATUS_CLS = {
   finalized: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -309,7 +357,13 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
           noDisc:   i.no_disc ?? false,
         }))
         const t = calcTotals(qItems, Number(q.package_discount) || 0, q.discount_type || 'percentage', Number(q.discount_value) || 0)
-        return { ...q, total: t.total, subtotal: t.subtotal, discount_amount: t.discountAmount, tax_amount: t.taxAmount }
+        // Keep the whole breakdown, not just the rolled-up figures — the
+        // summary at the bottom shows package savings, any further discount,
+        // and GST and PST separately.
+        return { ...q, total: t.total, subtotal: t.subtotal,
+                 discount_amount: t.discountAmount, tax_amount: t.taxAmount,
+                 pkg_disc_amount: t.pkgDiscAmount, user_disc_amount: t.userDiscAmount,
+                 gst_amount: t.gstAmount, pst_amount: t.pstAmount }
       })
 
       setQuotes(recalcQs); setItemsByQuote(grouped); setCategoryMap(catMap)
@@ -605,6 +659,42 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
 
                   {/* Cash Advanced */}
                   {caCat && renderCatSection(caCat)}
+
+                  {/* Summary — the breakdown behind each column's headline
+                      figure. Shares the "Discount & tax" toggle rather than
+                      adding another checkbox. */}
+                  {showTicker && (
+                    <div>
+                      <div className="pt-8 pb-2 text-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Summary</span>
+                      </div>
+                      <div className="grid" style={gridStyle}>
+                        {shown.map(q => {
+                          const pct = q.discount_type === 'percentage' && Number(q.discount_value) > 0
+                            ? ` ${Number(q.discount_value)}%` : ''
+                          return (
+                            <div key={q.id} className="px-6 pb-8 pt-1">
+                              <dl className="bg-stone-50 rounded-lg p-3 border border-stone-100 text-[13px] space-y-1.5">
+                                <SumRow label="Subtotal" value={fmt(q.subtotal)} />
+                                {q.pkg_disc_amount > 0 && (
+                                  <SumRow label="Package savings" value={`− ${fmt(q.pkg_disc_amount)}`} green />
+                                )}
+                                {q.user_disc_amount > 0 && (
+                                  <SumRow label={`Discount${pct}`} value={`− ${fmt(q.user_disc_amount)}`} green />
+                                )}
+                                {q.gst_amount > 0 && <SumRow label="GST 5%" value={fmt(q.gst_amount)} muted />}
+                                {q.pst_amount > 0 && <SumRow label="PST 7%" value={fmt(q.pst_amount)} muted />}
+                                <div className="flex justify-between items-baseline pt-2 mt-1 border-t border-stone-200">
+                                  <dt className="font-semibold text-stone-700">Total</dt>
+                                  <dd className="text-base font-bold text-stone-900">{fmt(q.total)}</dd>
+                                </div>
+                              </dl>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Payment Options */}
                   {showPayment && (

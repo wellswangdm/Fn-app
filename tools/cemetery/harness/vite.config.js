@@ -6,7 +6,8 @@ const ROOT     = '/home/user/Fn-app'
 const HARNESS  = path.join(ROOT, 'tools/cemetery/harness')
 const REAL     = path.join(ROOT, 'src/lib/supabase.js')
 const MOCK     = path.join(HARNESS, 'mockSupabase.js')      // always errors (schema card)
-const MOCK_ROWS= path.join(HARNESS, 'mockSupabaseRows.js')  // serves quote rows
+const MOCK_ROWS= path.join(HARNESS, 'mockSupabaseRows.js')  // serves cemetery quote rows
+const MOCK_FN  = path.join(HARNESS, 'mockSupabaseFuneral.js') // serves funeral quote data
 
 // Resolve the import first, then swap it — the app imports supabase.js by
 // several different relative specifiers, so matching on the specifier alone
@@ -19,6 +20,7 @@ const mockSupabase = {
     this._wantRows = this._wantRows || new Set()
     const r = await this.resolve(source, importer, { ...options, skipSelf: true })
     if (!r || path.resolve(r.id.split('?')[0]) !== REAL) return null
+    if (process.env.HARNESS_FUNERAL === '1') return MOCK_FN
     return process.env.HARNESS_ROWS === '1' ? MOCK_ROWS : MOCK
   },
 }
