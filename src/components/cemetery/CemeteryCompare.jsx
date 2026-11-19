@@ -203,7 +203,11 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
                       : 'border-stone-200 bg-white text-stone-400'}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${
                     selected.includes(a.id) ? 'bg-primary-500' : 'bg-stone-300'}`} />
-                  {a.client_name || a.template_name || `Option ${i + 1}`}
+                  {/* The same label as the column heading above. The family
+                      name is on every option, so it tells them apart not at all. */}
+                  {loaded.find(l => l.id === a.id)?.label
+                    || a.version_label
+                    || `Option ${i + 1}`}
                 </button>
               ))}
 

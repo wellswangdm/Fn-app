@@ -4,7 +4,7 @@ import CemeteryLineTable from '../components/cemetery/CemeteryLineTable.jsx'
 import CemeteryReview    from '../components/cemetery/CemeteryReview.jsx'
 import {
   fetchCatalog, fetchQuote, saveQuote, fromDbQuote,
-  addOptionToFamily, saveAsTemplate,
+  addOptionToFamily, saveAsTemplate, fetchQuotes,
 } from '../lib/cemetery.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
 import {
@@ -62,6 +62,18 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   const [depositManual, setDepositManual] = useState(false)
   const imageInput = useRef(null)
 
+  // The other options in this family, so you can move between them without
+  // going back to the list; and the templates, so a quote can be started
+  // from one here rather than only from the Templates tab.
+  const [siblings,  setSiblings]  = useState([])
+  const [templates, setTemplates] = useState([])
+  const [menu,      setMenu]      = useState(null)   // 'add' | 'template'
+
+  // Switching options or loading a template throws away unsaved work, so
+  // track whether there is any.
+  const [dirty, setDirty] = useState(false)
+  const hydrating = useRef(true)
+
   // Language is a VIEWING preference, shared with the funeral portal and with
   // the review and comparison screens — not a property of the saved quote.
   // Saving it per quote meant two quotes could be stored in different
@@ -82,18 +94,44 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           const loaded = await fetchQuote(quoteId)
           if (!alive) return
           const { items, ...rest } = loaded
-          setQ(prev => ({ ...prev, ...fromDbQuote(rest) }))
+          const q0 = fromDbQuote(rest)
+          setQ(prev => ({ ...prev, ...q0 }))
           setLines(items)
           setDepositManual(true)
+          if (q0.contactId) {
+            const fam = await fetchQuotes({ parkId: park.id, contactId: q0.contactId })
+            if (alive) setSiblings(fam)
+          }
         }
+        const tpl = await fetchQuotes({ parkId: park.id, templates: true })
+        if (alive) setTemplates(tpl)
       } catch (e) {
         if (alive) setError(e.message || String(e))
       } finally {
-        if (alive) setLoading(false)
+        if (alive) {
+          setLoading(false)
+          setDirty(false)
+          // let the next real edit mark the quote dirty
+          setTimeout(() => { hydrating.current = false }, 0)
+        }
       }
     })()
+    hydrating.current = true
     return () => { alive = false }
   }, [park.id, quoteId])
+
+  useEffect(() => {
+    if (hydrating.current) return
+    setDirty(true)
+  }, [lines, q])
+
+  function confirmDiscard(what) {
+    if (!dirty) return true
+    return window.confirm(
+      showChinese
+        ? `尚未儲存的修改將會遺失，確定要${what}嗎？`
+        : `You have unsaved changes. They will be lost if you ${what}. Continue?`)
+  }
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const totals = useMemo(() => calcCemeteryTotals(lines, {
@@ -194,23 +232,62 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     } finally { setSaving(false) }
   }
 
-  /** Another option for the same family — what a comparison compares. */
-  async function addOption() {
+  /**
+   * Another option for the same family — what a comparison compares.
+   * `blank` starts from nothing rather than a copy of this one, because a
+   * second option is often a different approach, not a tweak of the first.
+   */
+  async function addOption(blank) {
+    setMenu(null)
     setSaving(true); setError('')
     try {
+      // The current option has to exist before it can have a sibling.
       let id = q.id
-      if (!id) {
+      if (!id || dirty) {
         id = await saveQuote({
-          ...q, versionLabel: effectiveLabel,
+          ...q, id, versionLabel: effectiveLabel,
           contactId: q.contactId || crypto.randomUUID(),
           depositAmount: deposit, monthlyPaymentAmount: monthly, totals,
         }, lines, advisor?.userId)
       }
-      const newId = await addOptionToFamily(id, advisor?.userId)
+      const newId = await addOptionToFamily(id, advisor?.userId, { blank })
       onOpenQuote?.(newId)
     } catch (e) {
       setError(e.message || String(e))
     } finally { setSaving(false) }
+  }
+
+  /** Replace this option's contents with a template's. */
+  async function useTemplate(t) {
+    setMenu(null)
+    if (!confirmDiscard(showChinese ? '載入範本' : 'load a template')) return
+    setSaving(true); setError('')
+    try {
+      const loaded = await fetchQuote(t.id)
+      const { items, ...rest } = loaded
+      const tq = fromDbQuote(rest)
+      // Take the contents and the money settings; keep who this quote is for.
+      setLines(items)
+      setQ(p => ({
+        ...p,
+        discountPercent: tq.discountPercent,
+        manualWaiveAmount: tq.manualWaiveAmount,
+        manualWaiveName: tq.manualWaiveName,
+        isMonthlyPaymentEnabled: tq.isMonthlyPaymentEnabled,
+        interestRate: tq.interestRate,
+        paymentMonths: tq.paymentMonths,
+        terms: tq.terms || p.terms,
+      }))
+      setNotice(showChinese ? `已載入範本「${t.template_name}」` : `Loaded template "${t.template_name}"`)
+    } catch (e) {
+      setError(e.message || String(e))
+    } finally { setSaving(false) }
+  }
+
+  function switchOption(id) {
+    if (id === q.id) return
+    if (!confirmDiscard(showChinese ? '切換方案' : 'switch options')) return
+    onOpenQuote?.(id)
   }
 
   if (review) {
@@ -256,12 +333,37 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
               {showChinese ? '對比' : 'Compare'}
             </button>
           )}
-          <button onClick={addOption} disabled={saving} className="btn-secondary text-xs">
-            {showChinese ? '新增方案' : 'Add option'}
-          </button>
-          <button onClick={saveTemplate} disabled={saving} className="btn-secondary text-xs">
-            {showChinese ? '另存為範本' : 'Save as template'}
-          </button>
+          {/* Add option — copy this one, or start from nothing */}
+          <Menu open={menu === 'add'}
+                onToggle={() => setMenu(m => (m === 'add' ? null : 'add'))}
+                label={showChinese ? '新增方案' : 'Add option'} disabled={saving}>
+            <MenuItem onClick={() => addOption(false)}
+                      title={showChinese ? '複製此方案' : 'Copy this option'}
+                      hint={showChinese ? '以目前內容為基礎' : 'Start from what is here now'} />
+            <MenuItem onClick={() => addOption(true)}
+                      title={showChinese ? '建立空白方案' : 'Start blank'}
+                      hint={showChinese ? '只保留客戶資料' : 'Keep the client, drop the items'} />
+          </Menu>
+
+          {/* Pull from a template without leaving the builder */}
+          <Menu open={menu === 'template'}
+                onToggle={() => setMenu(m => (m === 'template' ? null : 'template'))}
+                label={showChinese ? '範本' : 'Template'} disabled={saving}>
+            {templates.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-stone-400">
+                {showChinese ? '尚無範本' : 'No templates saved yet'}
+              </p>
+            ) : templates.map(t => (
+              <MenuItem key={t.id} onClick={() => useTemplate(t)}
+                        title={t.template_name || 'Untitled'}
+                        hint={showChinese ? '載入此範本的項目' : 'Load this template\u2019s items'} />
+            ))}
+            <div className="border-t border-stone-100 mt-1 pt-1">
+              <MenuItem onClick={saveTemplate}
+                        title={showChinese ? '另存為範本' : 'Save as template'}
+                        hint={showChinese ? '不會更動此報價' : 'Saves a copy; this quote is untouched'} />
+            </div>
+          </Menu>
           <button onClick={() => save()} disabled={saving} className="btn-primary text-xs">
             {saving ? (showChinese ? '儲存中…' : 'Saving…') : (showChinese ? '儲存報價' : 'Save quote')}
           </button>
@@ -273,6 +375,30 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
+      {/* Options in this family — switch without going back to the list */}
+      {siblings.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            {showChinese ? '方案' : 'Options'}
+          </span>
+          {siblings.map((s2, i) => {
+            const active = s2.id === q.id
+            return (
+              <button key={s2.id} onClick={() => switchOption(s2.id)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors ${
+                  active ? 'border-primary-300 bg-primary-50 text-primary-700'
+                         : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}>
+                <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle ${
+                  active ? 'bg-primary-500' : 'bg-stone-300'}`} />
+                {s2.version_label || `${showChinese ? '方案' : 'Option'} ${i + 1}`}
+                {active && <span className="ml-1.5 text-[10px] opacity-60">
+                  {showChinese ? '編輯中' : 'editing'}</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {notice && !error && (
         <div className="card p-3 border-emerald-200 bg-emerald-50 flex items-center gap-3">
           <p className="text-sm text-emerald-800 flex-1">{notice}</p>
@@ -504,6 +630,38 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
         </div>
       )}
     </div>
+  )
+}
+
+function Menu({ open, onToggle, label, disabled, children }) {
+  return (
+    <div className="relative">
+      <button onClick={onToggle} disabled={disabled} className="btn-secondary text-xs">
+        {label}
+        <svg className="w-3 h-3 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={onToggle} />
+          <div className="absolute right-0 mt-1 z-20 w-64 card p-1 max-h-72 overflow-y-auto">
+            {children}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function MenuItem({ onClick, title, hint }) {
+  return (
+    <button onClick={onClick}
+            className="w-full text-left px-3 py-2 rounded-lg hover:bg-stone-50 transition-colors">
+      <span className="block text-xs font-medium text-stone-700">{title}</span>
+      {hint && <span className="block text-[11px] text-stone-400 mt-0.5">{hint}</span>}
+    </button>
   )
 }
 

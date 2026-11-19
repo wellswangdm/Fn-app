@@ -15,6 +15,7 @@
 import { supabase } from './supabase.js'
 import { CemeterySchemaError, isSchemaNotExposed } from './cemeterySchemaError.js'
 import { groupIntoFamilies } from './cemeteryFamilies.js'
+import { processingFeeLine } from './cemeteryTotals.js'
 
 export { CemeterySchemaError, groupIntoFamilies }
 
@@ -403,7 +404,7 @@ export async function saveQuote(quote, lines, userId) {
  * Another OPTION for the same family: a copy sharing the contact_id, placed
  * after the existing options. This is how a family gets something to compare.
  */
-export async function addOptionToFamily(quoteId, userId, label = null) {
+export async function addOptionToFamily(quoteId, userId, { label = null, blank = false } = {}) {
   const src = await fetchQuote(quoteId)
   const { items, ...rest } = src
   const q = fromDbQuote(rest)
@@ -424,6 +425,11 @@ export async function addOptionToFamily(quoteId, userId, label = null) {
   const siblings = await fetchQuotes({ contactId })
   const nextOrder = siblings.reduce((m, s) => Math.max(m, s.sort_order ?? 0), 0) + 1
 
+  // `blank` starts the option from nothing but the family's details — the
+  // point of a second option is often a different approach, not a tweak of
+  // the first one.
+  const lines = blank ? [processingFeeLine()] : items
+
   return saveQuote({
     ...q,
     id: null,
@@ -433,7 +439,11 @@ export async function addOptionToFamily(quoteId, userId, label = null) {
     isTemplate:   false,
     templateName: '',
     status:       'draft',
-  }, items, userId)
+    ...(blank ? {
+      discountPercent: 0, manualWaiveAmount: 0,
+      isMonthlyPaymentEnabled: false, imageUrl: null, notes: '',
+    } : {}),
+  }, lines, userId)
 }
 
 /**
