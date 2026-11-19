@@ -125,6 +125,20 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
     setDirty(true)
   }, [lines, q])
 
+  /**
+   * Re-read the family's options. Called after adding one so the switcher
+   * updates in place, rather than relying on the parent navigating — if that
+   * wiring is ever missing again, the list is still right.
+   */
+  async function refreshSiblings(contactId) {
+    const cid = contactId || q.contactId
+    if (!cid) return
+    try {
+      const fam = await fetchQuotes({ parkId: park.id, contactId: cid })
+      setSiblings(fam)
+    } catch { /* the switcher just keeps what it had */ }
+  }
+
   function confirmDiscard(what) {
     if (!dirty) return true
     return window.confirm(
@@ -202,20 +216,27 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
   async function save() {
     setSaving(true); setError('')
     try {
+      // Settle the family id BEFORE saving and keep the same value in state.
+      // Generating it inline meant the database got one and the editor kept
+      // null, so the next save minted another and orphaned any sibling
+      // options this quote already had.
+      const contactId = q.contactId || crypto.randomUUID()
       const id = await saveQuote({
         ...q,
+        contactId,
         versionLabel: effectiveLabel,
-        contactId: q.contactId || crypto.randomUUID(),
         depositAmount: deposit,
         monthlyPaymentAmount: monthly,
         totals,
       }, lines, advisor?.userId)
-      setQ(p => ({ ...p, id, versionLabel: effectiveLabel,
-                   contactId: p.contactId || undefined }))
+      setQ(p => ({ ...p, id, contactId, versionLabel: effectiveLabel }))
+      setDirty(false)
       onSaved?.(id)
       setNotice(showChinese ? '已儲存' : 'Saved')
+      return id
     } catch (e) {
       setError(e.message || String(e))
+      return null
     } finally { setSaving(false) }
   }
 
@@ -244,13 +265,16 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
       // The current option has to exist before it can have a sibling.
       let id = q.id
       if (!id || dirty) {
+        const contactId = q.contactId || crypto.randomUUID()
         id = await saveQuote({
-          ...q, id, versionLabel: effectiveLabel,
-          contactId: q.contactId || crypto.randomUUID(),
+          ...q, id, contactId, versionLabel: effectiveLabel,
           depositAmount: deposit, monthlyPaymentAmount: monthly, totals,
         }, lines, advisor?.userId)
+        setQ(p => ({ ...p, id, contactId }))
       }
       const newId = await addOptionToFamily(id, advisor?.userId, { blank })
+      await refreshSiblings(q.contactId)
+      setNotice(showChinese ? '已新增方案' : 'Option added')
       onOpenQuote?.(newId)
     } catch (e) {
       setError(e.message || String(e))
@@ -329,7 +353,13 @@ export default function CemeteryQuoteEditor({ park, advisor, quoteId, onBack, on
             {showChinese ? '預覽' : 'Review'}
           </button>
           {onCompare && (
-            <button onClick={onCompare} className="btn-secondary text-xs">
+            // Pass the family, not the click event — comparing is scoped to
+            // this quote's family.
+            <button onClick={() => onCompare(q.contactId)}
+                    disabled={!q.contactId}
+                    title={q.contactId ? undefined
+                      : (showChinese ? '請先儲存報價' : 'Save the quote first')}
+                    className="btn-secondary text-xs disabled:opacity-40">
               {showChinese ? '對比' : 'Compare'}
             </button>
           )}

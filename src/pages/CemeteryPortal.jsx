@@ -164,12 +164,13 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
 
         {!loading && park && view === 'editor' && (
           <CemeteryQuoteEditor
+            key={editId || 'new'}
             park={park}
             advisor={advisor}
             quoteId={editId}
             onBack={() => { setEditId(null); setView('list') }}
             onSaved={id => setEditId(id)}
-            advisor={advisor}
+            onOpenQuote={id => setEditId(id)}
             onCompare={cid => setComparing(cid)}
           />
         )}
