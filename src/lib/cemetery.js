@@ -182,23 +182,46 @@ export async function fetchCatalog(park) {
 
 // ─── Quotes ──────────────────────────────────────────────────────────────────
 
-const QUOTE_COLS = `id, park_id, user_id, contact_id, quote_number,
+// Columns added by migration_cemetery_quote_versions.sql. A database that
+// has not had it run yet still works: queries fall back to the older column
+// set and the portal behaves as it did before options existed, rather than
+// failing and showing an empty list. Running the migration turns the feature
+// on with no code change.
+const VERSION_COLS = ['version_label', 'sort_order']
+
+function isMissingColumn(error) {
+  const t = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`
+  return error?.code === '42703' ||
+         /column .* does not exist|could not find the .* column/i.test(t)
+}
+
+const QUOTE_COLS_BASE = `id, park_id, user_id, contact_id, quote_number,
   client_name, client_email, client_phone,
   advisor_name, advisor_email, advisor_phone,
   discount_percent, manual_discount_amount, manual_discount_name,
   gst_rate, pst_rate, gst_total, pst_total, subtotal, grand_total,
   is_monthly_payment_enabled, deposit_amount, interest_rate, payment_months,
   monthly_payment_amount, is_chinese_enabled, terms, notes,
-  image_url, image_height, status, version_label, sort_order,
+  image_url, image_height, status,
   is_template, template_name, created_at, updated_at`
 
+const QUOTE_COLS = `${QUOTE_COLS_BASE}, ${VERSION_COLS.join(', ')}`
+
 export async function fetchQuotes({ parkId, templates = false, contactId = null } = {}) {
-  let q = cem().from('quotes').select(QUOTE_COLS).eq('is_template', templates)
-  if (parkId)    q = q.eq('park_id', parkId)
-  if (contactId) q = q.eq('contact_id', contactId)
-  const { data, error } = contactId
-    ? await q.order('sort_order')
-    : await q.order('updated_at', { ascending: false })
+  const run = async (cols, ordered) => {
+    let q = cem().from('quotes').select(cols).eq('is_template', templates)
+    if (parkId)    q = q.eq('park_id', parkId)
+    if (contactId) q = q.eq('contact_id', contactId)
+    return ordered
+      ? await q.order('sort_order')
+      : await q.order('updated_at', { ascending: false })
+  }
+
+  let { data, error } = await run(QUOTE_COLS, !!contactId)
+  if (error && isMissingColumn(error)) {
+    // migration not run yet — every quote is simply a family of one
+    ;({ data, error } = await run(QUOTE_COLS_BASE, false))
+  }
   check(error, 'fetchQuotes')
   return data || []
 }
@@ -213,7 +236,10 @@ export async function fetchQuoteFamilies(parkId) {
 
 
 export async function fetchQuote(id) {
-  const { data, error } = await cem().from('quotes').select(QUOTE_COLS).eq('id', id).single()
+  let { data, error } = await cem().from('quotes').select(QUOTE_COLS).eq('id', id).single()
+  if (error && isMissingColumn(error)) {
+    ;({ data, error } = await cem().from('quotes').select(QUOTE_COLS_BASE).eq('id', id).single())
+  }
   check(error, 'fetchQuote')
   const { data: items, error: iErr } = await cem()
     .from('quote_items')
@@ -323,14 +349,29 @@ export async function saveQuote(quote, lines, userId) {
     contact_id:    quote.contactId || null,
   }
 
+  // Drop the version columns and retry if the migration has not been run,
+  // so saving still works on an older database.
+  const withoutVersionCols = r => {
+    const copy = { ...r }
+    for (const c of VERSION_COLS) delete copy[c]
+    return copy
+  }
+
   let quoteId = quote.id
   if (quoteId) {
-    const { error } = await cem().from('quotes').update(row).eq('id', quoteId)
+    let { error } = await cem().from('quotes').update(row).eq('id', quoteId)
+    if (error && isMissingColumn(error)) {
+      ;({ error } = await cem().from('quotes').update(withoutVersionCols(row)).eq('id', quoteId))
+    }
     check(error, 'updateQuote')
     const { error: dErr } = await cem().from('quote_items').delete().eq('quote_id', quoteId)
     check(dErr, 'clearQuoteItems')
   } else {
-    const { data, error } = await cem().from('quotes').insert(row).select('id').single()
+    let { data, error } = await cem().from('quotes').insert(row).select('id').single()
+    if (error && isMissingColumn(error)) {
+      ;({ data, error } = await cem().from('quotes')
+        .insert(withoutVersionCols(row)).select('id').single())
+    }
     check(error, 'insertQuote')
     quoteId = data.id
   }
@@ -371,8 +412,12 @@ export async function addOptionToFamily(quoteId, userId, label = null) {
   // If the source had no family yet, adopt it into the new one so both
   // options sit together rather than the original being left behind.
   if (!q.contactId) {
-    const { error } = await cem().from('quotes')
+    let { error } = await cem().from('quotes')
       .update({ contact_id: contactId, sort_order: 0 }).eq('id', quoteId)
+    if (error && isMissingColumn(error)) {
+      ;({ error } = await cem().from('quotes')
+        .update({ contact_id: contactId }).eq('id', quoteId))
+    }
     check(error, 'adoptQuoteIntoFamily')
   }
 
