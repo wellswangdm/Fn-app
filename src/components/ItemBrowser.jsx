@@ -194,8 +194,12 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
 
               <button
                 onClick={() => addItem(item)}
+                /* Hover-revealed on a pointer; on a touch screen there is no
+                   hover, so the only way to add an item stays visible. */
                 className="shrink-0 text-xs font-medium bg-primary-700 text-white px-2.5 py-1 rounded-lg
-                           opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-800"
+                           opacity-0 group-hover:opacity-100 focus:opacity-100
+                           [@media(hover:none)]:opacity-100
+                           transition-opacity hover:bg-primary-800"
               >
                 + Add
               </button>

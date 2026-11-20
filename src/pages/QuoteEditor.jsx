@@ -726,7 +726,10 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="bg-primary-800 text-white sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+        {/* Wraps instead of overflowing. Seven controls in a fixed-height,
+            no-wrap row pushed the page to 650px wide on a 390px screen, so the
+            whole builder scrolled sideways. */}
+        <div className="max-w-7xl mx-auto px-4 min-h-14 py-2 flex flex-wrap items-center gap-x-3 gap-y-2">
           <button
             onClick={onDone}
             className="text-primary-300 hover:text-white text-sm transition-colors shrink-0"
@@ -734,7 +737,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             ← Back
           </button>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-[6rem]">
             <p className="font-semibold text-sm leading-tight">
               {quoteId ? 'Edit Quote' : 'New Quote'}
             </p>
@@ -755,7 +758,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             {homes.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
           </select>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap ml-auto">
             <label className="text-primary-200 hover:text-white text-xs px-3 py-1.5
                               border border-white/20 rounded-lg transition-colors cursor-pointer"
                    title={attachedImage ? 'Replace attached image' : 'Attach image to print'}>
@@ -779,14 +782,9 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                 title="Remove attached image"
               >✕</button>
             )}
-            <button
-              onClick={() => setShowPrint(true)}
-              disabled={!state.items.length}
-              className="text-primary-200 hover:text-white disabled:opacity-30 text-xs px-3 py-1.5
-                         border border-white/20 rounded-lg transition-colors"
-            >
-              Print
-            </button>
+            {/* Print lives in one place: the big button under the total in
+                the summary, which is where you are looking once the quote is
+                built. There used to be one here too. */}
             <button
               onClick={() => save('draft')}
               disabled={saving}
