@@ -143,8 +143,13 @@ export default function PackageSelector({ funeralHomeId, selectedId, onSelect, o
 
   if (loading) return <p className="text-xs text-stone-400 py-4">Loading packages…</p>
 
-  const named    = packages.filter(p => p.pkg_type === 'package')
+  // Anything that is not explicitly à la carte is a named package. The old
+  // test was `pkg_type === 'package'`, so a row with any other value — a NULL,
+  // a typo, a type added later — appeared in neither list and was invisible in
+  // the builder with nothing to say it existed. That is not hypothetical:
+  // migration_3605_ppl_packages.sql exists to fix exactly that on Forest Lawn.
   const alacarte = packages.filter(p => p.pkg_type === 'alacarte')
+  const named    = packages.filter(p => p.pkg_type !== 'alacarte')
 
   return (
     <div className="space-y-4">
