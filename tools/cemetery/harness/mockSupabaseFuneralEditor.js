@@ -45,7 +45,7 @@ const SERVICE_ITEMS = [
 ]
 
 const CASKET_CATALOG = [
-  { id:'k1', name:'Jade Solid Mahogany',   description:'Solid mahogany, velvet interior', image_url:null },
+  { id:'k1', name:'Jade Solid Mahogany',   description:'Solid mahogany, velvet interior', image_url:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="%23b08968"/><text x="200" y="110" font-size="22" text-anchor="middle" fill="white">casket</text></svg>' },
   { id:'k2', name:'Heritage Oak',          description:'Solid oak, crepe interior',       image_url:null },
   { id:'k3', name:'Tribute Steel 18ga',    description:'18 gauge steel, sealed',          image_url:null },
   { id:'k4', name:'Honour Poplar',         description:'Poplar veneer',                   image_url:null },
@@ -126,7 +126,8 @@ const ITEMS = [
     is_cash_advance:false, gst:false, pst:false, no_disc:false, section_id:null, from_package:true },
   { id:'i3', quote_id:'q1', service_item_id:null, name:'Jade Solid Mahogany', price:8950, quantity:1,
     category_id:'c4', created_at:'2026-11-18T00:00:03Z',
-    is_cash_advance:false, gst:true, pst:true, no_disc:false, section_id:null, casket_id:'k1' },
+    is_cash_advance:false, gst:true, pst:true, no_disc:false, section_id:null, casket_id:'k1',
+    is_casket_item:true, service_item_id:null },
   { id:'i4', quote_id:'q1', service_item_id:'s11', name:'Remembrance Collection', price:395, quantity:1,
     category_id:'c4', created_at:'2026-11-18T00:00:04Z',
     is_cash_advance:false, gst:true, pst:false, no_disc:false, section_id:null, from_package:true },
