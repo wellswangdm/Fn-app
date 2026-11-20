@@ -73,7 +73,11 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
     const price = item.is_cash_advance
       ? Number(cashPrices[item.id] || 0)
       : Number(item.price ?? item.price_min ?? 0)
-    const payload = { serviceItemId: item.id, name: item.name, price, categoryId: item.category_id }
+    // isCashAdvance decides whether the item is a guaranteed good/service or a
+    // third-party disbursement. It was computed here for the price and then
+    // dropped, so a hand-added Crematorium Fee landed under Guaranteed Items.
+    const payload = { serviceItemId: item.id, name: item.name, price,
+                      categoryId: item.category_id, isCashAdvance: !!item.is_cash_advance }
     // Apply stored defaults only when the column is explicitly false (not null/undefined)
     if (item.default_gst === false)     payload.gst    = false
     if (item.default_no_disc === true)  payload.noDisc = true

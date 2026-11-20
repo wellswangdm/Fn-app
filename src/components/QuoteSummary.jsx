@@ -417,7 +417,13 @@ function SectionBlock({ section, subtitle, items, sections, translations, showCh
         ) : (
           <p
             onClick={() => setEditingName(true)}
-            className="section-title flex-1 cursor-text hover:bg-stone-100 rounded px-1 -mx-1 py-0.5"
+            /* `section-title` was never defined in index.css or the Tailwind
+               config, so this heading had been falling back to a browser
+               default <p> — larger than the item names underneath it. The
+               rename input beside it is text-[10px] uppercase, which is what
+               it was meant to look like. */
+            className="flex-1 cursor-text hover:bg-stone-100 rounded px-1 -mx-1 py-0.5
+                       text-[11px] font-semibold uppercase tracking-widest text-stone-400"
             title="Click to rename"
           >
             {section.name}
@@ -464,6 +470,7 @@ function ItemRow({ item, sections, translations = {}, showChinese, onRemove, onC
   const [localName,  setLocalName]  = useState(item.name)
   const [localPrice, setLocalPrice] = useState(item.price)
   const [showMove,   setShowMove]   = useState(false)
+  const [open,       setOpen]       = useState(false)
   const nameRef  = useRef(null)
   const priceRef = useRef(null)
 
@@ -488,6 +495,17 @@ function ItemRow({ item, sections, translations = {}, showChinese, onRemove, onC
   useEffect(() => { if (editPrice && priceRef.current) priceRef.current.select() }, [editPrice])
 
   const otherSections = (sections || []).filter(s => s.id !== (item.sectionId || 'sec-extra'))
+
+  // Everything the four tax buttons used to shout at rest, said only when it
+  // is actually true. The default is GST on, PST off, discountable — a line at
+  // the default says nothing, so only the exceptions draw the eye.
+  const tags = []
+  if (!gstOn && !pstOn) tags.push({ t: 'Tax exempt', warn: false })
+  else {
+    if (!gstOn) tags.push({ t: 'No GST', warn: false })
+    if (pstOn)  tags.push({ t: 'PST',    warn: false })
+  }
+  if (item.noDisc === true) tags.push({ t: 'No disc', warn: true })
 
   return (
     <div
@@ -553,63 +571,98 @@ function ItemRow({ item, sections, translations = {}, showChinese, onRemove, onC
             {fmt(item.price * item.quantity)}
           </span>
         )}
+
+        {/* The disclosure. Hover reveals it on a pointer; a touch screen has no
+            hover, so it stays visible there. */}
+        <button
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          aria-label={`${open ? 'Hide' : 'Show'} options for ${item.name}`}
+          title="Tax, quantity, section, remove"
+          className={`shrink-0 w-5 h-5 -mr-0.5 rounded flex items-center justify-center
+                      text-stone-300 hover:text-stone-600 hover:bg-stone-200 transition-all
+                      [@media(hover:none)]:opacity-100
+                      ${open ? 'opacity-100 text-stone-600' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'}`}
+        >
+          <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`}
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
       </div>
 
-      {/* Controls row */}
-      <div className="flex items-center gap-1.5 mt-1 pl-5">
-        <TaxBadge label="GST" active={gstOn}  activeClass="bg-primary-700 text-white border-primary-700"
-          onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn, noDisc: item.noDisc })} />
-        <TaxBadge label="PST" active={pstOn}  activeClass="bg-stone-600 text-white border-stone-600"
-          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn, noDisc: item.noDisc })} />
-        <TaxBadge label="Exempt" active={!gstOn && !pstOn} activeClass="bg-stone-400 text-white border-stone-400"
-          onClick={() => onToggleTax(item.id, { gst: false, pst: false, noDisc: item.noDisc })} />
-        <TaxBadge label="No Disc" active={item.noDisc === true} activeClass="bg-amber-500 text-white border-amber-500"
-          onClick={() => onToggleTax(item.id, { gst: gstOn, pst: pstOn, noDisc: !item.noDisc })} />
-
-        <span className="flex-1" />
-
-        {/* Move to section */}
-        {otherSections.length > 0 && (
-          <div className="relative">
-            <button
-              onClick={() => setShowMove(v => !v)}
-              className="text-[10px] text-stone-400 hover:text-stone-600 opacity-0 group-hover:opacity-100 transition-all px-1"
-              title="Move to section"
-            >
-              ⇄
-            </button>
-            {showMove && (
-              <div className="absolute right-0 bottom-full mb-1 bg-white border border-stone-200 rounded-lg shadow-lg z-10 min-w-[130px] py-1">
-                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-stone-400">Move to</p>
-                {otherSections.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => { onMoveItem(item.id, s.id); setShowMove(false) }}
-                    className="block w-full text-left px-3 py-1.5 text-xs text-stone-600 hover:bg-stone-50"
-                  >
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Qty */}
-        <div className="flex items-center gap-0.5">
-          <button onClick={() => onChangeQty(item.id, item.quantity - 1)}
-            className="w-5 h-5 rounded flex items-center justify-center text-stone-400
-                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs">−</button>
-          <span className="text-xs text-stone-600 w-4 text-center">{item.quantity}</span>
-          <button onClick={() => onChangeQty(item.id, item.quantity + 1)}
-            className="w-5 h-5 rounded flex items-center justify-center text-stone-400
-                       hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs">+</button>
+      {/* At rest: only what differs from the default, plus a quantity that is
+          not 1. Four buttons under every line made a five-item quote look like
+          a control panel. */}
+      {!open && (tags.length > 0 || item.quantity !== 1) && (
+        <div className="flex items-center gap-2 pl-5 mt-0.5">
+          {tags.map(({ t, warn }) => (
+            <span key={t} className={`text-[10px] ${warn ? 'text-amber-600' : 'text-stone-400'}`}>{t}</span>
+          ))}
+          {item.quantity !== 1 && (
+            <span className="text-[10px] text-stone-400">× {item.quantity}</span>
+          )}
         </div>
+      )}
 
-        <button onClick={() => onRemove(item.id)}
-          className="text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-sm leading-none"
-          title="Remove">×</button>
-      </div>
+      {/* Opened on request. Everything that used to be permanently on screen. */}
+      {open && (
+        <div className="flex items-center gap-1.5 mt-1.5 pl-5 flex-wrap">
+          <TaxBadge label="GST" active={gstOn}  activeClass="bg-primary-700 text-white border-primary-700"
+            onClick={() => onToggleTax(item.id, { gst: !gstOn, pst: pstOn, noDisc: item.noDisc })} />
+          <TaxBadge label="PST" active={pstOn}  activeClass="bg-stone-600 text-white border-stone-600"
+            onClick={() => onToggleTax(item.id, { gst: gstOn, pst: !pstOn, noDisc: item.noDisc })} />
+          <TaxBadge label="Exempt" active={!gstOn && !pstOn} activeClass="bg-stone-400 text-white border-stone-400"
+            onClick={() => onToggleTax(item.id, { gst: false, pst: false, noDisc: item.noDisc })} />
+          <TaxBadge label="No Disc" active={item.noDisc === true} activeClass="bg-amber-500 text-white border-amber-500"
+            onClick={() => onToggleTax(item.id, { gst: gstOn, pst: pstOn, noDisc: !item.noDisc })} />
+
+          <span className="flex-1" />
+
+          {/* Move to section */}
+          {otherSections.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMove(v => !v)}
+                className="text-[10px] text-stone-400 hover:text-stone-600 transition-colors px-1"
+                title="Move to section"
+              >
+                ⇄
+              </button>
+              {showMove && (
+                <div className="absolute right-0 bottom-full mb-1 bg-white border border-stone-200 rounded-lg shadow-lg z-10 min-w-[130px] py-1">
+                  <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-stone-400">Move to</p>
+                  {otherSections.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => { onMoveItem(item.id, s.id); setShowMove(false) }}
+                      className="block w-full text-left px-3 py-1.5 text-xs text-stone-600 hover:bg-stone-50"
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Qty */}
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => onChangeQty(item.id, item.quantity - 1)}
+              className="w-5 h-5 rounded flex items-center justify-center text-stone-400
+                         hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs">−</button>
+            <span className="text-xs text-stone-600 w-4 text-center">{item.quantity}</span>
+            <button onClick={() => onChangeQty(item.id, item.quantity + 1)}
+              className="w-5 h-5 rounded flex items-center justify-center text-stone-400
+                         hover:text-stone-700 hover:bg-stone-200 transition-colors text-xs">+</button>
+          </div>
+
+          <button onClick={() => onRemove(item.id)}
+            className="text-stone-300 hover:text-red-500 transition-colors text-sm leading-none px-1"
+            title="Remove">×</button>
+        </div>
+      )}
     </div>
   )
 }

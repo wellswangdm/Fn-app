@@ -70,6 +70,13 @@ function freshItem(item, sectionId = 'sec-extra') {
   return { id: crypto.randomUUID(), gst: true, pst: false, ...item, sectionId }
 }
 
+// Which half of the contract a line belongs to. A cash advance is money the
+// funeral home lays out to someone else (crematorium, registry, clergy), so it
+// is not a guaranteed good or service and must not be presented as one.
+export function sectionForItem(item) {
+  return item?.isCashAdvance ? 'sec-third-party' : 'sec-main'
+}
+
 function reducer(state, action) {
   switch (action.type) {
 
@@ -153,7 +160,8 @@ function reducer(state, action) {
         : state.items.find(i => !i.isCustom && i.serviceItemId === action.item.serviceItemId && !i.isFromPackage)
       const items = existing
         ? state.items.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false, pst: defaultPst(action.item, state.arrangementType) }, 'sec-main')]
+        : [...state.items, freshItem({ ...action.item, quantity: 1, isFromPackage: false, pst: defaultPst(action.item, state.arrangementType) },
+                                     sectionForItem(action.item))]
       return { ...state, items, ...calcTotals(items, state.packageDiscount, state.discountType, state.discountValue) }
     }
 
@@ -402,6 +410,16 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
         ? (await supabase.from('packages').select('name').eq('id', q.package_id).single()).data?.name || ''
         : ''
       if (!q) return
+      // quote_items has no is_cash_advance column, so the flag is read back
+      // from service_items — the query below already fetches that table for
+      // the stale-price check.
+      const caIds = [...new Set((qi || []).filter(i => i.service_item_id && !i.is_casket_item)
+                                          .map(i => i.service_item_id))]
+      const { data: caRows } = caIds.length
+        ? await supabase.from('service_items').select('id, is_cash_advance').in('id', caIds)
+        : { data: [] }
+      const isCA = Object.fromEntries((caRows || []).map(r => [r.id, !!r.is_cash_advance]))
+
       const items = (qi || []).map(i => ({
         id:            i.id,
         serviceItemId: i.casket_id || i.service_item_id,
@@ -414,7 +432,13 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
         gst:           i.is_gst  ?? true,
         pst:           i.is_pst  ?? false,
         noDisc:        i.no_disc ?? false,
-        sectionId:     i.section_id || (i.is_from_package ? 'sec-main' : 'sec-extra'),
+        isCashAdvance: isCA[i.service_item_id] || false,
+        // A quote saved before sections existed has section_id null. It used
+        // to fall into "Additional Items" whatever it was; now a cash advance
+        // goes where it belongs and everything else is guaranteed.
+        sectionId:     i.section_id
+                       || (i.is_from_package ? 'sec-main'
+                                             : sectionForItem({ isCashAdvance: isCA[i.service_item_id] })),
       }))
       // Check for stale prices
       const serviceIds = items.filter(i => i.serviceItemId && !i.isCasketItem).map(i => i.serviceItemId)
