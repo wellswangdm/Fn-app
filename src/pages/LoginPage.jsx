@@ -18,10 +18,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
-      <header className="bg-primary-800 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-5">
-          <h1 className="text-lg font-semibold tracking-tight">Funeral Quote</h1>
-          <p className="text-primary-300 text-xs mt-0.5">Service quotation manager</p>
+      <header className="bg-white border-b border-stone-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5">
+          <h1 className="text-base font-semibold tracking-tight text-stone-900">Funeral Quote</h1>
+          <p className="text-stone-400 text-xs mt-0.5">Service quotation manager</p>
         </div>
       </header>
 

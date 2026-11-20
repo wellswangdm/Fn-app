@@ -208,7 +208,11 @@ export default function CemeteryCatalog({
       </div>
 
       {/* Rows */}
-      <div className="space-y-px max-h-[460px] overflow-y-auto pr-0.5">
+      {/* The height cap and its scrollbar belong to the side-by-side desktop
+          layout. On a phone everything is one column, and a 460px scroller
+          inside the page just swallows the swipe — the page is the scroller
+          there. overscroll-contain stops the chaining jank where it stays. */}
+      <div className="space-y-px sm:max-h-[460px] sm:overflow-y-auto sm:overscroll-contain sm:pr-0.5">
         {rows.length === 0 && (
           <p className="text-xs text-stone-400 py-6 text-center">Nothing matches.</p>
         )}

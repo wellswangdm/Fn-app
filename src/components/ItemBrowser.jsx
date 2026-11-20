@@ -149,7 +149,7 @@ export default function ItemBrowser({ funeralHomeId, onAdd }) {
       {loading && <p className="text-xs text-stone-400 py-4">Loading items…</p>}
 
       {!loading && (
-        <div className="space-y-px max-h-[500px] overflow-y-auto pr-0.5">
+        <div className="space-y-px sm:max-h-[500px] sm:overflow-y-auto sm:overscroll-contain sm:pr-0.5">
           {filtered.length === 0 && (
             <p className="text-xs text-stone-400 py-6 text-center">No items found.</p>
           )}

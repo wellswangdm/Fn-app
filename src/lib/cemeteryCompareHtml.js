@@ -35,11 +35,11 @@ function headerCells({ quotes, showTicker, zh, cellPadding = '24px 24px 28px' })
     ].filter(Boolean)
     return `
     <div style="text-align:center;padding:${cellPadding};">
-      <p style="margin:0;font-size:20px;font-weight:700;color:${INK};font-family:${FONT}">
+      <p style="margin:0;font-size:17px;font-weight:700;color:${INK};font-family:${FONT}">
         ${esc(q.label || `Option ${i + 1}`)}
       </p>
       ${q.parkName ? `<p style="margin:6px 0 0;font-size:13px;color:${GREY}">${esc(q.parkName)}</p>` : ''}
-      <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:${INK};letter-spacing:-.02em">${fmt(q.totals.grandTotal)}</p>
+      <p style="margin:12px 0 0;font-size:22px;font-weight:700;color:${INK};letter-spacing:-.02em">${fmt(q.totals.grandTotal)}</p>
       ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:12px;color:${LIGHT}">${esc(parts.join(' · '))}</p>` : ''}
     </div>`
   }).join('')
@@ -138,7 +138,7 @@ function paymentHTML({ quotes, gridCols, zh, screen = false }) {
               <span>${zh ? '融資額' : 'Financed balance'}</span><span style="${VAL}">${fmt(q.plan.financed)}</span>
             </div>
           </div>
-          <p style="margin:14px 0 0;text-align:center;font-size:26px;font-weight:700;color:${INK};letter-spacing:-.02em">${fmt(q.plan.monthly)}</p>
+          <p style="margin:12px 0 0;text-align:center;font-size:16px;font-weight:600;color:${INK};letter-spacing:-.01em">${fmt(q.plan.monthly)}</p>
           <p style="margin:2px 0 0;text-align:center;font-size:12px;color:${GREY}">
             ${zh ? `每月 · 共 ${q.plan.months} 期` : `per month · ${q.plan.months} months`}${Number(q.interestRate) > 0 ? ` · ${q.interestRate}%` : ''}
           </p>

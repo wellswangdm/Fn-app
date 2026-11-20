@@ -37,12 +37,12 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
                     ? q.packages.name : ''
     return `
     <div style="text-align:center;padding:${cellPadding};">
-      <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
+      <p style="margin:0;font-size:17px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
         ${esc(title)}
       </p>
       ${sub ? `<p style="margin:6px 0 0;font-size:13px;color:#86868b">${esc(sub)}</p>` : ''}
       ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:12px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
-      <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
+      <p style="margin:12px 0 0;font-size:22px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
       ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:12px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
     </div>`
   }).join('')
@@ -557,10 +557,10 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
         {/* Header */}
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-100 flex flex-wrap items-center gap-x-3 gap-y-2">
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-stone-800">Compare Versions</h2>
+            <h2 className="text-sm font-bold text-stone-800">Compare options</h2>
             {/* The explanation is the first thing to go when space is tight;
                 on a phone it had been pushing Print onto four lines. */}
-            <p className="hidden sm:block text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
+            <p className="hidden sm:block text-xs text-stone-400 mt-0.5">Each column shows everything included in that option</p>
           </div>
           <div className="flex items-center gap-2 ml-auto shrink-0">
             <button
@@ -632,7 +632,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
             </div>
 
             {shown.length === 0 ? (
-              <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
+              <p className="text-xs text-stone-400 text-center py-16">Select at least one option.</p>
             ) : (
               <div className="overflow-x-auto">
                 <div style={isNarrow ? undefined : { minWidth: `${cols * COL_MIN_PX}px` }}>
@@ -653,7 +653,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                             && q.packages.name !== versionNameOf(q, quotes.indexOf(q), quotes.length)
                             && <p className="text-[11px] sm:text-sm text-stone-400 mt-1 sm:mt-1.5 leading-snug">{q.packages.name}</p>}
                           {showArrangement && q.arrangement_type && <p className="text-[11px] sm:text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
-                          <p className="text-lg sm:text-4xl font-bold text-stone-900 mt-2 sm:mt-4 tracking-tight">{fmt(q.total)}</p>
+                          <p className="text-lg sm:text-2xl font-bold text-stone-900 mt-2 sm:mt-3 tracking-tight">{fmt(q.total)}</p>
                           {showTicker && parts.length > 0 && (
                             <p className="text-[10px] sm:text-xs text-stone-400 mt-1 sm:mt-1.5 leading-snug">{parts.join(' · ')}</p>
                           )}

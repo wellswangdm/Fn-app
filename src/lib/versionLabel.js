@@ -10,18 +10,22 @@
 // The rule, matching cemeteryOptionLabel.js:
 //   the name you typed  →  the main thing in the quote  →  a number
 // where "the main thing" is the package here and the property there, and a
-// lone version is just "Quote" rather than "Version 1".
+// lone option is just "Quote" rather than "Option 1".
+//
+// Both portals say "option" to the advisor. The identifiers here still say
+// version because the database column is quotes.version_label — renaming them
+// would mean renaming that, which is not worth a schema migration.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function versionName({ versionLabel, packageName, index = 0, count = 0 } = {}) {
   return (versionLabel || '').trim()
       || (packageName  || '').trim()
-      || (count === 1 ? 'Quote' : `Version ${index + 1}`)
+      || (count === 1 ? 'Quote' : `Option ${index + 1}`)
 }
 
 /**
  * The same rule applied to a quote row as PostgREST returns it.
- * `count` is how many versions the contact has; pass the group's length.
+ * `count` is how many options the contact has; pass the group's length.
  */
 export function versionNameOf(quote, index = 0, count = 0) {
   return versionName({

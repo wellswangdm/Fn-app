@@ -21,19 +21,23 @@ function pct(rate, fallback) {
 export default function CemeteryCompareSheet({
   quotes = [], sections = [],
   showPrices = true, showImages = true, showTicker = true, showPayment = true,
-  zh = false,
+  zh = false, isNarrow = false,
 }) {
   if (quotes.length === 0) return null
 
   const cols      = quotes.length
-  const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(260px, 1fr))` }
+  // On a phone the columns fill the screen instead of forcing it to scroll
+  // sideways; 260px each only makes sense where there is 260px each to give.
+  const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
   const hasPlans  = quotes.some(q => q.isMonthlyPaymentEnabled && q.plan?.monthly > 0)
 
   // Cap the columns and centre them. Letting them stretch to the full width
   // of a wide screen leaves each column's centred content marooned with a
   // canyon of empty space down the middle.
   const COL_MAX = 330
-  const frame   = { maxWidth: cols * COL_MAX, margin: '0 auto', minWidth: cols * 260 }
+  const frame   = isNarrow
+    ? {}
+    : { maxWidth: cols * COL_MAX, margin: '0 auto', minWidth: cols * 260 }
 
   // Hairline between columns so a long list stays readable across. Both this
   // and the section bands below are screen furniture — on paper they come out
@@ -42,7 +46,7 @@ export default function CemeteryCompareSheet({
 
   return (
     <div className="overflow-x-auto">
-      <div style={{ minWidth: cols * 260 }}>
+      <div style={isNarrow ? undefined : { minWidth: cols * 260 }}>
 
         {/* Column headers */}
         <div className="grid" style={{ ...gridStyle, ...frame }}>
@@ -53,12 +57,13 @@ export default function CemeteryCompareSheet({
               q.totals.taxTotal       > 0 && `${fmt(q.totals.taxTotal)} tax incl.`,
             ].filter(Boolean)
             return (
-              <div key={q.id} className={`px-6 pt-7 pb-6 text-center ${cell(i)}`}>
-                <p className="text-2xl font-bold text-stone-900">
+              <div key={q.id} className={`px-2 sm:px-6 pt-5 sm:pt-7 pb-5 sm:pb-6 text-center ${cell(i)}`}>
+                <p className="text-base sm:text-lg font-bold text-stone-900 leading-snug">
                   {q.label || `Option ${i + 1}`}
                 </p>
-                {q.parkName && <p className="text-sm text-stone-400 mt-1.5">{q.parkName}</p>}
-                <p className="text-4xl font-bold text-stone-900 mt-4 tracking-tight">
+                {q.parkName && <p className="text-[11px] sm:text-sm text-stone-400 mt-1 sm:mt-1.5 leading-snug">{q.parkName}</p>}
+                {/* The total is the figure that matters, not a billboard. */}
+                <p className="text-xl sm:text-2xl font-bold text-stone-900 mt-3 tracking-tight">
                   {fmt(q.totals.grandTotal)}
                 </p>
                 {showTicker && parts.length > 0 && (
@@ -82,7 +87,7 @@ export default function CemeteryCompareSheet({
               {quotes.map((q, i) => {
                 const entries = section.byQuote[q.id] || []
                 return (
-                  <div key={q.id} className={`px-6 pb-7 text-center ${cell(i)}`}>
+                  <div key={q.id} className={`px-2 sm:px-6 pb-6 sm:pb-7 text-center ${cell(i)}`}>
                     {entries.length === 0 ? (
                       <p className="text-sm text-stone-300 mt-4">
                         {zh ? '未包含' : 'Not included'}
@@ -96,7 +101,7 @@ export default function CemeteryCompareSheet({
                         {/* English stays primary with Chinese beneath, as in the
                             funeral portal. Swapping them loses meaning here: every
                             vase in the price list shares the CHI value 花瓶. */}
-                        <p className="text-base font-semibold text-stone-800 leading-snug">
+                        <p className="text-[13px] sm:text-base font-semibold text-stone-800 leading-snug">
                           {e.name}
                           {e.quantity > 1 && <span className="text-stone-400"> × {e.quantity}</span>}
                         </p>
@@ -104,7 +109,7 @@ export default function CemeteryCompareSheet({
                           <p className="text-xs text-stone-400 leading-tight">{e.nameZh}</p>
                         )}
                         {e.description && (
-                          <p className="text-xs text-stone-400 leading-tight max-w-[220px]">{e.description}</p>
+                          <p className="hidden sm:block text-xs text-stone-400 leading-tight max-w-[220px]">{e.description}</p>
                         )}
                         {showPrices && (
                           <p className="text-sm text-stone-400">
@@ -132,7 +137,7 @@ export default function CemeteryCompareSheet({
             {quotes.map((q, i) => {
               const t = q.totals
               return (
-                <div key={q.id} className={`px-5 pb-7 pt-1 ${cell(i)}`}>
+                <div key={q.id} className={`px-2 sm:px-5 pb-6 sm:pb-7 pt-1 ${cell(i)}`}>
                   <dl className="bg-stone-50 rounded-lg p-3 border border-stone-100 text-[13px] space-y-1.5">
                     <Row label={zh ? '小計' : 'Subtotal'} value={fmt(t.subtotal)} />
                     {t.waiveAmount > 0 && (
@@ -170,7 +175,7 @@ export default function CemeteryCompareSheet({
             </div>
             <div className="grid" style={{ ...gridStyle, ...frame }}>
               {quotes.map((q, i) => (
-                <div key={q.id} className={`px-5 pb-7 pt-3 ${cell(i)}`}>
+                <div key={q.id} className={`px-2 sm:px-5 pb-6 sm:pb-7 pt-3 ${cell(i)}`}>
                   {q.isMonthlyPaymentEnabled && q.plan?.monthly > 0 ? (
                     <>
                       <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] space-y-1">
@@ -183,7 +188,9 @@ export default function CemeteryCompareSheet({
                           <span className="font-semibold text-stone-700">{fmt(q.plan.financed)}</span>
                         </div>
                       </div>
-                      <p className="text-center text-[26px] font-bold text-stone-900 mt-3.5 tracking-tight">
+                      {/* A monthly instalment is supporting detail under the
+                          total, so it is sized like one. */}
+                      <p className="text-center text-base font-semibold text-stone-800 mt-3 tracking-tight">
                         {fmt(q.plan.monthly)}
                       </p>
                       <p className="text-center text-xs text-stone-400 mt-0.5">

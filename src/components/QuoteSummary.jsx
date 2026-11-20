@@ -56,7 +56,7 @@ export default function QuoteSummary({
       </div>
 
       {/* Items */}
-      <div className="px-3 py-3 max-h-[500px] overflow-y-auto space-y-0.5">
+      <div className="px-3 py-3 lg:max-h-[500px] lg:overflow-y-auto lg:overscroll-contain space-y-0.5">
         {items.length === 0 && (
           <p className="text-xs text-stone-400 text-center py-8 leading-relaxed">
             No items added yet.<br />Select a package or add individual items.

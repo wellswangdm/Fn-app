@@ -699,7 +699,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
   }
 
   async function deleteVersion(versionId) {
-    if (!window.confirm('Delete this version? This cannot be undone.')) return
+    if (!window.confirm('Delete this option? This cannot be undone.')) return
     await supabase.from('quote_items').delete().eq('quote_id', versionId)
     await supabase.from('quotes').delete().eq('id', versionId)
     const remaining = versions.filter(v => v.id !== versionId)
@@ -794,7 +794,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                 disabled={saving}
                 className="btn-secondary text-xs disabled:opacity-40"
               >
-                Add version
+                Add option
               </button>
               {addVersionOpen && (
                 <>
@@ -805,7 +805,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                       onClick={() => { setAddVersionOpen(false); duplicateQuote() }}
                       className="w-full text-left px-4 py-2.5 hover:bg-stone-50 transition-colors"
                     >
-                      <p className="text-sm font-medium text-stone-700">Copy this version</p>
+                      <p className="text-sm font-medium text-stone-700">Copy this option</p>
                       <p className="text-xs text-stone-400 mt-0.5">Start from what is here now</p>
                     </button>
                     <button
@@ -851,13 +851,13 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
         </div>
       )}
 
-      {/* Versions in this quote. Click one to switch; click the one you are
+      {/* Options in this quote. Click one to switch; click the one you are
           on to rename it, the way you would rename a tab. Drag to reorder —
           that order is the order the comparison puts its columns in. */}
       {quoteId && versions.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-            Versions
+            Options
           </span>
           {versions.map((v, i) => {
             const isCurrent    = v.id === quoteId
@@ -897,7 +897,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                   onClick={() => isCurrent
                     ? setEditingLabel({ id: v.id, value: v.version_label || '' })
                     : (onEdit && onEdit(v.id))}
-                  title={isCurrent ? 'Click to rename' : 'Switch to this version'}
+                  title={isCurrent ? 'Click to rename' : 'Switch to this option'}
                   className="px-3 py-1.5"
                 >
                   <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle ${

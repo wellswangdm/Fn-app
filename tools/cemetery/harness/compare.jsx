@@ -66,6 +66,7 @@ createRoot(document.getElementById('root')).render(
         <p className="text-xs text-stone-400 mt-0.5">Each column shows everything included in that option</p>
       </div>
       <CemeteryCompareSheet quotes={quotes} sections={sections}
+        isNarrow={qs.get('narrow') === '1'}
         showPrices showImages={false} showTicker showPayment zh={zh} />
     </div>
   </div>

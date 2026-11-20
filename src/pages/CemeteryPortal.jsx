@@ -64,22 +64,22 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
 
-      <header className="bg-primary-800 text-white print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+      {/* Subtle, matching the funeral portal and the quote sheet itself. */}
+      <header className="bg-white border-b border-stone-200 print:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold tracking-tight">Cemetery Quote</h1>
-            <p className="text-primary-300 text-xs mt-0.5 truncate">
+            <h1 className="text-base font-semibold tracking-tight text-stone-900">Cemetery Quote</h1>
+            <p className="text-stone-400 text-xs mt-0.5 truncate">
               {park ? `${park.id} · ${park.name}` : 'Cemetery quotation manager'}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 shrink-0 ml-auto">
             {parks.length > 0 && (
               <select
                 value={parkId}
                 onChange={e => selectPark(e.target.value)}
-                className="bg-primary-700 border border-primary-600 text-white text-xs rounded-lg
-                           px-2.5 py-2 max-w-[200px] focus:outline-none focus:ring-2 focus:ring-white/20"
+                className="input text-xs py-1.5 max-w-[180px] sm:max-w-[220px] truncate mr-1"
                 aria-label="Select park"
               >
                 {parks.map(p => (
@@ -90,23 +90,23 @@ export default function CemeteryPortal({ onSwitchPortal, onSignOut, user }) {
 
             {(name || email) && (
               <div className="hidden lg:flex items-center gap-2.5 mr-1">
-                <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500
-                                flex items-center justify-center text-sm font-bold shrink-0">
+                <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 text-stone-600
+                                flex items-center justify-center text-sm font-semibold shrink-0">
                   {initial}
                 </div>
                 <div className="text-right">
-                  {name && <p className="text-sm font-medium leading-tight">{name}</p>}
-                  <p className="text-xs text-primary-300 leading-tight">{email}</p>
+                  {name && <p className="text-sm font-medium leading-tight text-stone-700">{name}</p>}
+                  <p className="text-xs text-stone-400 leading-tight">{email}</p>
                 </div>
               </div>
             )}
 
             <button onClick={onSwitchPortal}
-                    className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+                    className="text-xs text-stone-400 hover:text-stone-700 transition-colors px-3 py-2">
               Switch portal
             </button>
             <button onClick={onSignOut}
-                    className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+                    className="text-xs text-stone-400 hover:text-stone-700 transition-colors px-3 py-2">
               Sign out
             </button>
           </div>

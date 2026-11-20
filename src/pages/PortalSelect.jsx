@@ -75,28 +75,28 @@ export default function PortalSelect({ user, onSelect, onSignOut }) {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
 
-      <header className="bg-primary-800 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+      <header className="bg-white border-b border-stone-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">Quote Manager</h1>
-            <p className="text-primary-300 text-xs mt-0.5">Select a portal to continue</p>
+            <h1 className="text-base font-semibold tracking-tight text-stone-900">Quote Manager</h1>
+            <p className="text-stone-400 text-xs mt-0.5">Select a portal to continue</p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             {(name || email) && (
               <div className="flex items-center gap-2.5 mr-1">
-                <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500
-                                flex items-center justify-center text-sm font-bold shrink-0">
+                <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 text-stone-600
+                                flex items-center justify-center text-sm font-semibold shrink-0">
                   {initial}
                 </div>
                 <div className="hidden sm:block text-right">
-                  {name && <p className="text-sm font-medium leading-tight">{name}</p>}
-                  <p className="text-xs text-primary-300 leading-tight">{email}</p>
+                  {name && <p className="text-sm font-medium leading-tight text-stone-700">{name}</p>}
+                  <p className="text-xs text-stone-400 leading-tight">{email}</p>
                 </div>
               </div>
             )}
             <button onClick={onSignOut}
-                    className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+                    className="text-xs text-stone-400 hover:text-stone-700 transition-colors px-3 py-2">
               Sign out
             </button>
           </div>

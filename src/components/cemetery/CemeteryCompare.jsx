@@ -39,6 +39,18 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
   // quotes never depends on the language each was built in.
   const [zh,          setZh]          = useChineseMode()
   const [shareStatus, setShareStatus] = useState(null)
+  // Two columns side by side on a phone, scaled to fit, rather than a sheet
+  // that scrolls sideways.
+  const [isNarrow, setIsNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    const onChange = e => setIsNarrow(e.matches)
+    setIsNarrow(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -104,8 +116,17 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
     title: `${park.name} — Quote Comparison`,
   }
 
+  // A phone shows two options side by side and no more — three columns in
+  // 390px is not a comparison. Picking a third swaps out the one selected
+  // longest ago, so the chips are what choose the pair.
+  const MAX_ON_NARROW = 2
+
   function toggle(id) {
-    setSelected(s => s.includes(id) ? s.filter(x => x !== id) : s.length >= MAX ? s : [...s, id])
+    setSelected(s => {
+      if (s.includes(id)) return s.filter(x => x !== id)
+      const cap = isNarrow ? MAX_ON_NARROW : MAX
+      return s.length >= cap ? [...s.slice(1), id] : [...s, id]
+    })
   }
 
   function handlePrint() {
@@ -146,18 +167,19 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-4">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-100 flex flex-wrap items-center gap-x-3 gap-y-2">
           <div className="min-w-0">
             <h2 className="text-sm font-bold text-stone-800">Compare Options</h2>
-            <p className="text-xs text-stone-400 mt-0.5">
+            {/* The explanation is the first thing to go when space is tight. */}
+            <p className="hidden sm:block text-xs text-stone-400 mt-0.5">
               Each column shows everything included in that option
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <button
               onClick={handleShare}
               disabled={shareStatus === 'uploading' || loaded.length === 0}
@@ -194,7 +216,7 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
         ) : (
           <>
             {/* Toolbar */}
-            <div className="flex gap-2 px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/50">
+            <div className="flex gap-2 px-4 sm:px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/50">
               {available.map((a, i) => (
                 <button key={a.id} onClick={() => toggle(a.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -210,7 +232,7 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
                 </button>
               ))}
 
-              <div className="ml-auto flex items-center gap-4 flex-wrap">
+              <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-x-4 gap-y-1.5">
                 <Check checked={zh} onChange={setZh}>中文</Check>
                 <Check checked={showPrices} onChange={setShowPrices}>Show prices</Check>
                 {anyImages && <Check checked={showImages} onChange={setShowImages}>Images</Check>}
@@ -231,7 +253,8 @@ export default function CemeteryCompare({ park, contactId, onClose }) {
               // without it a browser Print from this modal produced a blank page.
               <div id="print-zone">
               <CemeteryCompareSheet
-                quotes={loaded}
+                isNarrow={isNarrow}
+                quotes={isNarrow ? loaded.slice(0, MAX_ON_NARROW) : loaded}
                 sections={sections}
                 showPrices={showPrices}
                 showImages={showImages && anyImages}

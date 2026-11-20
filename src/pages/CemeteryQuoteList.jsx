@@ -31,8 +31,6 @@ function when(ts) {
   return new Date(ts).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const SEARCH_FROM = 5   // families before a search field earns its place
-
 export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onCompare }) {
   const [tab,        setTab]        = useState('quotes')
   const [families,   setFamilies]   = useState([])
@@ -89,9 +87,10 @@ export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onComp
   const shownFamilies = families.filter(g =>
     matches(g.name) || g.options.some((o, i) => matches(nameOf(o, i))))
   const shownTemplates = templates.filter(t => matches(t.template_name))
-  const showSearch = tab === 'quotes'
-    ? families.length >= SEARCH_FROM
-    : templates.length >= SEARCH_FROM
+  // Always there once there is anything to search. Hiding it until a
+  // threshold meant that with four families the field simply was not there,
+  // which reads as missing rather than tidy.
+  const showSearch = (tab === 'quotes' ? families.length : templates.length) > 0
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -120,7 +119,7 @@ export default function CemeteryQuoteList({ park, advisor, onOpen, onNew, onComp
         <input className="w-full bg-stone-100/70 border-0 rounded-lg px-3.5 py-2 text-[13px]
                           placeholder:text-stone-400 focus:outline-none focus:ring-2
                           focus:ring-primary-500/20"
-               placeholder={tab === 'quotes' ? 'Search' : 'Search templates'}
+               placeholder={tab === 'quotes' ? 'Search by name' : 'Search templates'}
                value={search} onChange={e => setSearch(e.target.value)} />
       )}
 

@@ -39,7 +39,6 @@ function generateQuoteNumber() {
 
 
 
-const SEARCH_FROM = 5   // contacts before a search field earns its place
 
 export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, userId, user }) {
   const [quotes,      setQuotes]      = useState([])
@@ -155,33 +154,36 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
   })
 
   const totalGroups = new Set(quotes.map(q => q.contact_id || q.id)).size
-  const showSearch  = totalGroups >= SEARCH_FROM
+  const showSearch  = totalGroups > 0
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
 
-      <header className="bg-primary-800 text-white print:hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+      {/* Subtle, like the quote sheet's own letterhead: white, dark text, a
+          hairline underneath. A heavy blue slab across the top of every page
+          was the loudest thing in the app and said nothing. */}
+      <header className="bg-white border-b border-stone-200 print:hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-4">
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold tracking-tight">Funeral Quote</h1>
-            <p className="text-primary-300 text-xs mt-0.5">Service quotation manager</p>
+            <h1 className="text-base font-semibold tracking-tight text-stone-900">Funeral Quote</h1>
+            <p className="text-stone-400 text-xs mt-0.5">Service quotation manager</p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 shrink-0 ml-auto">
             {user && (() => {
               const name    = user.user_metadata?.full_name || user.user_metadata?.name || ''
               const email   = user.email || ''
               const initial = (name || email).charAt(0).toUpperCase()
               return (
                 <button onClick={openProfile} title="Edit profile"
-                        className="flex items-center gap-2.5 mr-1 hover:opacity-80 transition-opacity">
-                  <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500
-                                  flex items-center justify-center text-sm font-bold shrink-0">
+                        className="flex items-center gap-2.5 mr-1 hover:opacity-70 transition-opacity">
+                  <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 text-stone-600
+                                  flex items-center justify-center text-sm font-semibold shrink-0">
                     {initial}
                   </div>
                   <div className="hidden lg:block text-right">
-                    {name && <p className="text-sm font-medium leading-tight">{name}</p>}
-                    <p className="text-xs text-primary-300 leading-tight">{email}</p>
+                    {name && <p className="text-sm font-medium leading-tight text-stone-700">{name}</p>}
+                    <p className="text-xs text-stone-400 leading-tight">{email}</p>
                   </div>
                 </button>
               )
@@ -189,12 +191,12 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
 
             {onSwitchPortal && (
               <button onClick={onSwitchPortal}
-                      className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+                      className="text-xs text-stone-400 hover:text-stone-700 transition-colors px-3 py-2">
                 Switch portal
               </button>
             )}
             <button onClick={onSignOut}
-                    className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+                    className="text-xs text-stone-400 hover:text-stone-700 transition-colors px-3 py-2">
               Sign out
             </button>
           </div>
@@ -374,14 +376,14 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
             <h3 className="text-sm font-bold text-stone-800 mb-1">Duplicate Quote</h3>
-            <p className="text-xs text-stone-400 mb-4">Keep the same name to add as a new version, or change the name to create a separate contact.</p>
+            <p className="text-xs text-stone-400 mb-4">Keep the same name to add as a new option, or change the name to create a separate contact.</p>
 
             <label className="text-xs font-medium text-stone-600 block mb-1.5">Beneficiary name</label>
             <input className="input w-full text-sm mb-4" value={duplicating.newName} onChange={e => setDuplicating(d => ({ ...d, newName: e.target.value }))} autoFocus />
 
             <div className="grid grid-cols-2 gap-2 mb-5">
               <button onClick={() => setDuplicating(d => ({ ...d, sameContact: true }))} className={`text-xs py-2.5 px-3 rounded-xl border font-medium transition-colors text-left ${duplicating.sameContact ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-stone-200 text-stone-500 hover:border-stone-300'}`}>
-                <p>New version</p>
+                <p>New option</p>
                 <p className="text-[10px] font-normal opacity-60 mt-0.5">Same contact</p>
               </button>
               <button onClick={() => setDuplicating(d => ({ ...d, sameContact: false }))} className={`text-xs py-2.5 px-3 rounded-xl border font-medium transition-colors text-left ${!duplicating.sameContact ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-stone-200 text-stone-500 hover:border-stone-300'}`}>
