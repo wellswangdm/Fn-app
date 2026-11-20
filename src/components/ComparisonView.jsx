@@ -11,6 +11,9 @@ import { versionNameOf } from '../lib/versionLabel.js'
 // overflowed its own cell on a phone and the second version was unreadable.
 const COL_MIN_PX = 260
 
+// Most columns a desktop comparison will draw.
+const MAX_COLUMNS = 4
+
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
@@ -314,8 +317,20 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const [showPayment,      setShowPayment]       = useState(false)
   const [loading,          setLoading]           = useState(true)
   const [shareStatus,      setShareStatus]       = useState(null) // null | 'uploading' | 'done' | 'error'
+  // Two columns side by side on a phone, scaled to fit, rather than a sheet
+  // that scrolls sideways.
+  const [isNarrow, setIsNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches)
   const translations = useTranslations()
   const [showChinese, setShowChinese] = useChineseMode()
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    const onChange = e => setIsNarrow(e.matches)
+    setIsNarrow(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -384,11 +399,29 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
     load()
   }, [contactId])
 
+  // A phone shows two versions side by side and no more — three columns in
+  // 390px is not a comparison, it is a word search. Picking a third swaps out
+  // the one selected longest ago, so the chips are what choose the pair.
+  const MAX_ON_NARROW = 2
+
   function toggle(id) {
-    setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id); return next }
+      const cap = isNarrow ? MAX_ON_NARROW : MAX_COLUMNS
+      if (next.size >= cap) {
+        const oldest = quotes.find(q => next.has(q.id))
+        if (oldest) next.delete(oldest.id)
+      }
+      next.add(id)
+      return next
+    })
   }
 
-  const shown = quotes.filter(q => selected.has(q.id))
+  const selectedQuotes = quotes.filter(q => selected.has(q.id))
+  // Rotating a tablet must not silently change what is selected, so the cap is
+  // applied to what is drawn rather than to the selection itself.
+  const shown = isNarrow ? selectedQuotes.slice(0, MAX_ON_NARROW) : selectedQuotes
   const cols  = shown.length
 
   function buildCategoryData() {
@@ -495,17 +528,17 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   function renderCatSection({ catId, catName, itemsByVersion }) {
     return (
       <div key={catId}>
-        <div className="pt-8 pb-2 text-center">
+        <div className="pt-5 sm:pt-8 pb-2 text-center">
           <span className="text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
         </div>
         <div className="grid" style={gridStyle}>
           {shown.map((q) => (
-            <div key={q.id} className="px-8 pb-8 text-center">
+            <div key={q.id} className="px-2 sm:px-8 pb-6 sm:pb-8 text-center">
               {(itemsByVersion[q.id] || []).map((item, i) => (
-                <div key={i} className="mt-4">
-                  <p className="text-base font-semibold text-stone-800 leading-snug">{item.name}</p>
+                <div key={i} className="mt-3 sm:mt-4">
+                  <p className="text-[13px] sm:text-base font-semibold text-stone-800 leading-snug">{item.name}</p>
                   {showChinese && translations[item.name] && <p className="text-xs text-stone-400 leading-tight">{translations[item.name]}</p>}
-                  {showPrices && <p className="text-sm text-stone-400 mt-1">{fmt(item.amount)}</p>}
+                  {showPrices && <p className="text-xs sm:text-sm text-stone-400 mt-0.5 sm:mt-1">{fmt(item.amount)}</p>}
                 </div>
               ))}
             </div>
@@ -606,7 +639,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
               <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
             ) : (
               <div className="overflow-x-auto">
-                <div style={{ minWidth: `${cols * COL_MIN_PX}px` }}>
+                <div style={isNarrow ? undefined : { minWidth: `${cols * COL_MIN_PX}px` }}>
 
                   {/* Version headers */}
                   <div className="grid" style={gridStyle}>
@@ -616,20 +649,20 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                         q.tax_amount > 0      && `${fmt(q.tax_amount)} tax incl.`,
                       ].filter(Boolean)
                       return (
-                        <div key={q.id} className="px-4 sm:px-8 pt-7 pb-6 text-center">
-                          <p className={`text-xl sm:text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
+                        <div key={q.id} className="px-2 sm:px-8 pt-5 sm:pt-7 pb-5 sm:pb-6 text-center">
+                          <p className={`text-sm leading-snug sm:text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                             {versionNameOf(q, quotes.indexOf(q), quotes.length)}
                           </p>
                           {showArrangement && q.packages?.name
                             && q.packages.name !== versionNameOf(q, quotes.indexOf(q), quotes.length)
-                            && <p className="text-sm text-stone-400 mt-1.5">{q.packages.name}</p>}
-                          {showArrangement && q.arrangement_type && <p className="text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
+                            && <p className="text-[11px] sm:text-sm text-stone-400 mt-1 sm:mt-1.5 leading-snug">{q.packages.name}</p>}
+                          {showArrangement && q.arrangement_type && <p className="text-[11px] sm:text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                           )}
-                          <p className="text-2xl sm:text-4xl font-bold text-stone-900 mt-3 sm:mt-4 tracking-tight">{fmt(q.total)}</p>
+                          <p className="text-lg sm:text-4xl font-bold text-stone-900 mt-2 sm:mt-4 tracking-tight">{fmt(q.total)}</p>
                           {showTicker && parts.length > 0 && (
-                            <p className="text-xs text-stone-400 mt-1.5">{parts.join(' · ')}</p>
+                            <p className="text-[10px] sm:text-xs text-stone-400 mt-1 sm:mt-1.5 leading-snug">{parts.join(' · ')}</p>
                           )}
                         </div>
                       )
@@ -642,25 +675,25 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {/* Caskets */}
                   {hasCaskets && (
                     <div>
-                      <div className="pt-8 pb-2 text-center">
+                      <div className="pt-5 sm:pt-8 pb-2 text-center">
                         <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
                           const entry = casketByQuote[q.id]; const csk = entry?.casket
                           return (
-                            <div key={q.id} className="px-8 pb-8 text-center">
+                            <div key={q.id} className="px-2 sm:px-8 pb-6 sm:pb-8 text-center">
                               {entry ? (
                                 <div className="flex flex-col items-center gap-2 mt-4">
                                   {showCasketImages && (
                                     csk?.imageUrl
-                                      ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[220px] w-full object-contain rounded-xl bg-stone-50 max-h-48" />
+                                      ? <img src={csk.imageUrl} alt={entry.name} className="max-w-[220px] w-full object-contain rounded-xl bg-stone-50 max-h-32 sm:max-h-48" />
                                       : <div className="w-44 h-28 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 text-[10px]">No image</div>
                                   )}
-                                  <p className="text-base font-semibold text-stone-800">{entry.name}</p>
+                                  <p className="text-[13px] sm:text-base font-semibold text-stone-800 leading-snug">{entry.name}</p>
                                   {showChinese && <p className="text-xs text-stone-400 leading-tight">棺木</p>}
-                                  {csk?.description && <p className="text-xs text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
-                                  {showPrices && <p className="text-sm text-stone-400">{fmt(entry.price)}</p>}
+                                  {csk?.description && <p className="hidden sm:block text-xs text-stone-400 leading-tight max-w-[220px]">{csk.description}</p>}
+                                  {showPrices && <p className="text-xs sm:text-sm text-stone-400">{fmt(entry.price)}</p>}
                                 </div>
                               ) : <p className="text-sm text-stone-300 mt-4">Not selected</p>}
                             </div>
@@ -681,7 +714,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                       adding another checkbox. */}
                   {showTicker && (
                     <div>
-                      <div className="pt-8 pb-2 text-center">
+                      <div className="pt-5 sm:pt-8 pb-2 text-center">
                         <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Summary</span>
                       </div>
                       <div className="grid" style={gridStyle}>
@@ -715,7 +748,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {/* Payment Options */}
                   {showPayment && (
                     <div>
-                      <div className="pt-8 pb-2 text-center">
+                      <div className="pt-5 sm:pt-8 pb-2 text-center">
                         <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Payment Options</span>
                       </div>
                       <div className="grid" style={gridStyle}>
