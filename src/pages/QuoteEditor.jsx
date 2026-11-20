@@ -782,9 +782,16 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
                 title="Remove attached image"
               >✕</button>
             )}
-            {/* Print lives in one place: the big button under the total in
-                the summary, which is where you are looking once the quote is
-                built. There used to be one here too. */}
+            {/* Print lives here, in the sticky header, where it is always one
+                click away. The duplicate under the summary total is gone. */}
+            <button
+              onClick={() => setShowPrint(true)}
+              disabled={!state.items.length}
+              className="text-primary-200 hover:text-white disabled:opacity-30 text-xs px-3 py-1.5
+                         border border-white/20 rounded-lg transition-colors"
+            >
+              Print
+            </button>
             <button
               onClick={() => save('draft')}
               disabled={saving}

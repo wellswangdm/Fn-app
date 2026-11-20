@@ -238,14 +238,8 @@ export default function QuoteSummary({
           </div>
         )}
 
-        {items.length > 0 && (
-          <button
-            onClick={onPrint}
-            className="w-full mt-1 btn-secondary text-xs py-2 justify-center"
-          >
-            Print / Save as PDF
-          </button>
-        )}
+        {/* Print is in the builder's sticky header, always one click away.
+            A second copy down here needed scrolling past the whole quote. */}
       </div>
     </div>
   )

@@ -13,10 +13,16 @@ function openPrintWindow() {
   const zone = document.getElementById('print-zone')
   if (!zone) return
 
-  // Collect all stylesheets from the current page so Tailwind applies in the new window
-  const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-    .map(l => `<link rel="stylesheet" href="${l.href}">`)
-    .join('\n')
+  // Collect the page's styles so Tailwind applies in the new window. Both
+  // forms matter: a built app serves a <link>, but a dev server (and anything
+  // else that inlines CSS) injects <style> tags — those were being dropped, so
+  // the print window came up completely unstyled.
+  const stylesheets = [
+    ...Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map(l => `<link rel="stylesheet" href="${l.href}">`),
+    ...Array.from(document.querySelectorAll('style'))
+      .map(s => `<style>${s.innerHTML}</style>`),
+  ].join('\n')
 
   const win = window.open('', '_blank')
   if (!win) { alert('Allow popups for this site to print.'); return }
@@ -25,11 +31,18 @@ function openPrintWindow() {
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- A fixed 1024px layout viewport, NOT device-width. The on-screen quote
+       restacks below Tailwind's sm: breakpoint so it is readable on a phone;
+       the printed sheet must never do that. Pinning the width here means the
+       PDF is the paper layout whether it was sent from a desktop or a phone. -->
+  <meta name="viewport" content="width=1024">
   ${stylesheets}
   <style>
-    body { margin: 0; padding: 24px; background: #fff; }
-    @media print { body { padding: 0; } }
+    body { margin: 0; padding: 24px; background: #fff; width: 1024px; }
+    /* size:auto uses whatever paper is loaded rather than fitting a named
+       page box inside it and shrinking everything. */
+    @page { size: auto; margin: 12mm; }
+    @media print { body { padding: 0; width: auto; } }
   </style>
 </head>
 <body>
@@ -107,27 +120,28 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
   )
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8">
-      <div className="w-full max-w-3xl mx-4">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-y-auto py-4 sm:py-8">
+      <div className="w-full max-w-3xl mx-3 sm:mx-4">
 
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={onClose} className="text-white/80 hover:text-white text-sm transition-colors">
+        {/* Toolbar. It used to be one no-wrap row, so on a phone Back, the two
+            checkboxes, Share and Print piled on top of each other. */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 sm:mb-4">
+          <button onClick={onClose} className="text-white/80 hover:text-white text-sm transition-colors shrink-0">
             ← Back
           </button>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none">
-              <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
-              中文
-            </label>
-            <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none">
-              <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
-              Payment options
-            </label>
+          <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none shrink-0">
+            <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
+            中文
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-white/70 cursor-pointer select-none shrink-0">
+            <input type="checkbox" checked={showPayment} onChange={e => setShowPayment(e.target.checked)} className="rounded" />
+            Payment options
+          </label>
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <button
               onClick={handleShare}
               disabled={shareStatus === 'uploading'}
-              className={`text-sm font-semibold px-5 py-2 rounded-lg transition-colors shadow disabled:opacity-50
+              className={`text-sm font-semibold px-3 sm:px-5 py-2 rounded-lg transition-colors shadow disabled:opacity-50 whitespace-nowrap
                 ${shareStatus === 'done'  ? 'bg-emerald-500 text-white' :
                   shareStatus === 'error' ? 'bg-red-500 text-white' :
                   'bg-white/20 text-white hover:bg-white/30'}`}
@@ -139,10 +153,11 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
             </button>
             <button
               onClick={openPrintWindow}
-              className="bg-white text-primary-800 text-sm font-semibold px-5 py-2
-                         rounded-lg hover:bg-stone-100 transition-colors shadow"
+              className="bg-white text-primary-800 text-sm font-semibold px-3 sm:px-5 py-2
+                         rounded-lg hover:bg-stone-100 transition-colors shadow whitespace-nowrap"
             >
-              Print / Save as PDF
+              <span className="sm:hidden">PDF</span>
+              <span className="hidden sm:inline">Print / Save as PDF</span>
             </button>
           </div>
         </div>
@@ -151,7 +166,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
         <div id="print-zone" className="bg-white rounded-2xl shadow-2xl overflow-hidden">
 
           {/* Letterhead */}
-          <div className="bg-primary-800 px-8 py-5 flex items-start justify-between">
+          <div className="bg-primary-800 px-5 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:justify-between">
             <div>
               <h1 className="text-white text-xl font-bold tracking-tight leading-tight">
                 {home?.name || 'Funeral Centre'}
@@ -159,7 +174,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
               {home?.address && <p className="text-primary-200 text-xs mt-1">{home.address}</p>}
               {advisorPhone  && <p className="text-primary-200 text-xs">{advisorPhone}</p>}
             </div>
-            <div className="text-right text-xs leading-snug">
+            <div className="text-left sm:text-right text-xs leading-snug">
               <p className="text-primary-300">{today}</p>
               {(advisorName || advisorEmail) && (
                 <div className="mt-1.5">
@@ -171,7 +186,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
           </div>
 
           {/* Body */}
-          <div className="px-8 py-6">
+          <div className="px-5 py-5 sm:px-8 sm:py-6">
 
             {packageName && (
               <div className="flex items-center justify-between mb-5 pb-4 border-b border-stone-200">
@@ -185,7 +200,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
             )}
 
             <table className="w-full text-sm mb-6">
-              <thead>
+              <thead className="hidden sm:table-header-group">
                 <tr className="border-b-2 border-stone-200">
                   <th className="text-left pb-2.5 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Description</th>
                   <th className="text-center pb-2.5 text-[11px] font-semibold uppercase tracking-wider text-stone-400 w-10">Qty</th>
@@ -202,7 +217,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
               </tbody>
             </table>
 
-            <div className="flex items-stretch gap-6">
+            <div className="flex flex-col sm:flex-row items-stretch gap-5 sm:gap-6">
               <div className="flex-1">
                 {selectedCasket && (
                   <div className="border border-stone-200 rounded-xl overflow-hidden h-full flex">
@@ -224,7 +239,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
                 )}
               </div>
 
-              <div className="w-64 shrink-0">
+              <div className="w-full sm:w-64 shrink-0">
                 <div className="space-y-1.5 pb-3">
                   <TotalRow label="Subtotal" value={fmt(subtotal)} />
                   {pkgDiscAmount > 0 && (
@@ -266,7 +281,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
                         {beneficiaryName || 'Beneficiary'} · Age {age}
                       </p>
                       <table className="w-full text-sm border-collapse">
-                        <thead>
+                        <thead className="hidden sm:table-header-group">
                           <tr className="border-b-2 border-stone-200">
                             <th className="text-left pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Plan</th>
                             <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Monthly</th>
@@ -277,12 +292,24 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
                         </thead>
                         <tbody>
                           {plans.map(p => (
-                            <tr key={p.years} className="border-b border-stone-100">
-                              <td className="py-2 font-semibold text-stone-700">{p.label}</td>
-                              <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
-                              <td className="py-2 text-right text-stone-500">{p.years * 12}</td>
-                              <td className="py-2 text-right text-stone-500">{fmt(p.totalInvestment)}</td>
-                              <td className="py-2 text-right text-stone-500">{fmt(p.perDay)}</td>
+                            <tr key={p.years} className="block sm:table-row border-b border-stone-100 py-1.5 sm:py-0">
+                              {/* Phone: the plan and its monthly figure on one
+                                  line, the rest quietly underneath. Five
+                                  columns do not fit a 358px sheet. */}
+                              <td className="block sm:hidden">
+                                <div className="flex items-baseline justify-between gap-3">
+                                  <span className="font-semibold text-stone-700">{p.label}</span>
+                                  <span className="font-bold text-stone-900">{fmt(p.monthly)}<span className="text-[10px] font-normal text-stone-400">/mo</span></span>
+                                </div>
+                                <p className="text-[11px] text-stone-400 mt-0.5">
+                                  {p.years * 12} months · {fmt(p.totalInvestment)} total · {fmt(p.perDay)}/day
+                                </p>
+                              </td>
+                              <td className="hidden sm:table-cell py-2 font-semibold text-stone-700">{p.label}</td>
+                              <td className="hidden sm:table-cell py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
+                              <td className="hidden sm:table-cell py-2 text-right text-stone-500">{p.years * 12}</td>
+                              <td className="hidden sm:table-cell py-2 text-right text-stone-500">{fmt(p.totalInvestment)}</td>
+                              <td className="hidden sm:table-cell py-2 text-right text-stone-500">{fmt(p.perDay)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -295,13 +322,13 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
           </div>
 
           {notes && (
-            <div className="bg-stone-50 border-t border-stone-100 px-8 py-3 text-center">
+            <div className="bg-stone-50 border-t border-stone-100 px-5 sm:px-8 py-3 text-center">
               <p className="text-[10px] text-stone-500 whitespace-pre-wrap">{notes}</p>
             </div>
           )}
 
           {attachedImage && (
-            <div className="border-t border-stone-100 px-8 py-4 flex justify-center">
+            <div className="border-t border-stone-100 px-5 sm:px-8 py-4 flex justify-center">
               <img src={attachedImage} alt="Attached" className="max-w-full object-contain max-h-64" />
             </div>
           )}
@@ -316,8 +343,8 @@ function SectionRows({ title, items, translations = {}, showChinese }) {
   if (!items.length) return null
   return (
     <>
-      <tr>
-        <td colSpan={4} className="pt-4 pb-1.5">
+      <tr className="block sm:table-row">
+        <td colSpan={4} className="block sm:table-cell pt-4 pb-1.5">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-primary-600">{title}</span>
         </td>
       </tr>
@@ -331,16 +358,41 @@ function SectionRows({ title, items, translations = {}, showChinese }) {
   )
 }
 
+/**
+ * One line of the quote.
+ *
+ * At sm: and above this is exactly the four-column table it has always been —
+ * the printed sheet and every desktop screen are untouched.
+ *
+ * Below sm: the four columns restack, because squeezing them into 358px turned
+ * "Basic Professional Services of Funeral Director and Staff" into six lines
+ * while Qty gave a whole column to the digit 1. The name takes the full width
+ * and the money sits on its own line, with the unit price shown only when the
+ * quantity makes it tell you something the amount does not.
+ */
 function ItemRow({ item, nameZh }) {
+  const amount = item.price * item.quantity
   return (
-    <tr className="border-b border-stone-100">
-      <td className="py-1.5 text-stone-700 pr-4">
+    <tr className="block sm:table-row border-b border-stone-100 py-1 sm:py-0">
+      <td className="block sm:table-cell py-1 sm:py-1.5 text-stone-700 sm:pr-4">
         <span>{item.name}</span>
         {nameZh && <span className="block text-[10px] text-stone-400 leading-tight">{nameZh}</span>}
       </td>
-      <td className="py-1.5 text-center text-stone-500">{item.quantity}</td>
-      <td className="py-1.5 text-right text-stone-500">{fmt(item.price)}</td>
-      <td className="py-1.5 text-right font-medium text-stone-800">{fmt(item.price * item.quantity)}</td>
+
+      {/* Phone only */}
+      <td className="block sm:hidden pb-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-xs text-stone-400">
+            {item.quantity !== 1 ? `${item.quantity} × ${fmt(item.price)}` : ''}
+          </span>
+          <span className="font-medium text-stone-800">{fmt(amount)}</span>
+        </div>
+      </td>
+
+      {/* sm: and up — the printed layout */}
+      <td className="hidden sm:table-cell py-1.5 text-center text-stone-500">{item.quantity}</td>
+      <td className="hidden sm:table-cell py-1.5 text-right text-stone-500">{fmt(item.price)}</td>
+      <td className="hidden sm:table-cell py-1.5 text-right font-medium text-stone-800">{fmt(amount)}</td>
     </tr>
   )
 }
@@ -371,7 +423,7 @@ function PrintMonthlyPayment({ total, paymentTerms }) {
         </div>
       </div>
       <table className="w-full text-sm border-collapse">
-        <thead>
+        <thead className="hidden sm:table-header-group">
           <tr className="border-b-2 border-stone-200">
             <th className="text-left pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Term</th>
             <th className="text-right pb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">Rate</th>
@@ -381,11 +433,20 @@ function PrintMonthlyPayment({ total, paymentTerms }) {
         </thead>
         <tbody>
           {plans.map(p => (
-            <tr key={p.months} className="border-b border-stone-100">
-              <td className="py-2 font-semibold text-stone-700">{p.label}</td>
-              <td className="py-2 text-right text-stone-500">{p.rate > 0 ? `${p.rate}%` : '0%'}</td>
-              <td className="py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
-              <td className="py-2 text-right text-stone-500">{fmt(p.totalFinanced)}</td>
+            <tr key={p.months} className="block sm:table-row border-b border-stone-100 py-1.5 sm:py-0">
+              <td className="block sm:hidden">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-stone-700">{p.label}</span>
+                  <span className="font-bold text-stone-900">{fmt(p.monthly)}<span className="text-[10px] font-normal text-stone-400">/mo</span></span>
+                </div>
+                <p className="text-[11px] text-stone-400 mt-0.5">
+                  {p.rate > 0 ? `${p.rate}%` : '0%'} · {fmt(p.totalFinanced)} total
+                </p>
+              </td>
+              <td className="hidden sm:table-cell py-2 font-semibold text-stone-700">{p.label}</td>
+              <td className="hidden sm:table-cell py-2 text-right text-stone-500">{p.rate > 0 ? `${p.rate}%` : '0%'}</td>
+              <td className="hidden sm:table-cell py-2 text-right font-bold text-stone-900">{fmt(p.monthly)}</td>
+              <td className="hidden sm:table-cell py-2 text-right text-stone-500">{fmt(p.totalFinanced)}</td>
             </tr>
           ))}
         </tbody>
