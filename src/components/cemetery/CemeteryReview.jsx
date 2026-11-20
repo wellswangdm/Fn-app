@@ -211,9 +211,9 @@ export default function CemeteryReview({ park, quote, lines, totals, plan, onClo
               {totals.pstTotal > 0 && (
                 <Line label={`PST (${pct(quote.pstRate, 0.07)})`} value={fmt(totals.pstTotal)} muted />
               )}
-              <div className="flex justify-between items-baseline pt-2 mt-1 border-t-2 border-stone-800">
+              <div className="flex items-baseline justify-between gap-3 pt-2 mt-1 border-t-2 border-stone-800">
                 <dt className="font-bold text-stone-900">{zh ? '總額' : 'Total'}</dt>
-                <dd className="text-lg font-bold text-stone-900">{fmt(totals.grandTotal)}</dd>
+                <dd className="shrink-0 whitespace-nowrap tabular-nums text-lg font-bold text-stone-900">{fmt(totals.grandTotal)}</dd>
               </div>
             </dl>
           </section>
@@ -233,9 +233,11 @@ export default function CemeteryReview({ park, quote, lines, totals, plan, onClo
 
 function Line({ label, value, muted }) {
   return (
-    <div className="flex justify-between gap-4">
-      <dt className={muted ? 'text-stone-500' : 'text-stone-600'}>{label}</dt>
-      <dd className={muted ? 'text-stone-500' : 'text-stone-800'}>{value}</dd>
+    // The figure never breaks: "− $605.00" has a space in it, and in a narrow
+    // column that stranded the minus on its own line above the amount.
+    <div className="flex items-baseline justify-between gap-3 sm:gap-4">
+      <dt className={`min-w-0 ${muted ? 'text-stone-500' : 'text-stone-600'}`}>{label}</dt>
+      <dd className={`shrink-0 whitespace-nowrap tabular-nums ${muted ? 'text-stone-500' : 'text-stone-800'}`}>{value}</dd>
     </div>
   )
 }

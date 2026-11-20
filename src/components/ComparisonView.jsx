@@ -138,8 +138,8 @@ const GREEN = '#059669'
 // headline figure, with the money off in green.
 function buildSummarySectionHTML({ shown, gridCols }) {
   const row = (label, value, colour = '#6b6b6b', weight = '600') => `
-    <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;color:${colour}">
-      <span>${esc(label)}</span><span style="font-weight:${weight}">${esc(value)}</span>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;color:${colour}">
+      <span style="min-width:0">${esc(label)}</span><span style="flex-shrink:0;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:${weight}">${esc(value)}</span>
     </div>`
   return `
     <div style="text-align:center;padding:32px 0 10px;">
@@ -289,12 +289,22 @@ function buildWebHTML(props) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+/**
+ * One line of the summary.
+ *
+ * The figure never breaks. "− $605.00" contains a space, so in a narrow
+ * column it used to wrap with the minus stranded on one line and the amount
+ * on the next, beside a label that had wrapped too — four fragments where
+ * there should be two. items-baseline keeps the figure level with the first
+ * line of a label that does wrap.
+ */
 function SumRow({ label, value, green, muted }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className={green ? 'text-emerald-600' : muted ? 'text-stone-400' : 'text-stone-500'}>{label}</dt>
-      <dd className={green ? 'text-emerald-600 font-semibold'
-                           : muted ? 'text-stone-400' : 'font-semibold text-stone-700'}>{value}</dd>
+    <div className="flex items-baseline justify-between gap-1.5 sm:gap-3">
+      <dt className={`min-w-0 ${green ? 'text-emerald-600' : muted ? 'text-stone-400' : 'text-stone-500'}`}>{label}</dt>
+      <dd className={`shrink-0 whitespace-nowrap tabular-nums ${
+        green ? 'text-emerald-600 font-semibold'
+              : muted ? 'text-stone-400' : 'font-semibold text-stone-700'}`}>{value}</dd>
     </div>
   )
 }
@@ -715,20 +725,22 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                           const pct = q.discount_type === 'percentage' && Number(q.discount_value) > 0
                             ? ` ${Number(q.discount_value)}%` : ''
                           return (
-                            <div key={q.id} className="px-6 pb-8 pt-1">
-                              <dl className="bg-stone-50 rounded-lg p-3 border border-stone-100 text-[13px] space-y-1.5">
+                            <div key={q.id} className="px-2 sm:px-6 pb-6 sm:pb-8 pt-1">
+                              <dl className="bg-stone-50 rounded-lg p-1.5 sm:p-3 border border-stone-100 text-[11px] sm:text-[13px] space-y-1 sm:space-y-1.5">
                                 <SumRow label="Subtotal" value={fmt(q.subtotal)} />
                                 {q.pkg_disc_amount > 0 && (
-                                  <SumRow label="Package savings" value={`− ${fmt(q.pkg_disc_amount)}`} green />
+                                  <SumRow green value={`− ${fmt(q.pkg_disc_amount)}`}
+                                    label={<><span className="sm:hidden">Savings</span>
+                                            <span className="hidden sm:inline">Package savings</span></>} />
                                 )}
                                 {q.user_disc_amount > 0 && (
                                   <SumRow label={`Discount${pct}`} value={`− ${fmt(q.user_disc_amount)}`} green />
                                 )}
                                 {q.gst_amount > 0 && <SumRow label="GST 5%" value={fmt(q.gst_amount)} muted />}
                                 {q.pst_amount > 0 && <SumRow label="PST 7%" value={fmt(q.pst_amount)} muted />}
-                                <div className="flex justify-between items-baseline pt-2 mt-1 border-t border-stone-200">
+                                <div className="flex items-baseline justify-between gap-2 pt-2 mt-1 border-t border-stone-200">
                                   <dt className="font-semibold text-stone-700">Total</dt>
-                                  <dd className="text-base font-bold text-stone-900">{fmt(q.total)}</dd>
+                                  <dd className="shrink-0 whitespace-nowrap tabular-nums text-sm sm:text-base font-bold text-stone-900">{fmt(q.total)}</dd>
                                 </div>
                               </dl>
                             </div>

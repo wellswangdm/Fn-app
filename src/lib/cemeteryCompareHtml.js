@@ -86,8 +86,8 @@ function summaryHTML({ quotes, gridCols, zh, screen = false }) {
   const gridCls = screen ? 'class="cmp-grid"' : ''
   const BOX = 'background:#f5f5f7;border:1px solid #e5e5e5;border-radius:8px;padding:12px;font-size:13px;'
   const row = (label, value, colour = '#6b6b6b', weight = '600') => `
-    <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;color:${colour}">
-      <span>${esc(label)}</span><span style="font-weight:${weight}">${esc(value)}</span>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;color:${colour}">
+      <span style="min-width:0">${esc(label)}</span><span style="flex-shrink:0;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:${weight}">${esc(value)}</span>
     </div>`
   return `
     <div style="text-align:center;padding:32px 0 10px;">

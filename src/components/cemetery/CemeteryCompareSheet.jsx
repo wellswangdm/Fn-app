@@ -138,7 +138,7 @@ export default function CemeteryCompareSheet({
               const t = q.totals
               return (
                 <div key={q.id} className={`px-2 sm:px-5 pb-6 sm:pb-7 pt-1 ${cell(i)}`}>
-                  <dl className="bg-stone-50 rounded-lg p-3 border border-stone-100 text-[13px] space-y-1.5">
+                  <dl className="bg-stone-50 rounded-lg p-1.5 sm:p-3 border border-stone-100 text-[11px] sm:text-[13px] space-y-1 sm:space-y-1.5">
                     <Row label={zh ? '小計' : 'Subtotal'} value={fmt(t.subtotal)} />
                     {t.waiveAmount > 0 && (
                       <Row label={q.manualWaiveName || (zh ? '減免' : 'Waived')}
@@ -154,9 +154,9 @@ export default function CemeteryCompareSheet({
                     {t.pstTotal > 0 && (
                       <Row label={`PST ${pct(q.pstRate, 0.07)}`} value={fmt(t.pstTotal)} muted />
                     )}
-                    <div className="flex justify-between items-baseline pt-2 mt-1 border-t border-stone-200">
+                    <div className="flex items-baseline justify-between gap-2 pt-2 mt-1 border-t border-stone-200">
                       <dt className="font-semibold text-stone-700">{zh ? '總額' : 'Total'}</dt>
-                      <dd className="text-base font-bold text-stone-900">{fmt(t.grandTotal)}</dd>
+                      <dd className="shrink-0 whitespace-nowrap tabular-nums text-sm sm:text-base font-bold text-stone-900">{fmt(t.grandTotal)}</dd>
                     </div>
                   </dl>
                 </div>
@@ -178,14 +178,14 @@ export default function CemeteryCompareSheet({
                 <div key={q.id} className={`px-2 sm:px-5 pb-6 sm:pb-7 pt-3 ${cell(i)}`}>
                   {q.isMonthlyPaymentEnabled && q.plan?.monthly > 0 ? (
                     <>
-                      <div className="bg-stone-50 rounded-lg p-2.5 border border-stone-100 text-[11px] space-y-1">
-                        <div className="flex justify-between text-stone-500">
-                          <span>{zh ? '首期' : 'Deposit'}</span>
-                          <span className="font-semibold text-stone-700">{fmt(q.plan.deposit)}</span>
+                      <div className="bg-stone-50 rounded-lg p-2 sm:p-2.5 border border-stone-100 text-[10px] sm:text-[11px] space-y-1">
+                        <div className="flex items-baseline justify-between gap-2 text-stone-500">
+                          <span className="min-w-0">{zh ? '首期' : 'Deposit'}</span>
+                          <span className="shrink-0 whitespace-nowrap tabular-nums font-semibold text-stone-700">{fmt(q.plan.deposit)}</span>
                         </div>
-                        <div className="flex justify-between text-stone-500 border-t border-stone-200 pt-1">
-                          <span>{zh ? '融資額' : 'Financed balance'}</span>
-                          <span className="font-semibold text-stone-700">{fmt(q.plan.financed)}</span>
+                        <div className="flex items-baseline justify-between gap-2 text-stone-500 border-t border-stone-200 pt-1">
+                          <span className="min-w-0">{zh ? '融資額' : 'Financed balance'}</span>
+                          <span className="shrink-0 whitespace-nowrap tabular-nums font-semibold text-stone-700">{fmt(q.plan.financed)}</span>
                         </div>
                       </div>
                       {/* A monthly instalment is supporting detail under the
@@ -215,14 +215,23 @@ export default function CemeteryCompareSheet({
   )
 }
 
+/**
+ * One line of the summary.
+ *
+ * The figure never breaks. "− $48,964.70" contains a space, so in a narrow
+ * column it used to wrap with the minus stranded on one line and the amount
+ * on the next, beside a label that had wrapped too. items-baseline keeps the
+ * figure level with the first line of a label that does wrap.
+ */
 function Row({ label, value, green, muted }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className={green ? 'text-emerald-600' : muted ? 'text-stone-400' : 'text-stone-500'}>
+    <div className="flex items-baseline justify-between gap-1.5 sm:gap-3">
+      <dt className={`min-w-0 ${green ? 'text-emerald-600' : muted ? 'text-stone-400' : 'text-stone-500'}`}>
         {label}
       </dt>
-      <dd className={green ? 'text-emerald-600 font-semibold'
-                           : muted ? 'text-stone-400' : 'font-semibold text-stone-700'}>
+      <dd className={`shrink-0 whitespace-nowrap tabular-nums ${
+        green ? 'text-emerald-600 font-semibold'
+              : muted ? 'text-stone-400' : 'font-semibold text-stone-700'}`}>
         {value}
       </dd>
     </div>
