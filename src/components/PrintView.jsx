@@ -287,7 +287,7 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
           {/* Payment Options Table */}
           {showPayment && (
             total > MONTHLY_THRESHOLD
-              ? <PrintMonthlyPayment total={total} paymentTerms={paymentTerms} />
+              ? <PrintMonthlyPayment total={total} paymentTerms={paymentTerms} S={S} />
               : (() => {
                   const age   = calcAge(beneficiaryBirthdate)
                   const plans = getPaymentPlans(age, total)
@@ -413,8 +413,11 @@ function Line({ label, value, muted }) {
 
 
 
-function PrintMonthlyPayment({ total, paymentTerms }) {
+function PrintMonthlyPayment({ total, paymentTerms, S }) {
   const plans = getMonthlyPlans(total, paymentTerms)
+  // Destructuring plans[0] blind took the whole app down if the plan table
+  // ever came back empty; there is nothing to show in that case.
+  if (!plans.length) return null
   const { downPayment, balance } = plans[0]
   return (
     <div className="pb-6 pt-4 border-t border-stone-100">
