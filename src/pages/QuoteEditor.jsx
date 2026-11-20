@@ -8,6 +8,7 @@ import CustomerForm from '../components/CustomerForm.jsx'
 import PrintView from '../components/PrintView.jsx'
 import CasketPicker from '../components/CasketPicker.jsx'
 import ComparisonView from '../components/ComparisonView.jsx'
+import { versionNameOf } from '../lib/versionLabel.js'
 
 function generateQuoteNumber() {
   const d = new Date()
@@ -595,7 +596,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     if (!contactId || !quoteId) return
     const { data } = await supabase
       .from('quotes')
-      .select('id, quote_number, status, total, created_at, version_label, sort_order')
+      .select('id, quote_number, status, total, created_at, version_label, sort_order, packages(name)')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
     if (!data) return
@@ -811,7 +812,9 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
               const isEditing    = editingLabel?.id === v.id
               const isDragging   = dragV    === v.id
               const isDragTarget = dragOverV === v.id && dragV !== v.id
-              const displayLabel = v.version_label || `V${i + 1}`
+              // One naming rule across the list, this switcher and the
+              // comparison — see src/lib/versionLabel.js.
+              const displayLabel = versionNameOf(v, i, versions.length)
               const statusMark   = v.status === 'finalized' ? ' ✓' : v.status === 'accepted' ? ' ★' : ''
               return (
                 <div

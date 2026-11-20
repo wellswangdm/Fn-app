@@ -1,8 +1,34 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import ComparisonView from '../components/ComparisonView.jsx'
+import { versionNameOf } from '../lib/versionLabel.js'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Saved quotes — funeral portal.
+//
+// Built to the same rules as the cemetery list: one flat list, a contact is a
+// heading, its versions are the rows beneath it, and every version opens in a
+// single click.
+//
+// What the seven-column table used to do, and no longer does:
+//   * hide a contact's versions behind a "▸ 3 versions" chip, so getting to a
+//     quote took two clicks and you could not see what you were choosing
+//   * leave Status and Total blank on every multi-version row, because those
+//     only made sense per version — a table with holes in it
+//   * do two different things depending on where in one row you clicked
+//   * print "Purchaser" on every row even when it repeats the beneficiary
+//   * keep Duplicate and Delete on screen at all times
+//
+// Amounts sit in one right-aligned column so they can be read down the page.
+// ─────────────────────────────────────────────────────────────────────────────
 
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
+}
+
+function when(ts) {
+  if (!ts) return ''
+  return new Date(ts).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function generateQuoteNumber() {
@@ -11,11 +37,15 @@ function generateQuoteNumber() {
   return `Q-${date}-${String(Math.floor(Math.random() * 900) + 100)}`
 }
 
+// Colour, not a bordered pill. A list of twenty quotes should not look like a
+// sheet of stickers.
 const STATUS = {
-  draft:     { label: 'Draft',     cls: 'bg-amber-50 text-amber-600 border-amber-200'  },
-  finalized: { label: 'Finalized', cls: 'bg-blue-50 text-blue-600 border-blue-200'     },
-  accepted:  { label: 'Accepted',  cls: 'bg-green-50 text-green-600 border-green-200'  },
+  draft:     { label: 'Draft',     cls: 'text-stone-400'   },
+  finalized: { label: 'Finalized', cls: 'text-blue-600'    },
+  accepted:  { label: 'Accepted',  cls: 'text-emerald-600' },
 }
+
+const SEARCH_FROM = 5   // contacts before a search field earns its place
 
 export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, userId, user }) {
   const [quotes,      setQuotes]      = useState([])
@@ -23,8 +53,8 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
   const [error,       setError]       = useState(null)
   const [search,      setSearch]      = useState('')
   const [deleting,    setDeleting]    = useState(null)
-  const [expanded,    setExpanded]    = useState(new Set())
   const [duplicating, setDuplicating] = useState(null)
+  const [comparing,   setComparing]   = useState(null)   // { contactId, versionOrder }
   const [editProfile, setEditProfile] = useState(false)
   const [profile,     setProfile]     = useState({ name: '', phone: '', advisorEmail: '' })
   const [profSaving,  setProfSaving]  = useState(false)
@@ -64,34 +94,19 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
     setLoading(true)
     const { data, error } = await supabase
       .from('quotes')
-      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, version_label, sort_order, funeral_homes(name)')
+      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, version_label, sort_order, funeral_homes(name), packages(name)')
       .order('created_at', { ascending: false })
     if (error) setError(error.message)
     else setQuotes(data)
     setLoading(false)
   }
 
-  function toggleExpand(key, e) {
-    e.stopPropagation()
-    setExpanded(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
-  }
-
-  async function deleteQuote(id, e) {
-    e.stopPropagation()
-    if (!window.confirm('Delete this quote? This cannot be undone.')) return
+  async function deleteQuote(id, label) {
+    if (!window.confirm(`Delete “${label}”? This cannot be undone.`)) return
     setDeleting(id)
     await supabase.from('quotes').delete().eq('id', id)
     setQuotes(q => q.filter(x => x.id !== id))
     setDeleting(null)
-  }
-
-  function openDuplicate(quote, e) {
-    e.stopPropagation()
-    setDuplicating({ quote, newName: quote.deceased_name || '', sameContact: true })
   }
 
   async function confirmDuplicate() {
@@ -126,11 +141,11 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
     onEdit(newQ.id)
   }
 
-  const filtered = quotes.filter(q => {
-    const s = search.toLowerCase()
-    return !s || q.deceased_name?.toLowerCase().includes(s) || q.customer_name?.toLowerCase().includes(s)
-  })
+  const s = search.trim().toLowerCase()
+  const filtered = quotes.filter(q =>
+    !s || q.deceased_name?.toLowerCase().includes(s) || q.customer_name?.toLowerCase().includes(s))
 
+  // One group per contact, versions in the advisor's chosen order.
   const groups = []
   const groupMap = new Map()
   filtered.forEach(q => {
@@ -146,162 +161,196 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
     })
   })
 
-  return (
-    <div className="min-h-screen bg-stone-50">
+  const totalGroups = new Set(quotes.map(q => q.contact_id || q.id)).size
+  const showSearch  = totalGroups >= SEARCH_FROM
 
-      <header className="bg-primary-800 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div>
+  return (
+    <div className="min-h-screen bg-stone-50 flex flex-col">
+
+      <header className="bg-primary-800 text-white print:hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+          <div className="min-w-0">
             <h1 className="text-lg font-semibold tracking-tight">Funeral Quote</h1>
             <p className="text-primary-300 text-xs mt-0.5">Service quotation manager</p>
           </div>
 
-          {user && (() => {
-            const name    = user.user_metadata?.full_name || user.user_metadata?.name || ''
-            const email   = user.email || ''
-            const initial = (name || email).charAt(0).toUpperCase()
-            return (
-              <button onClick={openProfile} className="flex items-center gap-2.5 ml-auto hover:opacity-80 transition-opacity">
-                <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500 flex items-center justify-center text-sm font-bold shrink-0">
-                  {initial}
-                </div>
-                <div className="hidden sm:block text-right">
-                  {name && <p className="text-sm font-medium leading-tight">{name}</p>}
-                  <p className="text-xs text-primary-300 leading-tight">{email}</p>
-                </div>
-              </button>
-            )
-          })()}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {user && (() => {
+              const name    = user.user_metadata?.full_name || user.user_metadata?.name || ''
+              const email   = user.email || ''
+              const initial = (name || email).charAt(0).toUpperCase()
+              return (
+                <button onClick={openProfile} title="Edit profile"
+                        className="flex items-center gap-2.5 mr-1 hover:opacity-80 transition-opacity">
+                  <div className="w-8 h-8 rounded-full bg-primary-600 border border-primary-500
+                                  flex items-center justify-center text-sm font-bold shrink-0">
+                    {initial}
+                  </div>
+                  <div className="hidden lg:block text-right">
+                    {name && <p className="text-sm font-medium leading-tight">{name}</p>}
+                    <p className="text-xs text-primary-300 leading-tight">{email}</p>
+                  </div>
+                </button>
+              )
+            })()}
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={onNew} className="text-sm font-medium bg-white text-primary-800 px-4 py-2 rounded-lg hover:bg-stone-100 transition-colors shadow-sm">
-              + New Quote
-            </button>
             {onSwitchPortal && (
-              <button onClick={onSwitchPortal} className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+              <button onClick={onSwitchPortal}
+                      className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
                 Switch portal
               </button>
             )}
-            <button onClick={onSignOut} className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
+            <button onClick={onSignOut}
+                    className="text-xs text-primary-300 hover:text-white transition-colors px-3 py-2">
               Sign out
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6">
+      {/* New Quote sits with the list it adds to, as it does in the cemetery
+          portal, instead of competing with sign-out in the title bar. */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
 
-        <div className="mb-5">
-          <input className="input max-w-xs text-sm" placeholder="Search by name…" value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="flex items-center gap-3">
+          {showSearch ? (
+            <input className="flex-1 min-w-0 max-w-sm bg-stone-100/70 border-0 rounded-lg px-3.5 py-2 text-[13px]
+                              placeholder:text-stone-400 focus:outline-none focus:ring-2
+                              focus:ring-primary-500/20"
+                   placeholder="Search by name"
+                   value={search} onChange={e => setSearch(e.target.value)} />
+          ) : <div className="flex-1" />}
+          <button onClick={onNew} className="btn-primary text-[13px] shrink-0">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            New quote
+          </button>
         </div>
 
-        {loading && <p className="text-sm text-stone-400">Loading…</p>}
-        {error   && <p className="text-sm text-red-500">Error: {error}</p>}
+        {error && <p className="text-sm text-red-600">Error: {error}</p>}
 
-        {!loading && !error && (
-          groups.length === 0 ? (
-            <div className="card p-16 text-center">
-              <p className="text-stone-400 text-sm mb-3">No quotes yet</p>
-              <button onClick={onNew} className="btn-primary">Create your first quote</button>
-            </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-stone-100 bg-stone-50/80">
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Beneficiary</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Purchaser</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Funeral Home</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Status</th>
-                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Total</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Date</th>
-                    <th className="px-4 py-3 w-36" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-50">
-                  {groups.map(group => {
-                    const primary = group.quotes[0]
-                    const rest    = group.quotes.slice(1)
-                    const isOpen  = expanded.has(group.key)
-                    const isMulti = group.quotes.length > 1
-                    const s       = STATUS[primary.status] || { label: primary.status, cls: 'bg-stone-100 text-stone-500' }
+        {loading ? (
+          <p className="text-sm text-stone-400 py-16 text-center">Loading…</p>
 
-                    // Pick the best name to show for the group (first non-empty across all versions)
-                    const groupName     = group.quotes.find(q => q.deceased_name)?.deceased_name || null
-                    const groupPurchaser = group.quotes.find(q => q.customer_name)?.customer_name || null
-                    const groupHome     = group.quotes.find(q => q.funeral_homes?.name)?.funeral_homes?.name || '—'
+        ) : groups.length === 0 ? (
+          <div className="py-20 text-center">
+            <p className="text-sm text-stone-400">
+              {quotes.length === 0 ? 'No quotes yet.' : 'Nothing matches.'}
+            </p>
+            {quotes.length === 0 && (
+              <button onClick={onNew} className="btn-primary mt-5 text-[13px] mx-auto">
+                New quote
+              </button>
+            )}
+          </div>
 
-                    return (
-                      <>
-                        <tr key={primary.id} className="hover:bg-stone-50/60 transition-colors cursor-pointer" onClick={() => onEdit(primary.id)}>
-                          <td className="px-4 py-3 text-sm font-medium text-stone-800">
-                            <div className="flex items-center gap-2">
-                              {groupName || <span className="text-stone-300">—</span>}
-                              {isMulti ? (
-                                <button
-                                  onClick={e => toggleExpand(group.key, e)}
-                                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-600 hover:bg-primary-200 transition-colors shrink-0"
-                                >
-                                  {isOpen ? '▾' : '▸'} {group.quotes.length} versions
-                                </button>
-                              ) : primary.version_label ? (
-                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500 shrink-0">
-                                  {primary.version_label}
-                                </span>
-                              ) : null}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-stone-500">{groupPurchaser || <span className="text-stone-300">—</span>}</td>
-                          <td className="px-4 py-3 text-xs text-stone-400">{groupHome}</td>
-                          {/* For multi-version groups, status/total shown per-version in sub-rows */}
-                          <td className="px-4 py-3">{!isMulti && <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>}</td>
-                          <td className="px-4 py-3 text-right text-sm font-semibold text-stone-700">{!isMulti && fmt(primary.total)}</td>
-                          <td className="px-4 py-3 text-xs text-stone-400">{new Date(primary.created_at).toLocaleDateString('en-CA')}</td>
-                          <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                            {!isMulti && (
-                              <div className="flex items-center justify-end gap-3">
-                                <button onClick={e => openDuplicate(primary, e)} className="text-xs text-stone-400 hover:text-primary-600 transition-colors">Duplicate</button>
-                                <button onClick={e => deleteQuote(primary.id, e)} disabled={deleting === primary.id} className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors">Delete</button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
+        ) : (
+          <div className="card overflow-hidden divide-y divide-stone-200/70">
+            {groups.map(g => {
+              const count = g.quotes.length
+              // The first non-empty value across the versions: they describe
+              // one contact, so a blank on one version is not news.
+              const name      = g.quotes.find(q => q.deceased_name)?.deceased_name || '—'
+              const purchaser = g.quotes.find(q => q.customer_name)?.customer_name || ''
+              const home      = g.quotes.find(q => q.funeral_homes?.name)?.funeral_homes?.name || ''
+              const latest    = g.quotes.reduce((a, q) =>
+                                  new Date(q.created_at) > new Date(a) ? q.created_at : a,
+                                  g.quotes[0].created_at)
 
-                        {/* All versions shown as sub-rows when expanded */}
-                        {isOpen && group.quotes.map((q, i) => {
-                          const vs = STATUS[q.status] || { label: q.status, cls: 'bg-stone-100 text-stone-500' }
-                          return (
-                            <tr key={q.id} className="bg-stone-50/60 hover:bg-stone-100/70 transition-colors cursor-pointer" onClick={() => onEdit(q.id)}>
-                              <td className="py-2.5 pl-10 pr-4 text-sm font-medium text-stone-700">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-px h-4 bg-stone-300 shrink-0" />
-                                  {q.version_label || `V${i + 1}`}
-                                </div>
-                              </td>
-                              <td /><td />
-                              <td className="px-4 py-2.5">
-                                <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full border ${vs.cls}`}>{vs.label}</span>
-                              </td>
-                              <td className="px-4 py-2.5 text-right text-sm font-semibold text-stone-600">{fmt(q.total)}</td>
-                              <td />
-                              <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center justify-end gap-3">
-                                  <button onClick={e => openDuplicate(q, e)} className="text-xs text-stone-400 hover:text-primary-600 transition-colors">Duplicate</button>
-                                  <button onClick={e => deleteQuote(q.id, e)} disabled={deleting === q.id} className="text-xs text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors">Delete</button>
-                                </div>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )
+              return (
+                <section key={g.key}>
+                  {/* pr-20 leaves the gutter the rows leave for their hover
+                      actions, so this line ends where the amounts end. */}
+                  <header className="flex items-baseline gap-2.5 pl-5 pr-20 pt-4 pb-2">
+                    {/* flex-1 min-w-0, so the name takes the slack and is the
+                        thing that truncates last — not squeezed to nothing by
+                        the metadata beside it, which is what happened on a
+                        phone when the name was long. */}
+                    <h2 className="flex-1 min-w-0 text-[15px] font-semibold text-stone-900 truncate">{name}</h2>
+                    {/* Only when it says something the name does not, and only
+                        where there is room to say it. */}
+                    {purchaser && purchaser !== name && (
+                      <span className="hidden md:inline shrink-0 truncate max-w-[10rem] text-xs text-stone-400">
+                        for {purchaser}
+                      </span>
+                    )}
+                    {/* Metadata, not navigation: on a phone the name and
+                        Compare get the width instead. */}
+                    <span className="hidden sm:inline text-xs text-stone-400 shrink-0">
+                      {home && <span className="hidden lg:inline">{home} · </span>}
+                      {when(latest)}
+                    </span>
+                    {count > 1 && (
+                      <button onClick={() => setComparing({ contactId: g.key,
+                                                            versionOrder: g.quotes.map(q => q.id) })}
+                              className="shrink-0 text-xs text-stone-400 hover:text-primary-700 transition-colors">
+                        Compare
+                      </button>
+                    )}
+                  </header>
+
+                  <div className="divide-y divide-stone-100">
+                    {g.quotes.map((q, i) => {
+                      const label = versionNameOf(q, i, count)
+                      const st    = STATUS[q.status] || { label: q.status, cls: 'text-stone-400' }
+                      return (
+                        <div key={q.id}
+                             className="group relative flex items-center hover:bg-stone-50/80 transition-colors">
+                          <button onClick={() => onEdit(q.id)}
+                                  className="flex-1 min-w-0 flex items-center gap-3 pl-7 pr-20 py-2.5 text-left">
+                            <span className="flex-1 min-w-0 truncate text-sm text-stone-700 group-hover:text-stone-900">
+                              {label}
+                            </span>
+                            <span className={`hidden sm:block shrink-0 w-[4.5rem] text-right text-xs ${st.cls}`}>
+                              {st.label}
+                            </span>
+                            <span className="shrink-0 w-28 text-right text-sm text-stone-500 tabular-nums">
+                              {fmt(q.total)}
+                            </span>
+                          </button>
+
+                          {/* Hover-revealed on a pointer device; a touch screen
+                              has no hover, so they stay visible there. */}
+                          <div className="absolute right-3 flex items-center gap-0.5
+                                          opacity-0 group-hover:opacity-100 focus-within:opacity-100
+                                          [@media(hover:none)]:opacity-100 transition-opacity">
+                            <IconButton label={`Duplicate ${label}`} title="Duplicate"
+                                        onClick={() => setDuplicating({
+                                          quote: q, newName: q.deceased_name || '', sameContact: true })}>
+                              <path d="M8 8V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3" />
+                              <rect x="4" y="8" width="12" height="12" rx="1" />
+                            </IconButton>
+                            <IconButton label={`Delete ${label}`} title="Delete" danger
+                                        disabled={deleting === q.id}
+                                        onClick={() => deleteQuote(q.id, label)}>
+                              <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            </IconButton>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
         )}
       </main>
+
+      {/* Compare, reachable from the list as it is in the cemetery portal —
+          previously it existed only inside the editor. */}
+      {comparing && (
+        <ComparisonView
+          contactId={comparing.contactId}
+          /* Nothing is open here, so no column is "current" — passing the
+             first version would label it current for no reason. */
+          currentQuoteId={null}
+          versionOrder={comparing.versionOrder}
+          onClose={() => setComparing(null)}
+        />
+      )}
 
       {/* Profile dialog */}
       {editProfile && (
@@ -360,5 +409,18 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
         </div>
       )}
     </div>
+  )
+}
+
+function IconButton({ label, title, onClick, disabled, danger, children }) {
+  return (
+    <button onClick={onClick} disabled={disabled} aria-label={label} title={title}
+            className={`p-1.5 rounded-md text-stone-300 transition-colors disabled:opacity-40
+              ${danger ? 'hover:text-red-600 hover:bg-red-50' : 'hover:text-primary-700 hover:bg-primary-50'}`}>
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {children}
+      </svg>
+    </button>
   )
 }

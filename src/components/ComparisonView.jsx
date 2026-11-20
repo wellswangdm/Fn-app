@@ -4,6 +4,7 @@ import { calcAge, getPaymentPlans, getMonthlyPlans, MONTHLY_THRESHOLD } from '..
 import { calcTotals } from '../lib/calcTotals.js'
 import { useTranslations, getTranslations } from '../lib/useTranslations.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
+import { versionNameOf } from '../lib/versionLabel.js'
 
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
@@ -21,12 +22,17 @@ function buildVersionHeaderCells({ shown, quotes, showArrangement, showTicker, l
       q.discount_amount > 0 && `${fmt(q.discount_amount)} off`,
       q.tax_amount > 0      && `${fmt(q.tax_amount)} tax incl.`,
     ].filter(Boolean)
+    const title = versionNameOf(q, quotes.indexOf(q), quotes.length)
+    // When an unnamed version falls back to its package, the package is
+    // already the heading — printing it again underneath says nothing.
+    const sub   = showArrangement && q.packages?.name && q.packages.name !== title
+                    ? q.packages.name : ''
     return `
     <div style="text-align:center;padding:${cellPadding};">
       <p style="margin:0;font-size:20px;font-weight:700;color:#1d1d1f;font-family:-apple-system,sans-serif">
-        ${esc(q.version_label || `V${quotes.indexOf(q) + 1}`)}
+        ${esc(title)}
       </p>
-      ${showArrangement && q.packages?.name ? `<p style="margin:6px 0 0;font-size:13px;color:#86868b">${esc(q.packages.name)}</p>` : ''}
+      ${sub ? `<p style="margin:6px 0 0;font-size:13px;color:#86868b">${esc(sub)}</p>` : ''}
       ${showArrangement && q.arrangement_type ? `<p style="margin:3px 0 0;font-size:12px;color:#86868b;text-transform:capitalize">${esc(q.arrangement_type)}</p>` : ''}
       <p style="margin:16px 0 0;font-size:30px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em">${fmt(q.total)}</p>
       ${showTicker && parts.length ? `<p style="margin:6px 0 0;font-size:12px;color:#a1a1aa">${parts.join(' · ')}</p>` : ''}
@@ -552,7 +558,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                 <button key={q.id} onClick={() => toggle(q.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-medium transition-colors ${selected.has(q.id) ? 'border-primary-300 bg-primary-50 text-primary-700' : 'border-stone-200 bg-white text-stone-400'}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${selected.has(q.id) ? 'bg-primary-500' : 'bg-stone-300'}`} />
-                  {q.version_label || `V${i + 1}`}
+                  {versionNameOf(q, i, quotes.length)}
                   {q.id === currentQuoteId && <span className="text-xs opacity-60 ml-1">current</span>}
                 </button>
               ))}
@@ -604,9 +610,11 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                       return (
                         <div key={q.id} className="px-8 pt-7 pb-6 text-center">
                           <p className={`text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
-                            {q.version_label || `V${quotes.indexOf(q) + 1}`}
+                            {versionNameOf(q, quotes.indexOf(q), quotes.length)}
                           </p>
-                          {showArrangement && q.packages?.name && <p className="text-sm text-stone-400 mt-1.5">{q.packages.name}</p>}
+                          {showArrangement && q.packages?.name
+                            && q.packages.name !== versionNameOf(q, quotes.indexOf(q), quotes.length)
+                            && <p className="text-sm text-stone-400 mt-1.5">{q.packages.name}</p>}
                           {showArrangement && q.arrangement_type && <p className="text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
