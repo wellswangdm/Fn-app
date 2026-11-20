@@ -18,7 +18,7 @@ export default function QuoteSummary({
   status, beneficiaryName, beneficiaryBirthdate,
   onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder,
   onRenameSection, onAddSection, onRemoveSection, onMoveItem,
-  onChangeCasket, onPrint,
+  onChangeCasket, onPrint, onChangeStatus,
   paymentTerms, onChangePaymentTerms,
 }) {
   const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
@@ -57,9 +57,28 @@ export default function QuoteSummary({
             <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
             中文
           </label>
-          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>
-            {status}
-          </span>
+          {/* The badge is the status control. There used to be no way to set
+              status except by choosing between a "Save Draft" and a
+              "Finalize" button, which made saving and status the same act. */}
+          <label className="relative">
+            <span className="sr-only">Quote status</span>
+            <select
+              value={status || 'draft'}
+              onChange={e => onChangeStatus && onChangeStatus(e.target.value)}
+              className={`appearance-none cursor-pointer text-[11px] font-semibold
+                          pl-2 pr-5 py-0.5 rounded-full border capitalize
+                          focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${statusStyle}`}
+            >
+              <option value="draft">Draft</option>
+              <option value="finalized">Finalized</option>
+              <option value="accepted">Accepted</option>
+            </select>
+            <svg className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 opacity-60"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </label>
         </div>
       </div>
 

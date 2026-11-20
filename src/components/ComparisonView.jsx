@@ -495,8 +495,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   function renderCatSection({ catId, catName, itemsByVersion }) {
     return (
       <div key={catId}>
-        <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
-          <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+        <div className="pt-8 pb-2 text-center">
+          <span className="text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
         </div>
         <div className="grid" style={gridStyle}>
           {shown.map((q) => (
@@ -547,7 +547,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                shareStatus === 'error'     ? 'Error — retry?' :
                'Share link'}
             </button>
-            <button onClick={handleOpenHTML} className="hidden sm:inline-block text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
+            <button onClick={handleOpenHTML} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
               Open HTML
             </button>
             <button onClick={handlePrint} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
@@ -642,8 +642,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {/* Caskets */}
                   {hasCaskets && (
                     <div>
-                      <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
-                        <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
+                      <div className="pt-8 pb-2 text-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
@@ -681,8 +681,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                       adding another checkbox. */}
                   {showTicker && (
                     <div>
-                      <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
-                        <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">Summary</span>
+                      <div className="pt-8 pb-2 text-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Summary</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map(q => {
@@ -715,8 +715,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {/* Payment Options */}
                   {showPayment && (
                     <div>
-                      <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
-                        <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">Payment Options</span>
+                      <div className="pt-8 pb-2 text-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Payment Options</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {

@@ -792,19 +792,17 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             >
               Print
             </button>
+            {/* One button, as in the cemetery portal. "Save Draft" and
+                "Finalize" were two ways to save that differed only in the
+                status they wrote; status is a property of the quote, so it is
+                set on the status badge in the summary instead of deciding
+                which save button you press. */}
             <button
-              onClick={() => save('draft')}
-              disabled={saving}
-              className="btn-secondary text-xs py-1.5"
-            >
-              {saving ? 'Saving…' : 'Save Draft'}
-            </button>
-            <button
-              onClick={() => save('finalized')}
+              onClick={() => save()}
               disabled={saving}
               className="btn-primary text-xs py-1.5 bg-white text-primary-800 hover:bg-stone-100"
             >
-              Finalize
+              {saving ? 'Saving…' : 'Save quote'}
             </button>
           </div>
         </div>
@@ -1076,6 +1074,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             onRemoveSection={id => dispatch({ type: 'REMOVE_SECTION', id })}
             onMoveItem={(itemId, sectionId) => dispatch({ type: 'MOVE_ITEM_SECTION', itemId, sectionId })}
             onChangeCasket={() => setCasketPickerOpen(true)}
+            onChangeStatus={st => dispatch({ type: 'SET_STATUS', status: st })}
             onPrint={() => setShowPrint(true)}
             paymentTerms={paymentTerms}
             onChangePaymentTerms={setPaymentTerms}
