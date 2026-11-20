@@ -6,6 +6,11 @@ import { useTranslations, getTranslations } from '../lib/useTranslations.js'
 import { useChineseMode } from '../lib/useChineseMode.js'
 import { versionNameOf } from '../lib/versionLabel.js'
 
+// Each on-screen comparison column needs room for a version name and a figure
+// like $13,419.00. At the old 220px, with px-8 taking 64 of them, the price
+// overflowed its own cell on a phone and the second version was unreadable.
+const COL_MIN_PX = 260
+
 function fmt(n) {
   return n == null ? '—' : `$${Number(n).toLocaleString('en-CA', { minimumFractionDigits: 2 })}`
 }
@@ -389,7 +394,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   function buildCategoryData() {
     const PSS   = { catId: 'pss',   catName: 'Professional Staff & Services', itemsByVersion: {} }
     const TRANS = { catId: 'trans', catName: 'Transportation',                itemsByVersion: {} }
-    const CA    = { catId: 'ca',    catName: 'Cash Advanced Items',           itemsByVersion: {} }
+    const CA    = { catId: 'ca',    catName: 'Third Party Items',           itemsByVersion: {} }
 
     shown.forEach(q => {
       ;(itemsByQuote[q.id] || []).forEach(item => {
@@ -490,8 +495,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   function renderCatSection({ catId, catName, itemsByVersion }) {
     return (
       <div key={catId}>
-        <div className="pt-8 pb-2 text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
+        <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
+          <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">{catName}</span>
         </div>
         <div className="grid" style={gridStyle}>
           {shown.map((q) => (
@@ -517,16 +522,18 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
   const hasDiscountOrTax = shown.some(q => q.discount_amount > 0 || q.tax_amount > 0)
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-4">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-          <div>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-100 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="min-w-0">
             <h2 className="text-sm font-bold text-stone-800">Compare Versions</h2>
-            <p className="text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
+            {/* The explanation is the first thing to go when space is tight;
+                on a phone it had been pushing Print onto four lines. */}
+            <p className="hidden sm:block text-xs text-stone-400 mt-0.5">Each column shows everything included in that version</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <button
               onClick={handleShare}
               disabled={shareStatus === 'uploading'}
@@ -540,11 +547,12 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                shareStatus === 'error'     ? 'Error — retry?' :
                'Share link'}
             </button>
-            <button onClick={handleOpenHTML} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
+            <button onClick={handleOpenHTML} className="hidden sm:inline-block text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
               Open HTML
             </button>
-            <button onClick={handlePrint} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors">
-              Print / Save PDF
+            <button onClick={handlePrint} className="text-xs font-medium text-stone-500 hover:text-primary-700 border border-stone-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+              <span className="sm:hidden">PDF</span>
+              <span className="hidden sm:inline">Print / Save PDF</span>
             </button>
             <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-xl leading-none ml-1">×</button>
           </div>
@@ -553,7 +561,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
         {loading ? <p className="text-sm text-stone-400 p-8 text-center">Loading…</p> : (
           <>
             {/* Toolbar */}
-            <div className="flex gap-2 px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/50">
+            <div className="flex gap-2 px-4 sm:px-6 py-3 border-b border-stone-100 flex-wrap items-center bg-stone-50/50">
               {quotes.map((q, i) => (
                 <button key={q.id} onClick={() => toggle(q.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-medium transition-colors ${selected.has(q.id) ? 'border-primary-300 bg-primary-50 text-primary-700' : 'border-stone-200 bg-white text-stone-400'}`}>
@@ -562,7 +570,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {q.id === currentQuoteId && <span className="text-xs opacity-60 ml-1">current</span>}
                 </button>
               ))}
-              <div className="ml-auto flex items-center gap-4">
+              <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-x-4 gap-y-1.5">
                 <label className="flex items-center gap-1.5 text-sm text-stone-500 cursor-pointer select-none">
                   <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
                   中文
@@ -598,7 +606,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
               <p className="text-xs text-stone-400 text-center py-16">Select at least one version.</p>
             ) : (
               <div className="overflow-x-auto">
-                <div style={{ minWidth: `${cols * 220}px` }}>
+                <div style={{ minWidth: `${cols * COL_MIN_PX}px` }}>
 
                   {/* Version headers */}
                   <div className="grid" style={gridStyle}>
@@ -608,8 +616,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                         q.tax_amount > 0      && `${fmt(q.tax_amount)} tax incl.`,
                       ].filter(Boolean)
                       return (
-                        <div key={q.id} className="px-8 pt-7 pb-6 text-center">
-                          <p className={`text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
+                        <div key={q.id} className="px-4 sm:px-8 pt-7 pb-6 text-center">
+                          <p className={`text-xl sm:text-2xl font-bold ${q.id === currentQuoteId ? 'text-primary-700' : 'text-stone-900'}`}>
                             {versionNameOf(q, quotes.indexOf(q), quotes.length)}
                           </p>
                           {showArrangement && q.packages?.name
@@ -619,7 +627,7 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                           {STATUS_CLS[q.status] && (
                             <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
                           )}
-                          <p className="text-4xl font-bold text-stone-900 mt-4 tracking-tight">{fmt(q.total)}</p>
+                          <p className="text-2xl sm:text-4xl font-bold text-stone-900 mt-3 sm:mt-4 tracking-tight">{fmt(q.total)}</p>
                           {showTicker && parts.length > 0 && (
                             <p className="text-xs text-stone-400 mt-1.5">{parts.join(' · ')}</p>
                           )}
@@ -634,8 +642,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {/* Caskets */}
                   {hasCaskets && (
                     <div>
-                      <div className="pt-8 pb-2 text-center">
-                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
+                      <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
+                        <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">Casket Selection</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
@@ -673,8 +681,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                       adding another checkbox. */}
                   {showTicker && (
                     <div>
-                      <div className="pt-8 pb-2 text-center">
-                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Summary</span>
+                      <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
+                        <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">Summary</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map(q => {
@@ -707,8 +715,8 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                   {/* Payment Options */}
                   {showPayment && (
                     <div>
-                      <div className="pt-8 pb-2 text-center">
-                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Payment Options</span>
+                      <div className="pt-8 pb-2 px-4 text-left sm:px-0 sm:text-center">
+                        <span className="sticky left-0 sm:static inline-block text-xs font-bold uppercase tracking-widest text-stone-400">Payment Options</span>
                       </div>
                       <div className="grid" style={gridStyle}>
                         {shown.map((q) => {
