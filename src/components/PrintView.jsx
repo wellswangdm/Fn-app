@@ -130,9 +130,9 @@ export default function PrintView({ home, state, attachedImage, onClose, payment
   )
 
   return (
-    // A sheet of paper on a desk, not a document inside a dark modal — the
-    // same shell the cemetery review uses.
-    <div className="fixed inset-0 z-50 bg-stone-100 overflow-y-auto">
+    // A page of its own, as the cemetery review is — not an overlay floating
+    // on top of the builder.
+    <div className="min-h-screen bg-stone-100">
 
       {/* Controls — never printed */}
       <div className="print:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-stone-200">

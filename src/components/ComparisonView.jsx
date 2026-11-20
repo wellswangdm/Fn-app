@@ -299,10 +299,6 @@ function SumRow({ label, value, green, muted }) {
   )
 }
 
-const STATUS_CLS = {
-  finalized: 'bg-blue-50 text-blue-600 border-blue-200',
-  accepted:  'bg-green-50 text-green-600 border-green-200',
-}
 
 export default function ComparisonView({ contactId, currentQuoteId, versionOrder = [], onClose, paymentTerms = null }) {
   const [quotes,           setQuotes]           = useState([])
@@ -657,9 +653,6 @@ export default function ComparisonView({ contactId, currentQuoteId, versionOrder
                             && q.packages.name !== versionNameOf(q, quotes.indexOf(q), quotes.length)
                             && <p className="text-[11px] sm:text-sm text-stone-400 mt-1 sm:mt-1.5 leading-snug">{q.packages.name}</p>}
                           {showArrangement && q.arrangement_type && <p className="text-[11px] sm:text-xs text-stone-400 capitalize mt-0.5">{q.arrangement_type}</p>}
-                          {STATUS_CLS[q.status] && (
-                            <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_CLS[q.status]}`}>{q.status}</span>
-                          )}
                           <p className="text-lg sm:text-4xl font-bold text-stone-900 mt-2 sm:mt-4 tracking-tight">{fmt(q.total)}</p>
                           {showTicker && parts.length > 0 && (
                             <p className="text-[10px] sm:text-xs text-stone-400 mt-1 sm:mt-1.5 leading-snug">{parts.join(' · ')}</p>

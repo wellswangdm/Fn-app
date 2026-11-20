@@ -37,13 +37,7 @@ function generateQuoteNumber() {
   return `Q-${date}-${String(Math.floor(Math.random() * 900) + 100)}`
 }
 
-// Colour, not a bordered pill. A list of twenty quotes should not look like a
-// sheet of stickers.
-const STATUS = {
-  draft:     { label: 'Draft',     cls: 'text-stone-400'   },
-  finalized: { label: 'Finalized', cls: 'text-blue-600'    },
-  accepted:  { label: 'Accepted',  cls: 'text-emerald-600' },
-}
+
 
 const SEARCH_FROM = 5   // contacts before a search field earns its place
 
@@ -94,7 +88,7 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
     setLoading(true)
     const { data, error } = await supabase
       .from('quotes')
-      .select('id, deceased_name, customer_name, status, total, created_at, contact_id, version_label, sort_order, funeral_homes(name), packages(name)')
+      .select('id, deceased_name, customer_name, total, created_at, contact_id, version_label, sort_order, funeral_homes(name), packages(name)')
       .order('created_at', { ascending: false })
     if (error) setError(error.message)
     else setQuotes(data)
@@ -128,7 +122,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
       deceased_name: trimmedName,
       customer_name: q.purchaser_different ? q.customer_name : trimmedName,
       contact_id:    newContactId,
-      status:        'draft',
       user_id:       userId,
     }).select('id').single()
 
@@ -294,7 +287,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
                   <div className="divide-y divide-stone-100">
                     {g.quotes.map((q, i) => {
                       const label = versionNameOf(q, i, count)
-                      const st    = STATUS[q.status] || { label: q.status, cls: 'text-stone-400' }
                       return (
                         <div key={q.id}
                              className="group relative flex items-center hover:bg-stone-50/80 transition-colors">
@@ -302,9 +294,6 @@ export default function QuoteList({ onNew, onEdit, onSignOut, onSwitchPortal, us
                                   className="flex-1 min-w-0 flex items-center gap-3 pl-7 pr-20 py-2.5 text-left">
                             <span className="flex-1 min-w-0 truncate text-sm text-stone-700 group-hover:text-stone-900">
                               {label}
-                            </span>
-                            <span className={`hidden sm:block shrink-0 w-[4.5rem] text-right text-xs ${st.cls}`}>
-                              {st.label}
                             </span>
                             <span className="shrink-0 w-28 text-right text-sm text-stone-500 tabular-nums">
                               {fmt(q.total)}

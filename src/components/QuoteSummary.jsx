@@ -15,10 +15,10 @@ export default function QuoteSummary({
   subtotal, packageDiscount, pkgDiscAmount, userDiscAmount,
   discountType, discountValue, discountAmount,
   gstAmount, pstAmount, total,
-  status, beneficiaryName, beneficiaryBirthdate,
+  beneficiaryName, beneficiaryBirthdate,
   onRemove, onChangeQty, onDiscount, onToggleTax, onEdit, onReorder,
   onRenameSection, onAddSection, onRemoveSection, onMoveItem,
-  onChangeCasket, onPrint, onChangeStatus,
+  onChangeCasket, onPrint,
   paymentTerms, onChangePaymentTerms,
 }) {
   const [showDiscount,   setShowDiscount]   = useState(discountValue > 0)
@@ -28,11 +28,6 @@ export default function QuoteSummary({
   const translations = useTranslations()
   const [showChinese, setShowChinese] = useChineseMode()
 
-  const statusStyle = {
-    finalized: 'bg-blue-50 text-blue-600 border-blue-200',
-    accepted:  'bg-green-50 text-green-600 border-green-200',
-    draft:     'bg-amber-50 text-amber-600 border-amber-200',
-  }[status] || 'bg-stone-100 text-stone-500'
 
   function handleDrop(toId) {
     if (dragId && dragId !== toId) onReorder(dragId, toId)
@@ -56,28 +51,6 @@ export default function QuoteSummary({
           <label className="flex items-center gap-1 text-[11px] text-stone-400 cursor-pointer select-none">
             <input type="checkbox" checked={showChinese} onChange={e => setShowChinese(e.target.checked)} className="rounded" />
             中文
-          </label>
-          {/* The badge is the status control. There used to be no way to set
-              status except by choosing between a "Save Draft" and a
-              "Finalize" button, which made saving and status the same act. */}
-          <label className="relative">
-            <span className="sr-only">Quote status</span>
-            <select
-              value={status || 'draft'}
-              onChange={e => onChangeStatus && onChangeStatus(e.target.value)}
-              className={`appearance-none cursor-pointer text-[11px] font-semibold
-                          pl-2 pr-5 py-0.5 rounded-full border capitalize
-                          focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${statusStyle}`}
-            >
-              <option value="draft">Draft</option>
-              <option value="finalized">Finalized</option>
-              <option value="accepted">Accepted</option>
-            </select>
-            <svg className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 opacity-60"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
           </label>
         </div>
       </div>

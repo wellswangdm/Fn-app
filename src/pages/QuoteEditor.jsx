@@ -292,7 +292,6 @@ function reducer(state, action) {
     }
 
     case 'SET_CUSTOMER': return { ...state, ...action.payload }
-    case 'SET_STATUS':   return { ...state, status: action.status }
     case 'SET_NOTES':    return { ...state, notes: action.notes }
 
     default: return state
@@ -584,13 +583,12 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     }
   }
 
-  async function save(status) {
+  async function save() {
     setSaving(true); setSaveErr(null)
     try {
       const quoteData = {
         ...buildQuoteData(),
         quote_number: state.quoteNumber || generateQuoteNumber(),
-        status:       status || state.status,
       }
       let qid = quoteId
       if (quoteId) {
@@ -603,7 +601,6 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
       if (state.items.length) {
         await supabase.from('quote_items').insert(buildItemRows(state.items, qid))
       }
-      if (status) dispatch({ type: 'SET_STATUS', status })
       if (!quoteId && onEdit) {
         onEdit(qid) // first-time save: navigate to the newly created quote
       } else {
@@ -620,7 +617,7 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     if (!contactId || !quoteId) return
     const { data } = await supabase
       .from('quotes')
-      .select('id, quote_number, status, total, created_at, version_label, sort_order, packages(name)')
+      .select('id, quote_number, total, created_at, version_label, sort_order, packages(name)')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
     if (!data) return
@@ -721,233 +718,210 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
     </div>
   )
 
+  // Review takes over the screen, the way the cemetery editor hands off to
+  // its review sheet. It is a different view of the quote, not a window
+  // hovering over the one you were in.
+  if (showPrint) return (
+    <PrintView home={currentHome} state={state} attachedImage={attachedImage}
+               onClose={() => setShowPrint(false)} paymentTerms={paymentTerms} />
+  )
+
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
+    <div className="min-h-screen bg-stone-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="bg-primary-800 text-white sticky top-0 z-20">
-        {/* Wraps instead of overflowing. Seven controls in a fixed-height,
-            no-wrap row pushed the page to 650px wide on a 390px screen, so the
-            whole builder scrolled sideways. */}
-        <div className="max-w-7xl mx-auto px-4 min-h-14 py-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <button
-            onClick={onDone}
-            className="text-primary-300 hover:text-white text-sm transition-colors shrink-0"
-          >
-            ← Back
-          </button>
+      {/* Toolbar — the same shape as the cemetery editor: Back on the left,
+          everything else on the right, on the page rather than in a dark bar
+          bolted to the top of it. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button onClick={onDone} className="btn-ghost">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
 
-          <div className="flex-1 min-w-[6rem]">
-            <p className="font-semibold text-sm leading-tight">
-              {quoteId ? 'Edit Quote' : 'New Quote'}
-            </p>
-            {state.beneficiaryName && (
-              <p className="text-primary-300 text-xs truncate leading-tight">{state.beneficiaryName}</p>
-            )}
-          </div>
-
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <select
-            className="text-xs bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white
-                       focus:outline-none focus:ring-2 focus:ring-white/30 max-w-[200px] truncate"
+            className="input text-xs py-1.5 max-w-[190px] truncate"
             value={state.funeralHomeId || ''}
             onChange={e => {
               const home = homes.find(h => h.id === e.target.value)
               if (home) dispatch({ type: 'SET_HOME', id: home.id, taxRate: Number(home.tax_rate) })
             }}
+            aria-label="Funeral home"
           >
             {homes.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
           </select>
 
-          <div className="flex items-center gap-2 flex-wrap ml-auto">
-            <label className="text-primary-200 hover:text-white text-xs px-3 py-1.5
-                              border border-white/20 rounded-lg transition-colors cursor-pointer"
-                   title={attachedImage ? 'Replace attached image' : 'Attach image to print'}>
-              {attachedImage ? 'Image ✓' : 'Attach image'}
-              <input
-                type="file" accept="image/*" className="hidden"
-                onChange={e => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  const reader = new FileReader()
-                  reader.onload = ev => setAttachedImage(ev.target.result)
-                  reader.readAsDataURL(file)
-                  e.target.value = ''
-                }}
-              />
-            </label>
-            {attachedImage && (
-              <button
-                onClick={() => setAttachedImage(null)}
-                className="text-primary-300 hover:text-white text-xs transition-colors"
-                title="Remove attached image"
-              >✕</button>
-            )}
-            {/* Print lives here, in the sticky header, where it is always one
-                click away. The duplicate under the summary total is gone. */}
-            <button
-              onClick={() => setShowPrint(true)}
-              disabled={!state.items.length}
-              className="text-primary-200 hover:text-white disabled:opacity-30 text-xs px-3 py-1.5
-                         border border-white/20 rounded-lg transition-colors"
-            >
-              Print
-            </button>
-            {/* One button, as in the cemetery portal. "Save Draft" and
-                "Finalize" were two ways to save that differed only in the
-                status they wrote; status is a property of the quote, so it is
-                set on the status badge in the summary instead of deciding
-                which save button you press. */}
-            <button
-              onClick={() => save()}
-              disabled={saving}
-              className="btn-primary text-xs py-1.5 bg-white text-primary-800 hover:bg-stone-100"
-            >
-              {saving ? 'Saving…' : 'Save quote'}
-            </button>
-          </div>
-        </div>
-        {saveErr && (
-          <div className="bg-red-600 text-white text-xs px-4 py-2">Error: {saveErr}</div>
-        )}
-        {savedFlash && (
-          <div className="bg-emerald-600 text-white text-xs px-4 py-1.5 text-center font-medium transition-all">
-            Saved ✓
-          </div>
-        )}
-        {priceMap && (
-          <div className="bg-amber-500 text-white text-xs px-4 py-2 flex items-center justify-between">
-            <span>{Object.keys(priceMap).length} item{Object.keys(priceMap).length > 1 ? 's have' : ' has'} updated prices in the database.</span>
-            <button
-              onClick={() => { dispatch({ type: 'REFRESH_PRICES', priceMap }); setPriceMap(null) }}
-              className="ml-4 font-semibold underline hover:no-underline shrink-0"
-            >
-              Refresh Prices
-            </button>
-          </div>
-        )}
-      </header>
+          <label className="btn-secondary text-xs cursor-pointer"
+                 title={attachedImage ? 'Replace attached image' : 'Attach image to print'}>
+            {attachedImage ? 'Image ✓' : 'Attach image'}
+            <input
+              type="file" accept="image/*" className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                const reader = new FileReader()
+                reader.onload = ev => setAttachedImage(ev.target.result)
+                reader.readAsDataURL(file)
+                e.target.value = ''
+              }}
+            />
+          </label>
+          {attachedImage && (
+            <button onClick={() => setAttachedImage(null)}
+                    className="text-stone-400 hover:text-red-500 text-sm px-1"
+                    title="Remove attached image">✕</button>
+          )}
 
-      {/* ── Version Bar ─────────────────────────────────────────────────────── */}
-      {quoteId && (
-        <div className="bg-primary-900 border-b border-primary-700 px-4 py-2">
-          <div className="max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
-            <span className="text-primary-500 text-[11px] font-semibold uppercase tracking-widest shrink-0">Versions</span>
+          <button onClick={() => setShowPrint(true)} disabled={!state.items.length}
+                  className="btn-secondary text-xs disabled:opacity-40">
+            Review
+          </button>
 
-            {/* Version pills — draggable to reorder */}
-            {versions.map((v, i) => {
-              const isCurrent    = v.id === quoteId
-              const isEditing    = editingLabel?.id === v.id
-              const isDragging   = dragV    === v.id
-              const isDragTarget = dragOverV === v.id && dragV !== v.id
-              // One naming rule across the list, this switcher and the
-              // comparison — see src/lib/versionLabel.js.
-              const displayLabel = versionNameOf(v, i, versions.length)
-              const statusMark   = v.status === 'finalized' ? ' ✓' : v.status === 'accepted' ? ' ★' : ''
-              return (
-                <div
-                  key={v.id}
-                  draggable={!isEditing}
-                  onDragStart={() => setDragV(v.id)}
-                  onDragEnd={() => { setDragV(null); setDragOverV(null) }}
-                  onDragOver={e => { e.preventDefault(); setDragOverV(v.id) }}
-                  onDrop={e => { e.preventDefault(); handleVersionDrop(v.id) }}
-                  className={`flex items-center gap-0.5 group cursor-grab active:cursor-grabbing transition-opacity
-                    ${isDragging ? 'opacity-30' : ''}
-                    ${isDragTarget ? 'ring-2 ring-white/60 rounded-full' : ''}`}
-                >
-                  {isEditing ? (
-                    <input
-                      autoFocus
-                      value={editingLabel.value}
-                      onChange={e => setEditingLabel(l => ({ ...l, value: e.target.value }))}
-                      onBlur={() => saveVersionLabel(v.id, editingLabel.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') saveVersionLabel(v.id, editingLabel.value)
-                        if (e.key === 'Escape') setEditingLabel(null)
-                      }}
-                      className="text-xs px-2 py-0.5 rounded-full bg-white text-primary-800
-                                 border-2 border-primary-400 outline-none w-24 font-medium"
-                      maxLength={24}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => !isCurrent && onEdit && onEdit(v.id)}
-                      onDoubleClick={e => { e.stopPropagation(); setEditingLabel({ id: v.id, value: v.version_label || '' }) }}
-                      title="Drag to reorder · Double-click to rename"
-                      className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
-                        isCurrent
-                          ? 'bg-white text-primary-800 cursor-grab'
-                          : 'text-primary-300 hover:text-white border border-primary-600 hover:border-primary-400'
-                      }`}
-                    >
-                      {displayLabel}
-                      <span className={`text-[10px] ${isCurrent ? 'text-primary-500' : 'text-primary-600'}`}>
-                        {statusMark}
-                      </span>
-                    </button>
-                  )}
-                  {!isCurrent && !isEditing && (
-                    <button
-                      onClick={() => deleteVersion(v.id)}
-                      className="opacity-0 group-hover:opacity-100 text-primary-600 hover:text-red-400
-                                 text-[11px] leading-none transition-all px-0.5"
-                      title={`Delete ${displayLabel}`}
-                    >×</button>
-                  )}
-                </div>
-              )
-            })}
+          {quoteId && versions.length >= 2 && (
+            <button onClick={() => setShowCompare(true)} className="btn-secondary text-xs">
+              Compare
+            </button>
+          )}
 
-            {/* Add Version dropdown */}
+          {quoteId && (
             <div className="relative">
               <button
                 onClick={() => setAddVersionOpen(v => !v)}
                 disabled={saving}
-                className="text-[11px] text-primary-400 hover:text-white border border-primary-700
-                           hover:border-primary-500 px-2.5 py-1 rounded-full transition-colors disabled:opacity-40"
+                className="btn-secondary text-xs disabled:opacity-40"
               >
-                + Add Version
+                Add version
               </button>
               {addVersionOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setAddVersionOpen(false)} />
-                  <div className="absolute left-0 top-full mt-1.5 z-20 bg-white rounded-xl shadow-xl
-                                  border border-stone-100 py-1 w-48">
+                  <div className="absolute right-0 top-full mt-1.5 z-20 bg-white rounded-xl shadow-xl
+                                  border border-stone-100 py-1 w-56">
                     <button
                       onClick={() => { setAddVersionOpen(false); duplicateQuote() }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                      className="w-full text-left px-4 py-2.5 hover:bg-stone-50 transition-colors"
                     >
-                      <p className="font-medium">Duplicate</p>
-                      <p className="text-xs text-stone-400 mt-0.5">Copy all items & package</p>
+                      <p className="text-sm font-medium text-stone-700">Copy this version</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Start from what is here now</p>
                     </button>
-                    <div className="border-t border-stone-100 mx-2" />
                     <button
                       onClick={() => { setAddVersionOpen(false); newVersion() }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                      className="w-full text-left px-4 py-2.5 hover:bg-stone-50 transition-colors"
                     >
-                      <p className="font-medium">Start fresh</p>
-                      <p className="text-xs text-stone-400 mt-0.5">Same contact, blank quote</p>
+                      <p className="text-sm font-medium text-stone-700">Start blank</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Keep the client, drop the items</p>
                     </button>
                   </div>
                 </>
               )}
             </div>
+          )}
 
-            {/* Compare — only with 2+ versions */}
-            {versions.length >= 2 && (
-              <button
-                onClick={() => setShowCompare(true)}
-                className="text-[11px] text-primary-400 hover:text-white transition-colors ml-1"
-              >
-                Compare
-              </button>
-            )}
-          </div>
+          <button onClick={() => save()} disabled={saving} className="btn-primary text-xs">
+            {saving ? 'Saving…' : 'Save quote'}
+          </button>
+        </div>
+      </div>
+
+      {saveErr && (
+        <div className="card p-3 border-red-200 bg-red-50">
+          <p className="text-sm text-red-700">{saveErr}</p>
+        </div>
+      )}
+      {savedFlash && (
+        <div className="card p-3 border-emerald-200 bg-emerald-50">
+          <p className="text-sm text-emerald-800">Saved</p>
+        </div>
+      )}
+      {priceMap && (
+        <div className="card p-3 border-amber-200 bg-amber-50 flex items-center gap-3">
+          <p className="text-sm text-amber-800 flex-1">
+            {Object.keys(priceMap).length} item{Object.keys(priceMap).length > 1 ? 's have' : ' has'} updated prices in the database.
+          </p>
+          <button
+            onClick={() => { dispatch({ type: 'REFRESH_PRICES', priceMap }); setPriceMap(null) }}
+            className="btn-secondary text-xs shrink-0"
+          >
+            Refresh prices
+          </button>
+        </div>
+      )}
+
+      {/* Versions in this quote. Click one to switch; click the one you are
+          on to rename it, the way you would rename a tab. Drag to reorder —
+          that order is the order the comparison puts its columns in. */}
+      {quoteId && versions.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            Versions
+          </span>
+          {versions.map((v, i) => {
+            const isCurrent    = v.id === quoteId
+            const isEditing    = editingLabel?.id === v.id
+            const isDragging   = dragV    === v.id
+            const isDragTarget = dragOverV === v.id && dragV !== v.id
+            // One naming rule across the list, this switcher and the
+            // comparison — see src/lib/versionLabel.js.
+            const displayLabel = versionNameOf(v, i, versions.length)
+
+            if (isEditing) {
+              return (
+                <input key={v.id} autoFocus
+                       className="input text-xs py-1.5 w-56"
+                       defaultValue={v.version_label || ''}
+                       placeholder={displayLabel}
+                       onBlur={e => saveVersionLabel(v.id, e.target.value)}
+                       onKeyDown={e => {
+                         if (e.key === 'Enter') e.currentTarget.blur()
+                         if (e.key === 'Escape') setEditingLabel(null)
+                       }} />
+              )
+            }
+            return (
+              <span key={v.id}
+                draggable
+                onDragStart={() => setDragV(v.id)}
+                onDragEnd={() => { setDragV(null); setDragOverV(null) }}
+                onDragOver={e => { e.preventDefault(); setDragOverV(v.id) }}
+                onDrop={e => { e.preventDefault(); handleVersionDrop(v.id) }}
+                className={`inline-flex items-center rounded-xl border text-xs font-medium transition-colors
+                  ${isCurrent ? 'border-primary-300 bg-primary-50 text-primary-700'
+                              : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}
+                  ${isDragging ? 'opacity-40' : ''}
+                  ${isDragTarget ? 'ring-2 ring-primary-300' : ''}`}>
+                <button
+                  onClick={() => isCurrent
+                    ? setEditingLabel({ id: v.id, value: v.version_label || '' })
+                    : (onEdit && onEdit(v.id))}
+                  title={isCurrent ? 'Click to rename' : 'Switch to this version'}
+                  className="px-3 py-1.5"
+                >
+                  <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle ${
+                    isCurrent ? 'bg-primary-500' : 'bg-stone-300'}`} />
+                  {displayLabel}
+                </button>
+                {isCurrent && versions.length > 1 && (
+                  <button onClick={() => deleteVersion(v.id)}
+                          title={`Delete ${displayLabel}`}
+                          className="pr-2.5 pl-0.5 text-primary-400 hover:text-red-600">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </span>
+            )
+          })}
         </div>
       )}
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
 
         <div className="lg:col-span-2 flex flex-col gap-4">
           <CustomerForm
@@ -1060,7 +1034,6 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             gstAmount={state.gstAmount}
             pstAmount={state.pstAmount}
             total={state.total}
-            status={state.status}
             beneficiaryName={state.beneficiaryName}
             beneficiaryBirthdate={state.beneficiaryBirthdate}
             onRemove={id => dispatch({ type: 'REMOVE_ITEM', id })}
@@ -1074,17 +1047,13 @@ export default function QuoteEditor({ quoteId, onDone, onEdit, userId, user }) {
             onRemoveSection={id => dispatch({ type: 'REMOVE_SECTION', id })}
             onMoveItem={(itemId, sectionId) => dispatch({ type: 'MOVE_ITEM_SECTION', itemId, sectionId })}
             onChangeCasket={() => setCasketPickerOpen(true)}
-            onChangeStatus={st => dispatch({ type: 'SET_STATUS', status: st })}
             onPrint={() => setShowPrint(true)}
             paymentTerms={paymentTerms}
             onChangePaymentTerms={setPaymentTerms}
           />
         </div>
       </div>
-
-      {showPrint && (
-        <PrintView home={currentHome} state={state} attachedImage={attachedImage} onClose={() => setShowPrint(false)} paymentTerms={paymentTerms} />
-      )}
+      </div>
 
       {showCompare && state.contactId && (
         <ComparisonView
